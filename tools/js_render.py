@@ -745,7 +745,10 @@ function renderToday3(){
         '<button class="btn btn-primary" data-mg-step-set="'+g.id+'">'+esc(t('c.save'))+'</button></div>'+
       (stepChoices(g).length ? '<div class="mg-picks">'+stepChoices(g).map(function(x){
           return '<button type="button" class="t3idea" data-mg-step-pick="'+g.id+'" data-text="'+esc(x)+'">'+ic('plus')+'<span>'+esc(x)+'</span></button>';
-        }).join('')+'</div>' : '')+'</div>';
+        }).join('')+'</div>' : '')+
+      /* materials can be looked for before the step is chosen, too */
+      '<button type="button" class="btn btn-quiet btn-sm t3srch" data-srch-g="'+g.id+'">'+ic('globe')+'<span>'+esc(t('srch.t'))+
+        ((g.res||[]).length ? ' · '+g.res.length : '')+'</span></button></div>';
     return '<div class="t3row t3g'+(done?' done':'')+'">'+
       '<button type="button" class="t3chk" data-gstep-done="'+g.id+'" aria-pressed="'+done+'" aria-label="'+esc(t('t3.mark'))+'">'+ic('check')+'</button>'+
       '<div class="t3g-body"><div class="t3g-goal">'+ic('target')+'<span>'+esc(g.title)+'</span></div><div class="t3g-step">'+esc(step)+'</div>'+

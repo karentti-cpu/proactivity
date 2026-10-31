@@ -743,6 +743,7 @@ body.no-scroll{overflow:hidden;}
 .eve-choice svg,.wk-feel svg{width:15px;height:15px;color:var(--acc);flex:none;margin-top:3px;}
 #eveBox .field label{display:flex;align-items:center;gap:6px;}
 #eveBox .field label svg{width:16px;height:16px;color:var(--acc);flex:none;}
+.t3srch{margin-top:var(--s2);}
 .srch-modal #srchQ{width:100%;margin:var(--s2) 0 var(--s3);}
 .srch-ways{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);}
 .srch-way{display:flex;align-items:center;gap:8px;padding:12px;border-radius:var(--r-ctl);border:1px solid var(--ink-3);background:var(--ink-0);
@@ -6515,7 +6516,10 @@ function renderToday3(){
         '<button class="btn btn-primary" data-mg-step-set="'+g.id+'">'+esc(t('c.save'))+'</button></div>'+
       (stepChoices(g).length ? '<div class="mg-picks">'+stepChoices(g).map(function(x){
           return '<button type="button" class="t3idea" data-mg-step-pick="'+g.id+'" data-text="'+esc(x)+'">'+ic('plus')+'<span>'+esc(x)+'</span></button>';
-        }).join('')+'</div>' : '')+'</div>';
+        }).join('')+'</div>' : '')+
+      /* materials can be looked for before the step is chosen, too */
+      '<button type="button" class="btn btn-quiet btn-sm t3srch" data-srch-g="'+g.id+'">'+ic('globe')+'<span>'+esc(t('srch.t'))+
+        ((g.res||[]).length ? ' · '+g.res.length : '')+'</span></button></div>';
     return '<div class="t3row t3g'+(done?' done':'')+'">'+
       '<button type="button" class="t3chk" data-gstep-done="'+g.id+'" aria-pressed="'+done+'" aria-label="'+esc(t('t3.mark'))+'">'+ic('check')+'</button>'+
       '<div class="t3g-body"><div class="t3g-goal">'+ic('target')+'<span>'+esc(g.title)+'</span></div><div class="t3g-step">'+esc(step)+'</div>'+

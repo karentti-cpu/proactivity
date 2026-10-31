@@ -707,6 +707,7 @@ body.no-scroll{overflow:hidden;}
 .eve-choice svg,.wk-feel svg{width:15px;height:15px;color:var(--acc);flex:none;margin-top:3px;}
 #eveBox .field label{display:flex;align-items:center;gap:6px;}
 #eveBox .field label svg{width:16px;height:16px;color:var(--acc);flex:none;}
+.t3srch{margin-top:var(--s2);}
 .srch-modal #srchQ{width:100%;margin:var(--s2) 0 var(--s3);}
 .srch-ways{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);}
 .srch-way{display:flex;align-items:center;gap:8px;padding:12px;border-radius:var(--r-ctl);border:1px solid var(--ink-3);background:var(--ink-0);
