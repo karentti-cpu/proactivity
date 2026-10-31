@@ -172,7 +172,7 @@ def gender_report(table):
     return counts, missing_ar
 
 
-SITE = 'https://benmor042012-maker.github.io/proactivity/'
+SITE = 'https://karentti-cpu.github.io/proactivity/'
 
 # Static <head> metadata. The page is a single document with a JS language
 # switcher, so the markup carries the Hebrew default and applyLang() rewrites
@@ -276,6 +276,8 @@ self.addEventListener('fetch', function(e){
   var isDoc = req.mode==='navigate' || (req.headers.get('accept')||'').indexOf('text/html')>=0;
   if(isDoc){
     e.respondWith(fetch(req).then(function(r){
+      /* only a real page is kept: a 404 or an error must never replace the app */
+      if(!r || !r.ok) return caches.match('./index.html').then(function(hit){ return hit || r; });
       var copy=r.clone();
       caches.open(CACHE).then(function(c){ c.put('./index.html', copy); });
       return r;

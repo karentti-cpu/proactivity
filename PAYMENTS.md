@@ -68,7 +68,7 @@ and nothing in this app ever asks for it.
 Two settings, both under **Checkout** in Paddle:
 
 1. **Checkout settings → Default payment link** → set it to
-   `https://benmor042012-maker.github.io/proactivity/`.
+   `https://karentti-cpu.github.io/proactivity/`.
 2. **Request domain approval** → add that same domain.
 
 Paddle only opens its checkout on a domain it has approved, and the symptom when
