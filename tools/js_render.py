@@ -1841,6 +1841,7 @@ function showSplash(){
   setTimeout(hide,1600);
 }
 function startApp(){
+  handleShare();
   showSplash();
   var name=P.name || t('a.greet.anon');
   document.getElementById('greetName').textContent=t('a.greet',{name:name});
