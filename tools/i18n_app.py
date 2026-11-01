@@ -110,11 +110,11 @@ APP = {
 
 # ---------- goals ----------
 'g.t':           ('המטרות שלי', 'My goals', 'Mes objectifs', 'Мои цели', 'أهدافي'),
-'g.s':           ('יעד נבנה ממה שבא לך לשפר, ומתחיל להיספר רק כשלוחצים "התחל".',
-                  'A target is built from what you want to improve, and only starts counting when you press "start".',
-                  'Un objectif se construit à partir de ce que tu veux améliorer, et ne compte qu\'une fois que tu appuies sur « lancer ».',
-                  'Цель строится из того, что ты хочешь улучшить, и начинает считаться только после нажатия «начать».',
-                  'يُبنى الهدف ممّا تريد تحسينه، ولا يبدأ العدّ إلا عند الضغط على «ابدأ».'),
+'g.s':         ('מטרה היא יעד שחשוב לך לאורך זמן. כל צעד קטן חשוב בדרך.',
+                  'A goal is a target that matters to you over time. Every small step on the way counts.',
+                  'Un objectif, c\'est un cap qui compte pour toi dans la durée. Chaque petit pas compte sur le chemin.',
+                  'Цель — это ориентир, важный для тебя надолго. Каждый маленький шаг на пути важен.',
+                  'الهدف غاية تهمّك على المدى الطويل. كل خطوة صغيرة مهمّة في الطريق.'),
 'g.new.ph':      ('מטרה חדשה', 'A new goal', 'Nouvel objectif', 'Новая цель', 'هدف جديد'),
 'g.step.ph':     ('צעד משלך', 'Your own step', 'Ton étape', 'Свой шаг', 'خطوة خاصة بك'),
 

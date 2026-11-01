@@ -800,11 +800,12 @@ function renderToday3(){
     '</div>'+
     '<div class="t3panes" data-tab="'+tab+'">'+
       '<section class="t3pane today"><h3 class="t3pane-h">'+ic('check')+'<span>'+esc(t('t3.tab.today'))+'</span></h3>'+
+        '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>'+
         gRows+iRows+blankRows+
         (goals.length || !all.length ? '' : '<button type="button" class="btn btn-quiet btn-sm t3fromgoals" data-t3tab="pick">'+ic('target')+'<span>'+esc(t('t3.fromgoals'))+'</span></button>')+
       '</section>'+
       '<section class="t3pane pick"><h3 class="t3pane-h">'+ic('target')+'<span>'+esc(t('t3.pick.goals'))+'</span></h3>'+
-        '<p class="psub">'+esc(t('t3.s'))+'</p>'+picker+
+        '<p class="t3help">'+esc(t('t3.goal.h'))+'</p>'+picker+
       '</section>'+
     '</div>';
   /* a line written in the list joins it; Enter moves on to the next free line */

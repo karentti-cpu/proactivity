@@ -25,11 +25,11 @@ CHAIN = {
 
 # ================= the chain screens =================
 'gc.t':        ('מה בא לך לשפר?', 'What do you want to improve?', 'Tu veux améliorer quoi ?', 'Что хочешь улучшить?', 'ما الذي تريد تحسينه؟'),
-'gc.s':        ('נשאל שלוש שאלות קצרות ונבנה מזה יעד שבאמת נובע ממה שאמרת.',
-                'Three short questions, then a target that actually follows from what you said.',
-                'Trois questions courtes, puis un objectif qui découle vraiment de tes réponses.',
-                'Три коротких вопроса — и цель, которая действительно следует из твоих ответов.',
-                'ثلاثة أسئلة قصيرة، ثم هدف ينبع فعلاً ممّا قلته.'),
+'gc.s':        ('מטרה היא יעד שחשוב לך לאורך זמן. כל צעד קטן חשוב בדרך. שלוש שאלות קצרות, ונבנה אותה יחד.',
+                  'A goal is a target that matters to you over time. Every small step on the way counts. Three short questions, and we build it together.',
+                  'Un objectif, c\'est un cap qui compte pour toi dans la durée. Chaque petit pas compte sur le chemin. Trois questions courtes, et on le construit ensemble.',
+                  'Цель — это ориентир, важный для тебя надолго. Каждый маленький шаг на пути важен. Три коротких вопроса — и построим её вместе.',
+                  'الهدف غاية تهمّك على المدى الطويل. كل خطوة صغيرة مهمّة في الطريق. ثلاثة أسئلة قصيرة، ونبنيه معاً.'),
 'gc.kind.q':   ('מה בדיוק?', 'What exactly?', 'Quoi, exactement ?', 'Что именно?', 'ماذا بالضبط؟'),
 'gc.kind.s':   ('כמה שיותר ספציפי, ככה קל יותר להתחיל.',
                 'The more specific, the easier it is to start.',
