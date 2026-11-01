@@ -716,6 +716,7 @@ body.no-scroll{overflow:hidden;}
 .splash-tag{font-size:var(--t-body);color:var(--fg-2);animation:rise .5s .1s ease both;}
 .splash-line{font-size:var(--t-sm);font-weight:700;color:var(--acc);max-width:280px;line-height:1.5;animation:rise .5s .2s ease both;}
 @media (prefers-reduced-motion:reduce){.splash img,.splash-tag,.splash-line{animation:none;}}
+.t3help{font-size:var(--t-sm);color:var(--fg-2);line-height:1.5;margin:0 0 var(--s3);}
 .t3row.blank .t3chk{opacity:.45;cursor:default;}
 .t3fromgoals{margin-top:var(--s3);}
 .t3seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:var(--s3) 0 var(--s4);border-radius:var(--r-pill);background:var(--ink-2);}
