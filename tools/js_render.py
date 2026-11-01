@@ -714,7 +714,7 @@ function logDay(){
   var days=Object.keys(S.log).sort();
   while(days.length>LOG_DAYS) delete S.log[days.shift()];
 }
-var t3PickOpen=false, t3IdeasMore=false;
+var t3Tab=null, t3IdeasMore=false;
 function renderToday3(){
   var box=document.getElementById('todayBox'); if(!box) return;
   var td=today3(), all=liveGoals(), goals=pickedGoals(), today=dayKey(), running=!!fiveTimer;
@@ -779,25 +779,41 @@ function renderToday3(){
         '<button type="button" class="t3act" data-t3del="'+i+'" aria-label="'+esc(t('c.delete'))+'" title="'+esc(t('c.delete'))+'">'+ic('x')+'</button>')+
       '</div>';
   }).join('');
-  /* once something is chosen the picker folds away, so the list leads */
-  var chosen=total>0;
+  /* two panes: today's list and choosing. On a phone a switch shows one at
+     a time (choosing first, until something is chosen); on a wide screen
+     they stand side by side and the switch is hidden. */
+  var chosen=total>0, tab=t3Tab || (chosen ? 'today' : 'pick');
   box.innerHTML='<div class="boxh-row"><h2 class="boxh">'+ic('sun')+'<span>'+esc(t('t3.t'))+'</span></h2>'+
       (chosen ? '<span class="boxh-n numf">'+nDone+'/'+total+'</span>' : '')+'</div>'+
-    (chosen
-      ? '<div class="mg-lab">'+esc(t('t3.chosen'))+'</div>'+gRows+iRows+
-        '<details class="t3pick"'+(t3PickOpen?' open':'')+'><summary>'+ic('plus')+'<span>'+esc(t('t3.pickmore'))+'</span></summary>'+picker+'</details>'
-      : '<p class="psub">'+esc(t('t3.s'))+'</p>'+picker);
+    '<div class="t3seg" role="tablist">'+
+      '<button type="button" role="tab" data-t3tab="today" aria-selected="'+(tab==='today')+'" class="'+(tab==='today'?'on':'')+'">'+ic('check')+
+        '<span>'+esc(t('t3.tab.today'))+'</span>'+(total?'<b class="numf">'+total+'</b>':'')+'</button>'+
+      '<button type="button" role="tab" data-t3tab="pick" aria-selected="'+(tab==='pick')+'" class="'+(tab==='pick'?'on':'')+'">'+ic('target')+
+        '<span>'+esc(t('t3.pick.goals'))+'</span></button>'+
+    '</div>'+
+    '<div class="t3panes" data-tab="'+tab+'">'+
+      '<section class="t3pane today"><h3 class="t3pane-h">'+ic('check')+'<span>'+esc(t('t3.tab.today'))+'</span></h3>'+
+        (chosen ? gRows+iRows
+          : '<div class="t3empty"><p>'+esc(t('t3.empty'))+'</p><button type="button" class="btn btn-primary btn-sm" data-t3tab="pick">'+ic('target')+'<span>'+esc(t('t3.gopick'))+'</span></button></div>')+
+      '</section>'+
+      '<section class="t3pane pick"><h3 class="t3pane-h">'+ic('target')+'<span>'+esc(t('t3.pick.goals'))+'</span></h3>'+
+        '<p class="psub">'+esc(t('t3.s'))+'</p>'+picker+
+      '</section>'+
+    '</div>';
+  box.querySelectorAll('[data-t3tab]').forEach(function(b){
+    b.addEventListener('click',function(){ t3Tab=b.dataset.t3tab; renderToday3(); });
+  });
+  /* choosing several things in a row stays on the choosing pane */
+  box.querySelector('.t3pane.pick').addEventListener('click',function(){ if(!t3Tab) t3Tab=tab; },true);
   var mi=box.querySelector('[data-t3more]');
   if(mi) mi.addEventListener('click',function(){ t3IdeasMore=true; renderToday3(); });
-  var det=box.querySelector('.t3pick');
-  if(det) det.addEventListener('toggle',function(){ t3PickOpen=det.open; });
   box.querySelectorAll('[data-t3pick]').forEach(function(b){
     b.addEventListener('click',function(){
       var id=Number(b.dataset.t3pick), td=today3(), i=td.picked.indexOf(id), g=goalById(id);
       if(i>=0){ td.picked.splice(i,1); if(g && g.day && g.day.d===dayKey()) g.day=null; if(fiveGid===id) clearFive(); }
       else { td.picked.push(id); markActiveToday(); prefLearn(goalCat(g),1); }
       logDay(); save(); renderToday3();
-      if(i<0){ var s=box.querySelector('[data-mg-step-in="'+id+'"]'); if(s && !t3PickOpen) s.focus(); }
+      if(i<0) toast(t('t3.added'));
     });
   });
   box.querySelectorAll('[data-idea]').forEach(function(b){
