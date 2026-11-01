@@ -259,4 +259,66 @@ function srchKeep(){
 function srchClose(){ document.getElementById('srchModal').classList.remove('on'); srchFor=null; }
 document.getElementById('srchClose').addEventListener('click',srchClose);
 document.getElementById('srchModal').addEventListener('click',function(e){ if(e.target.id==='srchModal') srchClose(); });
+
+/* ================= a link shared from another app =================
+   With the app installed on Android it sits in the phone's Share menu.
+   A video or page shared to it opens the app with the link in the address;
+   the app asks which goal to keep it in (or today's list), saves it, and
+   clears the address so a reload does not ask again. */
+var shareSeen=false;
+function sharedLink(){
+  var q; try{ q=new URLSearchParams(location.search); }catch(e){ return null; }
+  var raw=[q.get('url'),q.get('text'),q.get('title')].filter(Boolean).join(' ');
+  var m=raw.match(/https?:\/\/[^\s"'<>]+/i); if(!m) return null;
+  var url=m[0].replace(/[).,!?]+$/,''), title=(q.get('title')||'').trim();
+  /* YouTube shares "title + link" as the text; what is left after the link is the name */
+  if(!title){ var rest=(q.get('text')||'').replace(m[0],'').trim(); if(rest && rest.length<=80) title=rest; }
+  return {url:url, title:title};
+}
+function sharedName(s){
+  if(s.title) return s.title;
+  if(ytId(s.url)) return t('res.ytname');
+  try{ return new URL(s.url).hostname.replace(/^www\./,''); }catch(e){ return s.url; }
+}
+function handleShare(){
+  if(shareSeen) return; shareSeen=true;
+  var s=sharedLink(); if(!s) return;
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  splashDone=true;            /* straight to the question, no opening screen */
+  openShare(s);
+}
+function openShare(s){
+  var yt=ytId(s.url), name=sharedName(s), goals=liveGoals();
+  function row(attr, icon, text){
+    return '<button type="button" class="t3opt goal" '+attr+'><span class="t3opt-i">'+ic(icon)+'</span>'+
+      '<span class="t3opt-t">'+esc(text)+'</span><span class="t3opt-a">'+ic('plus')+'</span></button>';
+  }
+  document.getElementById('shareBody').innerHTML=
+    '<div class="share-prev">'+(yt ? '<img src="https://i.ytimg.com/vi/'+yt+'/mqdefault.jpg" alt="">' : ic('link'))+
+      '<span>'+esc(name)+'</span></div>'+
+    (goals.length ? '<div class="mg-lab">'+esc(t('t3.pick.goals'))+'</div><div class="t3list">'+
+        goals.map(function(g){ return row('data-share-g="'+g.id+'"','target',g.title); }).join('')+'</div>'
+      : '<p class="hint">'+esc(t('share.nogoal'))+'</p>')+
+    '<div class="t3list share-today">'+row('data-share-day','sun',t('share.today'))+'</div>';
+  var m=document.getElementById('shareModal'); m.classList.add('on');
+  m.querySelectorAll('[data-share-g]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var g=goalById(Number(b.dataset.shareG)); if(!g) return;
+      if(!g.res) g.res=[];
+      if(!g.res.some(function(r){ return r.url===s.url; })) g.res.push({id:uid++, url:s.url, title:name, yt:yt});
+      prefLearn(goalCat(g),1); markActiveToday(); save();
+      shareClose(); toast(t('share.saved',{g:g.title}));
+      if(typeof renderGoals==='function') renderGoals();
+      renderToday3();
+    });
+  });
+  var d=m.querySelector('[data-share-day]');
+  if(d) d.addEventListener('click',function(){
+    if(addDayItem(name)){ var td=today3(); td.items[td.items.length-1].url=s.url; logDay(); save(); toast(t('cir.added')); }
+    shareClose(); renderToday3();
+  });
+}
+function shareClose(){ document.getElementById('shareModal').classList.remove('on'); }
+document.getElementById('shareClose').addEventListener('click',shareClose);
+document.getElementById('shareModal').addEventListener('click',function(e){ if(e.target.id==='shareModal') shareClose(); });
 """

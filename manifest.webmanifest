@@ -10,6 +10,15 @@
  "theme_color": "#FBF9F5",
  "dir": "rtl",
  "lang": "he",
+ "share_target": {
+  "action": "./",
+  "method": "GET",
+  "params": {
+   "title": "title",
+   "text": "text",
+   "url": "url"
+  }
+ },
  "icons": [
   {
    "src": "icon-192.png",

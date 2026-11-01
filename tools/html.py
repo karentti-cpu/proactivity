@@ -700,6 +700,12 @@ def build_body(logo):
  <div class="modal-btns"><button class="btn btn-primary" id="srchClose" data-i18n="res.close"></button></div>
 </div></div>
 
+<div class="modal-bg" id="shareModal"><div class="modal share-modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+ <h3 id="shareTitle" data-i18n="share.t"></h3>
+ <div id="shareBody"></div>
+ <div class="modal-btns"><button class="btn btn-ghost" id="shareClose" data-i18n="c.cancel"></button></div>
+</div></div>
+
 <div class="modal-bg" id="camModal"><div class="modal" role="dialog" aria-modal="true">
  <h3 data-i18n="cam.t"></h3><p id="camTN"></p>
  <video class="cam-v" id="camV" autoplay playsinline muted></video>
