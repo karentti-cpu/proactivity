@@ -110,11 +110,11 @@ APP = {
 
 # ---------- goals ----------
 'g.t':           ('המטרות שלי', 'My goals', 'Mes objectifs', 'Мои цели', 'أهدافي'),
-'g.s':           ('מטרה היא משהו שחשוב לך לאורך זמן. בכל יום עושים בשבילה צעד קטן אחד, וכך היא קורית.',
-                  'A goal is something that matters to you over time. Each day you take one small step for it, and that is how it happens.',
-                  'Un objectif, c\'est quelque chose qui compte pour toi dans la durée. Chaque jour, un petit pas pour lui, et c\'est comme ça qu\'il se réalise.',
-                  'Цель — это то, что важно тебе надолго. Каждый день — один маленький шаг к ней, и так она сбывается.',
-                  'الهدف شيء يهمّك على المدى الطويل. كل يوم خطوة صغيرة واحدة من أجله، وهكذا يتحقّق.'),
+'g.s':         ('מטרה היא יעד שחשוב לך לאורך זמן. כל צעד קטן חשוב בדרך.',
+                  'A goal is a target that matters to you over time. Every small step on the way counts.',
+                  'Un objectif, c\'est un cap qui compte pour toi dans la durée. Chaque petit pas compte sur le chemin.',
+                  'Цель — это ориентир, важный для тебя надолго. Каждый маленький шаг на пути важен.',
+                  'الهدف غاية تهمّك على المدى الطويل. كل خطوة صغيرة مهمّة في الطريق.'),
 'g.new.ph':      ('מטרה חדשה', 'A new goal', 'Nouvel objectif', 'Новая цель', 'هدف جديد'),
 'g.step.ph':     ('צעד משלך', 'Your own step', 'Ton étape', 'Свой шаг', 'خطوة خاصة بك'),
 
