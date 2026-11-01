@@ -1747,7 +1747,23 @@ function lastTab(){
 function renderTasks(){ renderRing(); renderCats(); }
 function renderHome(){ renderTasks(); }   // kept: other modules still call it
 
+/* A moment of who this is for, right after the phone's own splash: the
+   logo, the name, the line about being who you want to be, and what the
+   app is for. Once per opening, a second and a half, a tap skips it. */
+var splashDone=false;
+function showSplash(){
+  if(splashDone) return; splashDone=true;
+  var sp=document.getElementById('splash'); if(!sp) return;
+  var tk=(P.gender==='m'||P.gender==='f') ? 'b.tag' : 'b.tag.n';
+  document.getElementById('splashTag').textContent=t(tk);
+  sp.querySelectorAll('[data-i18n]').forEach(function(e){ e.textContent=t(e.getAttribute('data-i18n')); });
+  sp.hidden=false;
+  function hide(){ if(sp.classList.contains('out')) return; sp.classList.add('out'); setTimeout(function(){ sp.hidden=true; },350); }
+  sp.addEventListener('click',hide);
+  setTimeout(hide,1600);
+}
 function startApp(){
+  showSplash();
   var name=P.name || t('a.greet.anon');
   document.getElementById('greetName').textContent=t('a.greet',{name:name});
   var tag=document.getElementById('appTag'), tk=(P.gender==='m'||P.gender==='f') ? 'b.tag' : 'b.tag.n';

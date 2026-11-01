@@ -316,6 +316,13 @@ def build_body(logo):
   <button class="x" id="installNo" data-i18n="pwa.no"></button>
  </div>
 
+ <div class="splash" id="splash" hidden>
+  <img src="{logo}" alt="" width="96" height="96">
+  <div class="splash-name">{WORDMARK}</div>
+  <p class="splash-tag" id="splashTag"></p>
+  <p class="splash-line" data-i18n="sp.line"></p>
+ </div>
+
  <header class="apphead">
   <div class="app-brand"><img src="{logo}" alt="" width="32" height="32">
    <div><div role="img" aria-label="Proacty">{WORDMARK}</div><p class="brand-tag" id="appTag" data-i18n="b.tag.n"></p></div></div>

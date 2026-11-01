@@ -707,6 +707,15 @@ body.no-scroll{overflow:hidden;}
 .eve-choice svg,.wk-feel svg{width:15px;height:15px;color:var(--acc);flex:none;margin-top:3px;}
 #eveBox .field label{display:flex;align-items:center;gap:6px;}
 #eveBox .field label svg{width:16px;height:16px;color:var(--acc);flex:none;}
+.splash{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s3);
+  padding:var(--s5);background:var(--ink-0);text-align:center;transition:opacity .35s ease;}
+.splash[hidden]{display:none;}
+.splash.out{opacity:0;pointer-events:none;}
+.splash img{width:96px;height:96px;border-radius:24px;box-shadow:0 8px 30px rgba(0,0,0,.08);animation:rise .5s ease both;}
+.splash-name .wordmark{font-size:40px;}
+.splash-tag{font-size:var(--t-body);color:var(--fg-2);animation:rise .5s .1s ease both;}
+.splash-line{font-size:var(--t-sm);font-weight:700;color:var(--acc);max-width:280px;line-height:1.5;animation:rise .5s .2s ease both;}
+@media (prefers-reduced-motion:reduce){.splash img,.splash-tag,.splash-line{animation:none;}}
 .t3srch{margin-top:var(--s2);}
 .srch-modal #srchQ{width:100%;margin:var(--s2) 0 var(--s3);}
 .srch-ways{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);}
