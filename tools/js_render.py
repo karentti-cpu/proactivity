@@ -458,6 +458,9 @@ function renderWeek(){
 
   document.getElementById('wMet').textContent=met;
   document.getElementById('wTot').textContent=S.missions.length;
+  /* the "reached" count waits for the first target - a zero reads as a reproach */
+  document.getElementById('wMet').parentNode.parentNode.style.visibility = met ? '' : 'hidden';
+  renderWeekSummary();
 
   body.querySelectorAll('.dcell').forEach(function(cell){
     cell.addEventListener('click',function(){
@@ -477,6 +480,35 @@ function renderWeek(){
       save(); renderWeek();
     });
   });
+}
+/* ---- the week, summed up as it goes ----
+   Read from the ticks on the board each time it changes, and only what
+   went well: ticks so far, targets reached, what is one or two away, the
+   strongest day and today. A zero is never said out loud. */
+function renderWeekSummary(){
+  var box=document.getElementById('wSum'); if(!box) return;
+  var ms=S.missions||[]; if(!ms.length){ box.innerHTML=''; return; }
+  var names=dayNames(), today=new Date().getDay();
+  var total=0, perDay=[0,0,0,0,0,0,0], won=[], close=[];
+  ms.forEach(function(m){
+    var c=0; m.days.forEach(function(on,i){ if(on){ c++; perDay[i]++; } });
+    total+=c;
+    if(m.target>0 && c>=m.target) won.push(label(m));
+    else if(c>0 && m.target-c<=2) close.push({n:label(m), k:m.target-c});
+  });
+  var lines=[];
+  if(!total) lines.push(['🌱', t('ws.start')]);
+  else {
+    if(won.length===ms.length) lines.push(['🏆', t('ws.all')]);
+    else if(won.length) lines.push(['🎉', t('ws.met',{list:won.join(' · ')})]);
+    lines.push(['💪', t('ws.marks',{n:total})]);
+    close.slice(0,2).forEach(function(x){ lines.push(['✨', t('ws.close',{m:x.n, k:x.k})]); });
+    var best=0; perDay.forEach(function(v,i){ if(v>perDay[best]) best=i; });
+    if(perDay[best]>=2) lines.push(['⭐', t('ws.best',{d:names[best], n:perDay[best]})]);
+    lines.push(perDay[today] ? ['✅', t('ws.today',{n:perDay[today]})] : ['☀️', t('ws.today0')]);
+  }
+  box.innerHTML='<h3>'+ic('sparkles')+'<span>'+esc(t('ws.t'))+'</span></h3><ul>'+lines.map(function(l){
+    return '<li><span class="ws-e">'+l[0]+'</span><span>'+esc(l[1])+'</span></li>'; }).join('')+'</ul>';
 }
 function fillMissionCats(){
   document.getElementById('nMisCat').innerHTML=
