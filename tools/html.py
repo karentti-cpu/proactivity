@@ -363,6 +363,7 @@ def build_body(logo):
     <div><span data-i18n="w.met"></span> <span class="numf"><b id="wMet">0</b>/<span id="wTot">0</span></span></div>
     <button class="btn btn-ghost btn-sm" id="rWkBtn">{i("refresh")}<span data-i18n="w.reset"></span></button>
    </div>
+   <div class="wk-sum" id="wSum" aria-live="polite"></div>
    <div class="scroller"><table class="grid"><caption class="sr" data-i18n="n.pg.week"></caption>
     <thead><tr id="wHead"></tr></thead><tbody id="wBody"></tbody></table></div>
    <div class="addrow" style="margin-top:var(--s3)">
