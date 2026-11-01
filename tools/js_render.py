@@ -714,25 +714,35 @@ function logDay(){
   var days=Object.keys(S.log).sort();
   while(days.length>LOG_DAYS) delete S.log[days.shift()];
 }
-var t3PickOpen=false;
+var t3PickOpen=false, t3IdeasMore=false;
 function renderToday3(){
   var box=document.getElementById('todayBox'); if(!box) return;
   var td=today3(), all=liveGoals(), goals=pickedGoals(), today=dayKey(), running=!!fiveTimer;
   var total=goals.length+td.items.length;
   var nDone=td.items.filter(function(x){ return x.done; }).length + goals.filter(function(g){ return g.doneDay===today; }).length;
-  /* the picker: my goals to choose, ideas, and my own words */
-  var ideas=t3Ideas(td);
+  /* the picker, in order of weight: my goals as full rows, then three
+     ideas (more on request), then a line in my own words */
+  var ideas=t3Ideas(td), shown=t3IdeasMore ? ideas : ideas.slice(0,3);
+  function optRow(attrs, icon, text, on, cls){
+    return '<button type="button" class="t3opt'+(cls?' '+cls:'')+(on?' on':'')+'" '+attrs+'>'+
+      '<span class="t3opt-i">'+ic(icon)+'</span><span class="t3opt-t">'+esc(text)+'</span>'+
+      '<span class="t3opt-a">'+ic(on?'check':'plus')+'</span></button>';
+  }
   var picker=
     '<div class="mg-lab">'+esc(t(all.length?'t3.pick.goals':'t3.pick.sug'))+'</div>'+
-    (all.length ? '<div class="mg-picks t3goals">'+all.map(function(g){
-        var on=td.picked.indexOf(g.id)>=0, locked=g.doneDay===today;
-        return '<button type="button" class="t3idea t3gpick'+(on?' on':'')+'" data-t3pick="'+g.id+'" aria-pressed="'+on+'"'+(locked?' disabled':'')+'>'+
-          ic(on?'check':'target')+'<span>'+esc(g.title)+'</span></button>'; }).join('')+'</div>'
-      : '<div class="mg-picks">'+readyGoals('for').slice(0,3).map(function(r){
-          return '<button type="button" class="t3idea" data-t3ready="'+r[0]+'">'+ic('target')+'<span>'+esc(t('rg.'+r[0]+'.t'))+'</span></button>'; }).join('')+'</div>'+
-        '<button type="button" class="btn btn-quiet btn-sm t3nogoal" data-goto-goals>'+ic('plus')+'<span>'+esc(t('t3.nogoal'))+'</span></button>')+
-    (ideas.length && td.items.length<T3_MAX ? '<div class="mg-lab">'+esc(t('sq.t'))+'</div><div class="mg-picks">'+ideas.map(function(x){
-        return '<button type="button" class="t3idea" data-idea="'+esc(x.t)+'"'+(x.cat?' data-cat="'+x.cat+'"':'')+'>'+ic('plus')+'<span>'+esc(x.t)+'</span></button>'; }).join('')+'</div>' : '')+
+    '<div class="t3list">'+(all.length
+      ? all.map(function(g){
+          var on=td.picked.indexOf(g.id)>=0, locked=g.doneDay===today;
+          return optRow('data-t3pick="'+g.id+'" aria-pressed="'+on+'"'+(locked?' disabled':''),'target',g.title,on,'goal');
+        }).join('')
+      : readyGoals('for').slice(0,3).map(function(r){ return optRow('data-t3ready="'+r[0]+'"','target',t('rg.'+r[0]+'.t'),false,'goal'); }).join('')
+    )+'</div>'+
+    (all.length ? '' : '<button type="button" class="btn btn-quiet btn-sm t3nogoal" data-goto-goals>'+ic('plus')+'<span>'+esc(t('t3.nogoal'))+'</span></button>')+
+    (shown.length && td.items.length<T3_MAX
+      ? '<div class="mg-lab t3lab2">'+esc(t('sq.t'))+'</div><div class="t3list">'+shown.map(function(x){
+          return optRow('data-idea="'+esc(x.t)+'"'+(x.cat?' data-cat="'+x.cat+'"':''),'sparkles',x.t,false,'idea'); }).join('')+'</div>'+
+        (!t3IdeasMore && ideas.length>3 ? '<button type="button" class="btn btn-quiet btn-sm t3moreideas" data-t3more>'+esc(t('t3.moreideas'))+'</button>' : '')
+      : '')+
     (td.items.length<T3_MAX ? '<div class="addrow t3own"><input type="text" id="t3Own" maxlength="80" placeholder="'+esc(t('t3.other.ph'))+'" aria-label="'+esc(t('t3.other.ph'))+'">'+
         '<button class="btn btn-ghost" id="t3OwnAdd" aria-label="'+esc(t('c.add'))+'">'+ic('plus')+'</button></div>' : '')+
     (hasProfile() ? '' : '<button type="button" class="btn btn-quiet btn-sm t3quiz" data-goquiz>'+ic('sparkles')+'<span>'+esc(t('sq.quiz'))+'</span></button>');
@@ -777,6 +787,8 @@ function renderToday3(){
       ? '<div class="mg-lab">'+esc(t('t3.chosen'))+'</div>'+gRows+iRows+
         '<details class="t3pick"'+(t3PickOpen?' open':'')+'><summary>'+ic('plus')+'<span>'+esc(t('t3.pickmore'))+'</span></summary>'+picker+'</details>'
       : '<p class="psub">'+esc(t('t3.s'))+'</p>'+picker);
+  var mi=box.querySelector('[data-t3more]');
+  if(mi) mi.addEventListener('click',function(){ t3IdeasMore=true; renderToday3(); });
   var det=box.querySelector('.t3pick');
   if(det) det.addEventListener('toggle',function(){ t3PickOpen=det.open; });
   box.querySelectorAll('[data-t3pick]').forEach(function(b){
