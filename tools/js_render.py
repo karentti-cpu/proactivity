@@ -782,7 +782,14 @@ function renderToday3(){
   /* two panes: today's list and choosing. On a phone a switch shows one at
      a time (choosing first, until something is chosen); on a wide screen
      they stand side by side and the switch is hidden. */
-  var chosen=total>0, tab=t3Tab || (chosen ? 'today' : 'pick');
+  var nBlank=td.items.length>=T3_MAX ? 0 : Math.min(T3_MAX-td.items.length, Math.max(1, 3-td.items.length));
+  var blankRows='';
+  for(var k=0;k<nBlank;k++){
+    var ph=t('t3.ph',{n:td.items.length+k+1});
+    blankRows+='<div class="t3row blank"><span class="t3chk" aria-hidden="true">'+ic('check')+'</span>'+
+      '<input type="text" maxlength="80" data-t3new="'+k+'" placeholder="'+esc(ph)+'" aria-label="'+esc(ph)+'"></div>';
+  }
+  var chosen=total>0, tab=t3Tab || 'today';
   box.innerHTML='<div class="boxh-row"><h2 class="boxh">'+ic('sun')+'<span>'+esc(t('t3.t'))+'</span></h2>'+
       (chosen ? '<span class="boxh-n numf">'+nDone+'/'+total+'</span>' : '')+'</div>'+
     '<div class="t3seg" role="tablist">'+
@@ -793,13 +800,23 @@ function renderToday3(){
     '</div>'+
     '<div class="t3panes" data-tab="'+tab+'">'+
       '<section class="t3pane today"><h3 class="t3pane-h">'+ic('check')+'<span>'+esc(t('t3.tab.today'))+'</span></h3>'+
-        (chosen ? gRows+iRows
-          : '<div class="t3empty"><p>'+esc(t('t3.empty'))+'</p><button type="button" class="btn btn-primary btn-sm" data-t3tab="pick">'+ic('target')+'<span>'+esc(t('t3.gopick'))+'</span></button></div>')+
+        gRows+iRows+blankRows+
+        (goals.length || !all.length ? '' : '<button type="button" class="btn btn-quiet btn-sm t3fromgoals" data-t3tab="pick">'+ic('target')+'<span>'+esc(t('t3.fromgoals'))+'</span></button>')+
       '</section>'+
       '<section class="t3pane pick"><h3 class="t3pane-h">'+ic('target')+'<span>'+esc(t('t3.pick.goals'))+'</span></h3>'+
         '<p class="psub">'+esc(t('t3.s'))+'</p>'+picker+
       '</section>'+
     '</div>';
+  /* a line written in the list joins it; Enter moves on to the next free line */
+  box.querySelectorAll('[data-t3new]').forEach(function(inp){
+    function add(next){
+      var v=inp.value.trim(); if(!v) return;
+      if(addDayItem(v)){ markActiveToday(); t3Tab='today'; renderToday3();
+        if(next){ var n=box.querySelector('[data-t3new="0"]'); if(n) n.focus(); } }
+    }
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); add(true); } });
+    inp.addEventListener('change',function(){ add(false); });
+  });
   box.querySelectorAll('[data-t3tab]').forEach(function(b){
     b.addEventListener('click',function(){ t3Tab=b.dataset.t3tab; renderToday3(); });
   });
