@@ -333,6 +333,19 @@ document.getElementById('shareModal').addEventListener('click',function(e){ if(e
    photo of the paper is kept on the phone as the period's proof. */
 var TRK_TYPES=[{id:'week',icon:'calendar',max:8},{id:'month',icon:'star',max:6},{id:'c30',icon:'flame',max:1},{id:'day',icon:'sun',max:0}];
 var trkType='week', trkPhoto=null;
+/* the sheet's look: a colour (or black and white, to save ink), a style,
+   and for the fun style an emoji at the start of each row */
+var TRK_COLORS={green:['#3D7B5E','#9fb3a6','#f1f6f2','#c9d6cd'], blue:['#2F6FB0','#9db5d0','#eef4fb','#c8d7e8'],
+  purple:['#7A4FB0','#bba7d6','#f4effa','#d9cdea'], pink:['#C2477F','#e0a9c3','#fcf0f5','#efcfde'],
+  orange:['#D9792B','#e8bf98','#fdf3ea','#f1d9c2'], ink:['#222222','#888888','#f2f2f2','#bbbbbb']};
+var TRK_EMO=['🌟','💪','📚','🌿','💧','🎯','🎨','😊','🏃','🧘','🍎','😴','🎵','💰','❤️','✏️'];
+function trkStyle(){ var st=trkState(); if(!st.style) st.style={color:'green', look:'clean'}; return st.style; }
+var TRK_CAT_EMO={body:'💪', study:'📚', people:'❤️', money:'💰', calm:'🌿', create:'🎨'};
+function trkEmo(r,i){
+  if(r.e) return r.e;
+  var g=r.gid && goalById(r.gid), c=g && goalCat(g);
+  return (c && TRK_CAT_EMO[c]) || TRK_EMO[i%TRK_EMO.length];
+}
 function trkState(){
   if(!S.trk) S.trk={cfg:{}, list:[]};
   return S.trk;
@@ -372,8 +385,10 @@ function trkTitle(type, days){
 
 /* ---- the printed page ---- */
 function trkSheetHtml(type, cfg){
-  var days=trkDays(type,cfg), vis=(P.vision||'').trim();
-  var head='<div class="sheet-top"><div><h3>'+esc(t('trk.sheet.'+type))+'</h3><p>'+esc(trkTitle(type,days))+(P.name?' · '+esc(P.name):'')+'</p></div>'+
+  var days=trkDays(type,cfg), vis=(P.vision||'').trim(), sty=trkStyle(), fun=sty.look==='fun';
+  var col=TRK_COLORS[sty.color]||TRK_COLORS.green;
+  var title=(cfg.title||'').trim() || t('trk.sheet.'+type);
+  var head='<div class="sheet-top"><div><h3>'+esc(title)+'</h3><p>'+esc(trkTitle(type,days))+(P.name?' · '+esc(P.name):'')+'</p></div>'+
       '<div class="sheet-brand">Proacty</div></div>'+
     (vis ? '<p class="sheet-vis">'+esc(t('vis.lab'))+': <b>'+esc(vis)+'</b></p>' : '');
   var foot='<div class="sheet-foot">'+esc(t('sp.line'))+'</div>';
@@ -386,12 +401,12 @@ function trkSheetHtml(type, cfg){
     body='<table class="sheet-grid '+type+'"><thead><tr><th class="sg-goal">'+esc(t('ps.col.goal'))+'</th>'+
       days.map(function(d){ return '<th><span>'+esc(type==='week'?trkLoc(d,{weekday:'short'}):trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
       '<th class="sg-sum">'+esc(t('ps.col.sum'))+'</th></tr></thead><tbody>'+
-      rows.map(function(r){ return '<tr style="height:'+rowH+'px"><td class="sg-goal">'+esc(r.t)+'</td>'+days.map(function(){ return '<td></td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
+      rows.map(function(r,i){ return '<tr style="height:'+rowH+'px"><td class="sg-goal">'+(r.t && (fun||r.e) ? '<span class="sg-emo">'+trkEmo(r,i)+'</span>' : '')+esc(r.t)+'</td>'+days.map(function(){ return '<td></td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
       '</tbody></table>'+
       '<div class="sheet-lines"><p>'+esc(t(type==='month'?'trk.q1m':'wr.q1'))+'</p><p>'+esc(t(type==='month'?'trk.q2m':'wr.q2'))+'</p></div>';
   } else if(type==='c30'){
     var g=cfg.rows[0];
-    body='<p class="sheet-c30goal">'+ic('flame')+'<b>'+esc(g?g.t:'')+'</b></p>'+
+    body='<p class="sheet-c30goal">'+(fun&&g ? '<span>'+trkEmo(g,0)+'</span>' : ic('flame'))+'<b>'+esc(g?g.t:'')+'</b></p>'+
       '<div class="sheet-c30">'+days.map(function(d,i){
         return '<div class="c30-box"><span class="c30-n">'+(i+1)+'</span><span class="c30-d">'+esc(trkLoc(d,{day:'numeric',month:'numeric'}))+'</span></div>'; }).join('')+'</div>'+
       '<div class="sheet-lines"><p>'+esc(t('trk.prize'))+'</p></div>';
@@ -405,7 +420,7 @@ function trkSheetHtml(type, cfg){
       '<div><h4>'+esc(t('ev.t'))+'</h4><p class="sheet-feels">⚡ 🌿 🌟 🌙</p>'+
         '<div class="sheet-lines"><p>'+esc(t('ev.q'))+'</p><p>'+esc(t('ev.ch.q'))+'</p></div></div></div>';
   }
-  return '<div class="sheet'+(type==='day'?' portrait':'')+'">'+head+body+foot+'</div>';
+  return '<div class="sheet'+(type==='day'?' portrait':'')+'" data-look="'+esc(sty.look)+'" style="--sc:'+col[0]+';--sl:'+col[1]+';--sb:'+col[2]+';--sl2:'+col[3]+'">'+head+body+foot+'</div>';
 }
 
 /* ---- ticking ---- */
@@ -439,6 +454,7 @@ function trkTick(type, cfg, row, di){
 }
 
 /* ---- the page ---- */
+var trkDesignOpen=false;
 function renderTrackers(){
   var box=document.getElementById('trkBox'); if(!box) return;
   var type=trkType, cfg=trkCfg(type), tdef=TRK_TYPES.filter(function(x){ return x.id===type; })[0];
@@ -458,7 +474,7 @@ function renderTrackers(){
           '<button type="button" data-trk-next="1" class="'+(cfg.next?'on':'')+'">'+esc(t(type==='week'?'wk.next':'trk.nextm'))+'</button></div>';
     build='<div class="mg-lab">'+esc(t(type==='c30'?'trk.c30.goal':type==='month'?'trk.rows.m':'ps.rows'))+(tdef.max>1?' <span class="numf">'+cfg.rows.length+'/'+tdef.max+'</span>':'')+'</div>'+
       '<div class="ps-rows">'+cfg.rows.map(function(r,i){
-        return '<div class="ps-row"><span class="numf">'+(i+1)+'</span><span class="ps-row-t">'+esc(r.t)+'</span>'+
+        return '<div class="ps-row"><button type="button" class="trk-emo" data-trk-emo="'+i+'" aria-label="'+esc(t('trk.emo'))+'" title="'+esc(t('trk.emo'))+'">'+trkEmo(r,i)+'</button><span class="ps-row-t">'+esc(r.t)+'</span>'+
           '<button class="icon-btn" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+'</div>'+
       (cfg.rows.length<tdef.max ?
         (cands.length ? '<div class="mg-picks">'+cands.slice(0,8).map(function(c){
@@ -495,7 +511,16 @@ function renderTrackers(){
       (rec&&rec.photo ? '<img class="ps-photo" src="'+rec.photo+'" alt="">' : '')+
       '<div id="trkReward"></div></div>';
   }
-  var printSec='<div class="trk-sec"><h3 class="boxh">'+ic('share')+'<span>'+esc(t('trk.paper'))+'</span></h3>'+
+  var sty=trkStyle();
+  var design='<details class="trk-design"'+(trkDesignOpen?' open':'')+'><summary>'+ic('palette')+'<span>'+esc(t('trk.design'))+'</span></summary>'+
+    '<div class="mg-lab">'+esc(t('trk.d.color'))+'</div><div class="trk-swatches">'+Object.keys(TRK_COLORS).map(function(k){
+      return '<button type="button" class="trk-sw'+(k==='ink'?' ink':'')+(sty.color===k?' on':'')+'" data-trk-color="'+k+'"'+(k==='ink'?'':' style="background:'+TRK_COLORS[k][0]+'"')+
+        ' aria-label="'+esc(t('trk.c.'+k))+'" title="'+esc(t('trk.c.'+k))+'"></button>'; }).join('')+'</div>'+
+    '<div class="mg-lab">'+esc(t('trk.d.look'))+'</div><div class="t3seg trk-looks" style="grid-template-columns:repeat(3,1fr)">'+['clean','fun','mini'].map(function(k){
+      return '<button type="button" data-trk-look="'+k+'" class="'+(sty.look===k?'on':'')+'">'+esc(t('trk.l.'+k))+'</button>'; }).join('')+'</div>'+
+    '<div class="field"><label for="trkTitle">'+esc(t('trk.d.title'))+'</label><input type="text" id="trkTitle" maxlength="40" value="'+esc(cfg.title||'')+'" placeholder="'+esc(t('trk.sheet.'+type))+'"></div>'+
+    '</details>';
+  var printSec='<div class="trk-sec"><h3 class="boxh">'+ic('share')+'<span>'+esc(t('trk.paper'))+'</span></h3>'+design+
     '<div class="sheet-wrap">'+trkSheetHtml(type,cfg)+'</div>'+
     '<button class="btn btn-primary btn-block" id="trkPrint">'+ic('share')+'<span>'+esc(t('ps.print'))+'</span></button>'+
     '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('ps.print.h'))+'</span></p></div>';
@@ -511,6 +536,18 @@ function renderTrackers(){
   box.querySelectorAll('[data-trk-del]').forEach(function(b){ b.addEventListener('click',function(){ cfg.rows.splice(Number(b.dataset.trkDel),1); save(); renderTrackers(); }); });
   box.querySelectorAll('[data-trk-add]').forEach(function(b){ b.addEventListener('click',function(){
     cfg.rows.push({t:b.dataset.trkAdd, gid:b.dataset.gid?Number(b.dataset.gid):null}); save(); renderTrackers(); }); });
+  var dz=box.querySelector('.trk-design');
+  if(dz) dz.addEventListener('toggle',function(){ trkDesignOpen=dz.open; });
+  box.querySelectorAll('[data-trk-color]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().color=b.dataset.trkColor; save(); renderTrackers(); }); });
+  box.querySelectorAll('[data-trk-look]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().look=b.dataset.trkLook; save(); renderTrackers(); }); });
+  var ti=box.querySelector('#trkTitle');
+  if(ti) ti.addEventListener('change',function(){ cfg.title=ti.value.trim(); save(); renderTrackers(); });
+  box.querySelectorAll('[data-trk-emo]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var i=Number(b.dataset.trkEmo), r=cfg.rows[i], k=TRK_EMO.indexOf(trkEmo(r,i));
+      r.e=TRK_EMO[(k+1)%TRK_EMO.length]; save(); renderTrackers();
+    });
+  });
   var rs=box.querySelector('[data-trk-restart]');
   if(rs) rs.addEventListener('click',function(){ cfg.start=dayKey(); save(); renderTrackers(); });
   var own=box.querySelector('#trkOwn');
