@@ -1804,7 +1804,7 @@ function goPage(name){
   if(name==='goals') renderGoals();
   if(name==='progress'){ renderMyWeek(); renderProfile('profBody'); renderAchievements(); renderSettings(); renderTrend(); renderBackupLast(); }
   if(name==='circle') renderCircle();
-  if(name==='sheet') renderSheetPage();
+  if(name==='sheet') renderTrackers();
   if(name==='body') renderBodyGate();
   window.scrollTo(0,0);
 }

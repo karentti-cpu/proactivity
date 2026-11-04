@@ -716,6 +716,52 @@ body.no-scroll{overflow:hidden;}
 .splash-tag{font-size:var(--t-body);color:var(--fg-2);animation:rise .5s .1s ease both;}
 .splash-line{font-size:var(--t-sm);font-weight:700;color:var(--acc);max-width:280px;line-height:1.5;animation:rise .5s .2s ease both;}
 @media (prefers-reduced-motion:reduce){.splash img,.splash-tag,.splash-line{animation:none;}}
+.trk-types{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--s3);}
+.trk-type{display:grid;gap:2px;justify-items:start;padding:10px 12px;border-radius:var(--r-ctl);border:1.5px solid var(--ink-2);background:var(--ink-0);
+  color:var(--fg);font:inherit;text-align:start;cursor:pointer;}
+.trk-type svg{width:18px;height:18px;color:var(--acc);}
+.trk-type small{font-size:var(--t-xs);color:var(--fg-3);}
+.trk-type.on{border-color:var(--acc);background:var(--acc-dim);}
+.trk-sec{margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--ink-2);}
+.trk-types+.trk-sec{border-top:0;padding-top:0;margin-top:var(--s2);}
+.trk-period{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--t-sm);color:var(--fg-2);margin-top:var(--s2);}
+.trk-grid{border-collapse:separate;border-spacing:3px;}
+.trk-grid th{font-size:var(--t-xs);color:var(--fg-3);font-weight:600;padding:2px;}
+.trk-grid thead th span{display:block;}
+.trk-grid thead th b{display:block;color:var(--fg-2);}
+.trk-grid thead th.today b{color:var(--acc);}
+.trk-grid .mcol{position:sticky;inset-inline-start:0;z-index:1;background:var(--ink-1);text-align:start;min-width:96px;max-width:130px;padding:4px 6px;font-size:var(--t-sm);color:var(--fg);}
+.trk-grid .mcol span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trk-grid .mcol b{font-size:var(--t-xs);color:var(--acc);}
+.trk-grid td{padding:0;}
+.trk-c{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;border:1.5px solid var(--ink-3);background:var(--ink-0);color:transparent;cursor:pointer;padding:0;position:relative;}
+.trk-grid.month .trk-c{width:28px;height:28px;border-radius:7px;}
+.trk-c svg{width:16px;height:16px;}
+.trk-c.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc,#fff);}
+.trk-c.today:not(.on){border-color:var(--acc);}
+.trk-c.fut{opacity:.35;}
+.trk-c30{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
+.trk-c30 .trk-c{width:100%;height:46px;}
+.trk-c30 .trk-c .c30-n{position:absolute;top:3px;inset-inline-start:6px;font-size:10px;color:var(--fg-3);}
+.trk-c30 .trk-c.on .c30-n{color:var(--on-acc,#fff);}
+.trk-count{margin-top:var(--s2);font-weight:700;color:var(--acc);}
+.sheet-c30goal{display:flex;align-items:center;gap:8px;font-size:20px;margin:10px 0 0;}
+.sheet-c30goal svg{width:22px;height:22px;color:#3D7B5E;}
+.sheet-c30{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px;}
+.c30-box{height:64px;border:1.5px solid #9fb3a6;border-radius:8px;display:flex;justify-content:space-between;align-items:flex-start;padding:4px 6px;}
+.c30-box .c30-n{font-weight:800;color:#3D7B5E;}
+.c30-box .c30-d{font-size:11px;color:#55635a;}
+.sheet-grid.month th{font-size:9px;padding:3px 0;}
+.sheet-grid.month th b{font-size:11px;}
+.sheet-grid.month .sg-goal{width:16%;font-size:12px;}
+.sheet-grid.month .sg-sum{width:5%;}
+.sheet.portrait{min-width:420px;}
+.sheet-daycols{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-top:12px;}
+.sheet-daycols h4{margin:0 0 8px;color:#3D7B5E;}
+.sheet-todo{list-style:none;margin:0;padding:0;display:grid;gap:4px;}
+.sheet-todo li{display:flex;align-items:flex-end;gap:10px;min-height:46px;border-bottom:1.5px solid #c9d6cd;font-size:14px;padding-bottom:4px;}
+.todo-box{width:18px;height:18px;border:1.5px solid #9fb3a6;border-radius:4px;flex:none;}
+.sheet-feels{font-size:24px;letter-spacing:8px;margin:0 0 10px;}
 .ps-week{margin-top:0;}
 .ps-rows{display:grid;gap:6px;margin-bottom:var(--s3);}
 .ps-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-ctl);border:1px solid var(--ink-2);background:var(--ink-0);}
@@ -755,6 +801,8 @@ body.no-scroll{overflow:hidden;}
 #printRoot{display:none;}
 @media print{
   @page{size:A4 landscape;margin:10mm;}
+  @page portrait{size:A4 portrait;margin:12mm;}
+  #printRoot .sheet.portrait{page:portrait;}
   body.printing-sheet>*:not(#printRoot){display:none !important;}
   body.printing-sheet{background:#fff !important;padding:0 !important;margin:0 !important;}
   body.printing-sheet #printRoot{display:block;}
