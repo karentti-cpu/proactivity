@@ -67,7 +67,8 @@ TABS = [('home', 'home', 'n.tab.home'),
 MORE = [('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
         ('learn', 'brain', 'n.tab.learn', 'more.learn'),
         ('body', 'activity', 'a.tab.body', 'more.body'),
-        ('circle', 'compass', 'cir.t', 'more.circle')]
+        ('circle', 'compass', 'cir.t', 'more.circle'),
+        ('sheet', 'calendar', 'ps.t', 'more.sheet')]
 
 LANGS = [('he', 'עברית', 'עב'), ('en', 'English', 'EN'), ('fr', 'Français', 'FR'),
          ('ru', 'Русский', 'RU'), ('ar', 'العربية', 'ع')]
@@ -352,6 +353,12 @@ def build_body(logo):
  <div class="page" id="page-circle" role="tabpanel">
   <h2 class="ptitle" data-i18n="cir.t"></h2><p class="psub" data-i18n="cir.s"></p>
   <section class="dash-box" id="cirBox"></section>
+ </div>
+
+ <div class="page" id="page-sheet" role="tabpanel">
+  <h2 class="ptitle" data-i18n="ps.t"></h2><p class="psub" data-i18n="ps.s"></p>
+  <section class="dash-box" id="psBuild"></section>
+  <section class="dash-box" id="psUpload"></section>
  </div>
 
  <div class="page" id="page-tasks" role="tabpanel">
