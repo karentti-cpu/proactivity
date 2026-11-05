@@ -33,7 +33,7 @@ function renderVision(){
     var due=P.visionNext<=dayKey();
     box.className='vision';
     box.innerHTML='<button type="button" class="vision-line" data-vis-edit aria-label="'+esc(t('ge.btn'))+'">'+ic('compass')+
-      '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span></button>'+
+      '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span>'+ic('edit','vis-edit')+'</button>'+
       (due ? '<div class="vis-chk"><p>'+esc(t('vis.chk'))+'</p><div class="row-btns">'+
         '<button class="btn btn-ghost btn-sm" data-vis-keep>'+ic('check')+'<span>'+esc(t('vis.keep'))+'</span></button>'+
         '<button class="btn btn-quiet btn-sm" data-vis-change>'+ic('edit')+'<span>'+esc(t('vis.change'))+'</span></button></div></div>' : '');
