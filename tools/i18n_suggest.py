@@ -162,6 +162,8 @@ SUGGEST = {
 'trk.rows.m':('היעדים לחודש', 'Goals for the month', 'Objectifs du mois', 'Цели на месяц', 'أهداف الشهر'),
 'trk.q1m':   ('מה עבד החודש?', 'What worked this month?', 'Qu\'est-ce qui a marché ce mois-ci ?', 'Что сработало в этом месяце?', 'ما الذي نجح هذا الشهر؟'),
 'trk.q2m':   ('מה אנסה בחודש הבא?', 'What will I try next month?', 'Qu\'est-ce que j\'essaierai le mois prochain ?', 'Что я попробую в следующем месяце?', 'ماذا سأجرّب الشهر القادم؟'),
+'trk.home.s':('להדפסה או לסימון כאן, ולבנות רצף', 'To print or tick here, and build a streak', 'À imprimer ou cocher ici, pour créer une série', 'Распечатать или отмечать здесь — и строить серию', 'للطباعة أو للتأشير هنا، وبناء سلسلة'),
+'trk.home.n':('השבוע: ✓ {n} בטבלה. ממשיכים!', 'This week: ✓ {n} in the table. Keep going!', 'Cette semaine : ✓ {n} dans le tableau. Continue !', 'На этой неделе: ✓ {n} в таблице. Так держать!', 'هذا الأسبوع: ✓ {n} في الجدول. استمرّ!'),
 'trk.design':('עיצוב הטבלה', 'Table design', 'Style du tableau', 'Оформление таблицы', 'تصميم الجدول'),
 'trk.d.color':('צבע', 'Colour', 'Couleur', 'Цвет', 'اللون'),
 'trk.d.look':('סגנון', 'Style', 'Style', 'Стиль', 'النمط'),
