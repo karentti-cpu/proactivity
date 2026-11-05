@@ -17,6 +17,8 @@ GAMES = {
 'more.games':  ('משחקים קצרים לחיזוק פרואקטיביות', 'Short games that build proactivity', 'Petits jeux pour devenir proactif', 'Короткие игры для проактивности', 'ألعاب قصيرة لتقوية المبادرة'),
 'gm.daily':    ('משחק היום', 'Today\'s game', 'Le jeu du jour', 'Игра дня', 'لعبة اليوم'),
 'gm.daily.done':('שיחקת היום ✓', 'Played today ✓', 'Joué aujourd\'hui ✓', 'Сегодня сыграно ✓', 'لعبتَ اليوم ✓'),
+'gm.play':     ('לשחק', 'Play', 'Jouer', 'Играть', 'العب'),
+'gm.daily.xp': ('דקה אחת · בונוס +15 XP', 'One minute · +15 XP bonus', 'Une minute · bonus +15 XP', 'Одна минута · бонус +15 XP', 'دقيقة واحدة · مكافأة +15 XP'),
 'gm.min':      ('דקה', 'a minute', 'une minute', 'минута', 'دقيقة'),
 'gm.circle':   ('בידיים שלי?', 'In my hands?', 'Ça dépend de moi ?', 'В моих руках?', 'بيدي؟'),
 'gm.circle.s': ('מה בשליטתי, ומה לא', 'What I control, and what I do not', 'Ce qui dépend de moi, ou pas', 'Что я контролирую, а что нет', 'ما بيدي وما ليس بيدي'),
