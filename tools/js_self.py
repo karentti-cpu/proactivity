@@ -673,8 +673,10 @@ function renderGameRow(){
   var id=gmDaily(), g=GAME_IDS.filter(function(x){ return x.id===id; })[0], done=gmState().daily===dayKey();
   b.hidden=false;
   b.className='home-game'+(done?' done':'');
-  b.innerHTML=ic(g.icon)+'<span><small>'+esc(t('gm.daily'))+'</small><b>'+esc(t('gm.'+id))+'</b></span>'+
-    '<em>'+esc(done ? t('gm.daily.done') : t('gm.min'))+'</em>';
+  b.innerHTML='<span class="hg-ic">'+ic(g.icon)+'</span>'+
+    '<span class="hg-t"><small>'+esc(t('gm.daily'))+'</small><b>'+esc(t('gm.'+id))+'</b>'+
+      '<em>'+esc(done ? t('gm.daily.done') : t('gm.daily.xp'))+'</em></span>'+
+    '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
   if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
 }
 function renderGames(){

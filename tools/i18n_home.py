@@ -249,6 +249,7 @@ HOME = {
 'ws.today0':     ('היום עוד פתוח. גם סימון אחד הוא התקדמות.', 'Today is still open. Even one tick is progress.',
                   'La journée est encore ouverte. Même une coche, c\'est un progrès.', 'День ещё открыт. Даже одна отметка — это шаг вперёд.',
                   'اليوم ما زال مفتوحاً. حتى علامة واحدة تقدّم.'),
+'t3.addgoals':  ('להוסיף מהמטרות שלי ומרעיונות', 'Add from my goals and ideas', 'Ajouter depuis mes objectifs et des idées', 'Добавить из целей и идей', 'إضافة من أهدافي ومن الأفكار'),
 't3.moreideas':  ('עוד רעיונות', 'More ideas', 'Plus d\'idées', 'Ещё идеи', 'أفكار أخرى'),
 't3.pick.goals': ('המטרות שלי', 'My goals', 'Mes objectifs', 'Мои цели', 'أهدافي'),
 't3.pick.sug':   ('מטרות שאולי יתאימו לך', 'Goals that may suit you', 'Des objectifs qui pourraient te convenir', 'Цели, которые могут тебе подойти', 'أهداف قد تناسبك'),

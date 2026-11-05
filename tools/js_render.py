@@ -746,37 +746,32 @@ function logDay(){
   var days=Object.keys(S.log).sort();
   while(days.length>LOG_DAYS) delete S.log[days.shift()];
 }
-var t3Tab=null, t3IdeasMore=false;
+var t3Open=false, t3IdeasMore=false;
 function renderToday3(){
   var box=document.getElementById('todayBox'); if(!box) return;
   var td=today3(), all=liveGoals(), goals=pickedGoals(), today=dayKey(), running=!!fiveTimer;
   var total=goals.length+td.items.length;
   var nDone=td.items.filter(function(x){ return x.done; }).length + goals.filter(function(g){ return g.doneDay===today; }).length;
-  /* the picker, in order of weight: my goals as full rows, then three
-     ideas (more on request), then a line in my own words */
+  /* adding from goals and ideas, opened in place under the list: small
+     chips, a tap puts one into today */
   var ideas=t3Ideas(td), shown=t3IdeasMore ? ideas : ideas.slice(0,3);
-  function optRow(attrs, icon, text, on, cls){
-    return '<button type="button" class="t3opt'+(cls?' '+cls:'')+(on?' on':'')+'" '+attrs+'>'+
-      '<span class="t3opt-i">'+ic(icon)+'</span><span class="t3opt-t">'+esc(text)+'</span>'+
-      '<span class="t3opt-a">'+ic(on?'check':'plus')+'</span></button>';
+  function chip(attrs, icon, text, on){
+    return '<button type="button" class="t3idea t3chip'+(on?' on':'')+'" '+attrs+'>'+ic(on?'check':icon)+'<span>'+esc(text)+'</span></button>';
   }
   var picker=
     '<div class="mg-lab">'+esc(t(all.length?'t3.pick.goals':'t3.pick.sug'))+'</div>'+
-    '<div class="t3list">'+(all.length
+    '<div class="mg-picks">'+(all.length
       ? all.map(function(g){
           var on=td.picked.indexOf(g.id)>=0, locked=g.doneDay===today;
-          return optRow('data-t3pick="'+g.id+'" aria-pressed="'+on+'"'+(locked?' disabled':''),'target',g.title,on,'goal');
+          return chip('data-t3pick="'+g.id+'" aria-pressed="'+on+'"'+(locked?' disabled':''),'target',g.title,on);
         }).join('')
-      : readyGoals('for').slice(0,3).map(function(r){ return optRow('data-t3ready="'+r[0]+'"','target',t('rg.'+r[0]+'.t'),false,'goal'); }).join('')
+      : readyGoals('for').slice(0,3).map(function(r){ return chip('data-t3ready="'+r[0]+'"','target',t('rg.'+r[0]+'.t'),false); }).join('')
     )+'</div>'+
-    (all.length ? '' : '<button type="button" class="btn btn-quiet btn-sm t3nogoal" data-goto-goals>'+ic('plus')+'<span>'+esc(t('t3.nogoal'))+'</span></button>')+
     (shown.length && td.items.length<T3_MAX
-      ? '<div class="mg-lab t3lab2">'+esc(t('sq.t'))+'</div><div class="t3list">'+shown.map(function(x){
-          return optRow('data-idea="'+esc(x.t)+'"'+(x.cat?' data-cat="'+x.cat+'"':''),'sparkles',x.t,false,'idea'); }).join('')+'</div>'+
-        (!t3IdeasMore && ideas.length>3 ? '<button type="button" class="btn btn-quiet btn-sm t3moreideas" data-t3more>'+esc(t('t3.moreideas'))+'</button>' : '')
+      ? '<div class="mg-lab t3lab2">'+esc(t('sq.t'))+'</div><div class="mg-picks">'+shown.map(function(x){
+          return chip('data-idea="'+esc(x.t)+'"'+(x.cat?' data-cat="'+x.cat+'"':''),'plus',x.t,false); }).join('')+
+        (!t3IdeasMore && ideas.length>3 ? '<button type="button" class="btn btn-quiet btn-sm" data-t3more>'+esc(t('t3.moreideas'))+'</button>' : '')+'</div>'
       : '')+
-    (td.items.length<T3_MAX ? '<div class="addrow t3own"><input type="text" id="t3Own" maxlength="80" placeholder="'+esc(t('t3.other.ph'))+'" aria-label="'+esc(t('t3.other.ph'))+'">'+
-        '<button class="btn btn-ghost" id="t3OwnAdd" aria-label="'+esc(t('c.add'))+'">'+ic('plus')+'</button></div>' : '')+
     (hasProfile() ? '' : '<button type="button" class="btn btn-quiet btn-sm t3quiz" data-goquiz>'+ic('sparkles')+'<span>'+esc(t('sq.quiz'))+'</span></button>');
   /* what was chosen: a row per goal (its step chosen in place, then ticked), then the one-off things */
   var gRows=goals.map(function(g){
@@ -821,40 +816,28 @@ function renderToday3(){
     blankRows+='<div class="t3row blank"><span class="t3chk" aria-hidden="true">'+ic('check')+'</span>'+
       '<input type="text" maxlength="80" data-t3new="'+k+'" placeholder="'+esc(ph)+'" aria-label="'+esc(ph)+'"></div>';
   }
-  var chosen=total>0, tab=t3Tab || 'today';
+  /* one list: what is chosen, lines to write in, and the goals and ideas
+     opened in place below it */
+  var chosen=total>0;
   box.innerHTML='<div class="boxh-row"><h2 class="boxh">'+ic('sun')+'<span>'+esc(t('t3.t'))+'</span></h2>'+
       (chosen ? '<span class="boxh-n numf">'+nDone+'/'+total+'</span>' : '')+'</div>'+
-    '<div class="t3seg" role="tablist">'+
-      '<button type="button" role="tab" data-t3tab="today" aria-selected="'+(tab==='today')+'" class="'+(tab==='today'?'on':'')+'">'+ic('check')+
-        '<span>'+esc(t('t3.tab.today'))+'</span>'+(total?'<b class="numf">'+total+'</b>':'')+'</button>'+
-      '<button type="button" role="tab" data-t3tab="pick" aria-selected="'+(tab==='pick')+'" class="'+(tab==='pick'?'on':'')+'">'+ic('target')+
-        '<span>'+esc(t('t3.pick.goals'))+'</span></button>'+
-    '</div>'+
-    '<div class="t3panes" data-tab="'+tab+'">'+
-      '<section class="t3pane today"><h3 class="t3pane-h">'+ic('check')+'<span>'+esc(t('t3.tab.today'))+'</span></h3>'+
-        '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>'+
-        gRows+iRows+blankRows+
-        (goals.length || !all.length ? '' : '<button type="button" class="btn btn-quiet btn-sm t3fromgoals" data-t3tab="pick">'+ic('target')+'<span>'+esc(t('t3.fromgoals'))+'</span></button>')+
-      '</section>'+
-      '<section class="t3pane pick"><h3 class="t3pane-h">'+ic('target')+'<span>'+esc(t('t3.pick.goals'))+'</span></h3>'+
-        '<p class="t3help">'+esc(t('t3.goal.h'))+'</p>'+picker+
-      '</section>'+
-    '</div>';
+    '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>'+
+    gRows+iRows+blankRows+
+    '<button type="button" class="t3open'+(t3Open?' on':'')+'" data-t3open aria-expanded="'+t3Open+'">'+ic('target')+
+      '<span>'+esc(t('t3.addgoals'))+'</span>'+ic('chevron','t3open-c')+'</button>'+
+    (t3Open ? '<div class="t3add">'+picker+'</div>' : '');
+  var op=box.querySelector('[data-t3open]');
+  if(op) op.addEventListener('click',function(){ t3Open=!t3Open; renderToday3(); });
   /* a line written in the list joins it; Enter moves on to the next free line */
   box.querySelectorAll('[data-t3new]').forEach(function(inp){
     function add(next){
       var v=inp.value.trim(); if(!v) return;
-      if(addDayItem(v)){ markActiveToday(); t3Tab='today'; renderToday3();
+      if(addDayItem(v)){ markActiveToday(); renderToday3();
         if(next){ var n=box.querySelector('[data-t3new="0"]'); if(n) n.focus(); } }
     }
     inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); add(true); } });
     inp.addEventListener('change',function(){ add(false); });
   });
-  box.querySelectorAll('[data-t3tab]').forEach(function(b){
-    b.addEventListener('click',function(){ t3Tab=b.dataset.t3tab; renderToday3(); });
-  });
-  /* choosing several things in a row stays on the choosing pane */
-  box.querySelector('.t3pane.pick').addEventListener('click',function(){ if(!t3Tab) t3Tab=tab; },true);
   var mi=box.querySelector('[data-t3more]');
   if(mi) mi.addEventListener('click',function(){ t3IdeasMore=true; renderToday3(); });
   box.querySelectorAll('[data-t3pick]').forEach(function(b){
