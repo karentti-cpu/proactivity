@@ -340,6 +340,7 @@ def build_body(logo):
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
   <section class="dash-box today3" id="todayBox"></section>
+  <button type="button" class="home-trk" id="homeTrk" data-more="sheet">{i("calendar")}<span><b data-i18n="trk.t"></b><small id="homeTrkSub" data-i18n="trk.home.s"></small></span>{i("chevron")}</button>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
   <div class="dstrip" id="dashStats"></div>

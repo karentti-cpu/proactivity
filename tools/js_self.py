@@ -611,4 +611,15 @@ function psShrink(file, done){
   };
   fr.readAsDataURL(file);
 }
+
+/* the way in from Home: the week's ticks on the paper-or-app table, when there are any */
+function renderHomeTrk(){
+  var sub=document.getElementById('homeTrkSub'); if(!sub) return;
+  var st=S.trk, n=0;
+  if(st && st.cfg && st.cfg.week){
+    var r=trkRec('week', {next:false}, false);
+    if(r) Object.keys(r.ticks).forEach(function(k){ r.ticks[k].forEach(function(v){ if(v) n++; }); });
+  }
+  sub.textContent = n ? t('trk.home.n',{n:n}) : t('trk.home.s');
+}
 """
