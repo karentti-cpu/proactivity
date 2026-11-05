@@ -338,6 +338,10 @@ var trkType='week', trkPhoto=null;
 var TRK_COLORS={green:['#3D7B5E','#9fb3a6','#f1f6f2','#c9d6cd'], blue:['#2F6FB0','#9db5d0','#eef4fb','#c8d7e8'],
   purple:['#7A4FB0','#bba7d6','#f4effa','#d9cdea'], pink:['#C2477F','#e0a9c3','#fcf0f5','#efcfde'],
   orange:['#D9792B','#e8bf98','#fdf3ea','#f1d9c2'], ink:['#222222','#888888','#f2f2f2','#bbbbbb']};
+/* what a done day is marked with - on screen, and faintly in each printed box */
+var TRK_MARKS={check:'✓', heart:'❤️', star:'⭐', fire:'🔥', smile:'😊', flower:'🌸', sun:'☀️', dot:'●'};
+function trkMark(){ return trkStyle().mark||'check'; }
+function trkMarkHtml(){ var m=trkMark(); return m==='check' ? ic('check') : '<span class="trk-m">'+TRK_MARKS[m]+'</span>'; }
 var TRK_EMO=['🌟','💪','📚','🌿','💧','🎯','🎨','😊','🏃','🧘','🍎','😴','🎵','💰','❤️','✏️'];
 function trkStyle(){ var st=trkState(); if(!st.style) st.style={color:'green', look:'clean'}; return st.style; }
 var TRK_CAT_EMO={body:'💪', study:'📚', people:'❤️', money:'💰', calm:'🌿', create:'🎨'};
@@ -386,11 +390,13 @@ function trkTitle(type, days){
 /* ---- the printed page ---- */
 function trkSheetHtml(type, cfg){
   var days=trkDays(type,cfg), vis=(P.vision||'').trim(), sty=trkStyle(), fun=sty.look==='fun';
+  var mk=trkMark(), faint = mk==='check' ? '' : '<span class="sg-faint">'+TRK_MARKS[mk]+'</span>';
   var col=TRK_COLORS[sty.color]||TRK_COLORS.green;
   var title=(cfg.title||'').trim() || t('trk.sheet.'+type);
   var head='<div class="sheet-top"><div><h3>'+esc(title)+'</h3><p>'+esc(trkTitle(type,days))+(P.name?' · '+esc(P.name):'')+'</p></div>'+
       '<div class="sheet-brand">Proacty</div></div>'+
-    (vis ? '<p class="sheet-vis">'+esc(t('vis.lab'))+': <b>'+esc(vis)+'</b></p>' : '');
+    (vis ? '<p class="sheet-vis">'+esc(t('vis.lab'))+': <b>'+esc(vis)+'</b></p>' : '')+
+    (type!=='day' ? '<p class="sheet-vis">'+esc(t('trk.markwith',{m:TRK_MARKS[mk]}))+'</p>' : '');
   var foot='<div class="sheet-foot">'+esc(t('sp.line'))+'</div>';
   var body='';
   if(type==='week' || type==='month'){
@@ -401,14 +407,14 @@ function trkSheetHtml(type, cfg){
     body='<table class="sheet-grid '+type+'"><thead><tr><th class="sg-goal">'+esc(t('ps.col.goal'))+'</th>'+
       days.map(function(d){ return '<th><span>'+esc(type==='week'?trkLoc(d,{weekday:'short'}):trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
       '<th class="sg-sum">'+esc(t('ps.col.sum'))+'</th></tr></thead><tbody>'+
-      rows.map(function(r,i){ return '<tr style="height:'+rowH+'px"><td class="sg-goal">'+(r.t && (fun||r.e) ? '<span class="sg-emo">'+trkEmo(r,i)+'</span>' : '')+esc(r.t)+'</td>'+days.map(function(){ return '<td></td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
+      rows.map(function(r,i){ return '<tr style="height:'+rowH+'px"><td class="sg-goal">'+(r.t && (fun||r.e) ? '<span class="sg-emo">'+trkEmo(r,i)+'</span>' : '')+esc(r.t)+'</td>'+days.map(function(){ return '<td>'+(r.t?faint:'')+'</td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
       '</tbody></table>'+
       '<div class="sheet-lines"><p>'+esc(t(type==='month'?'trk.q1m':'wr.q1'))+'</p><p>'+esc(t(type==='month'?'trk.q2m':'wr.q2'))+'</p></div>';
   } else if(type==='c30'){
     var g=cfg.rows[0];
     body='<p class="sheet-c30goal">'+(fun&&g ? '<span>'+trkEmo(g,0)+'</span>' : ic('flame'))+'<b>'+esc(g?g.t:'')+'</b></p>'+
       '<div class="sheet-c30">'+days.map(function(d,i){
-        return '<div class="c30-box"><span class="c30-n">'+(i+1)+'</span><span class="c30-d">'+esc(trkLoc(d,{day:'numeric',month:'numeric'}))+'</span></div>'; }).join('')+'</div>'+
+        return '<div class="c30-box"><span class="c30-n">'+(i+1)+'</span><span class="c30-d">'+esc(trkLoc(d,{day:'numeric',month:'numeric'}))+'</span>'+faint+'</div>'; }).join('')+'</div>'+
       '<div class="sheet-lines"><p>'+esc(t('trk.prize'))+'</p></div>';
   } else {
     var td=today3(), lines=[];
@@ -490,7 +496,7 @@ function renderTrackers(){
       var arr=rec && rec.ticks[normLine(r.t)], on=!!(arr && arr[di]), fut=dayKey(d)>today, isT=dayKey(d)===today;
       return '<button type="button" class="trk-c'+(on?' on':'')+(fut?' fut':'')+(isT?' today':'')+'" data-trk-r="'+cfg.rows.indexOf(r)+'" data-trk-d="'+di+'"'+
         ' aria-pressed="'+on+'" aria-label="'+esc(r.t+' · '+trkLoc(d,{weekday:'long',day:'numeric',month:'numeric'}))+'">'+
-        (type==='c30' ? '<span class="c30-n">'+(di+1)+'</span>' : '')+ic('check')+'</button>';
+        (type==='c30' ? '<span class="c30-n">'+(di+1)+'</span>' : '')+trkMarkHtml()+'</button>';
     };
     if(type==='c30'){
       var r0=cfg.rows[0], arr0=rec && rec.ticks[normLine(r0.t)], n0=arr0 ? arr0.filter(Boolean).length : 0;
@@ -505,7 +511,7 @@ function renderTrackers(){
             days.map(function(d,di){ return '<td>'+cell(r,di,d)+'</td>'; }).join('')+'</tr>'; }).join('')+
         '</tbody></table></div>';
     }
-    digital='<div class="trk-sec"><h3 class="boxh">'+ic('check')+'<span>'+esc(t('trk.dig'))+'</span></h3><p class="psub">'+esc(t('trk.dig.s'))+'</p>'+digital+
+    digital='<div class="trk-sec'+(trkMark()==='check'?'':' trk-emomark')+'"><h3 class="boxh">'+ic('check')+'<span>'+esc(t('trk.dig'))+'</span></h3><p class="psub">'+esc(t('trk.dig.s'))+'</p>'+digital+
       '<label class="btn btn-ghost btn-block ps-cam">'+ic('camera')+'<span>'+esc(t(rec&&rec.photo?'trk.photo.again':'trk.photo'))+'</span>'+
         '<input type="file" accept="image/*" capture="environment" id="trkFile" class="hidden-file"></label>'+
       (rec&&rec.photo ? '<img class="ps-photo" src="'+rec.photo+'" alt="">' : '')+
@@ -516,6 +522,8 @@ function renderTrackers(){
     '<div class="mg-lab">'+esc(t('trk.d.color'))+'</div><div class="trk-swatches">'+Object.keys(TRK_COLORS).map(function(k){
       return '<button type="button" class="trk-sw'+(k==='ink'?' ink':'')+(sty.color===k?' on':'')+'" data-trk-color="'+k+'"'+(k==='ink'?'':' style="background:'+TRK_COLORS[k][0]+'"')+
         ' aria-label="'+esc(t('trk.c.'+k))+'" title="'+esc(t('trk.c.'+k))+'"></button>'; }).join('')+'</div>'+
+    '<div class="mg-lab">'+esc(t('trk.d.mark'))+'</div><div class="trk-marks">'+Object.keys(TRK_MARKS).map(function(k){
+      return '<button type="button" class="trk-mk'+(trkMark()===k?' on':'')+'" data-trk-mark="'+k+'" aria-label="'+esc(t('trk.m.'+k))+'" title="'+esc(t('trk.m.'+k))+'">'+(k==='check'?ic('check'):TRK_MARKS[k])+'</button>'; }).join('')+'</div>'+
     '<div class="mg-lab">'+esc(t('trk.d.look'))+'</div><div class="t3seg trk-looks" style="grid-template-columns:repeat(3,1fr)">'+['clean','fun','mini'].map(function(k){
       return '<button type="button" data-trk-look="'+k+'" class="'+(sty.look===k?'on':'')+'">'+esc(t('trk.l.'+k))+'</button>'; }).join('')+'</div>'+
     '<div class="field"><label for="trkTitle">'+esc(t('trk.d.title'))+'</label><input type="text" id="trkTitle" maxlength="40" value="'+esc(cfg.title||'')+'" placeholder="'+esc(t('trk.sheet.'+type))+'"></div>'+
@@ -539,6 +547,7 @@ function renderTrackers(){
   var dz=box.querySelector('.trk-design');
   if(dz) dz.addEventListener('toggle',function(){ trkDesignOpen=dz.open; });
   box.querySelectorAll('[data-trk-color]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().color=b.dataset.trkColor; save(); renderTrackers(); }); });
+  box.querySelectorAll('[data-trk-mark]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().mark=b.dataset.trkMark; save(); renderTrackers(); }); });
   box.querySelectorAll('[data-trk-look]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().look=b.dataset.trkLook; save(); renderTrackers(); }); });
   var ti=box.querySelector('#trkTitle');
   if(ti) ti.addEventListener('change',function(){ cfg.title=ti.value.trim(); save(); renderTrackers(); });
@@ -612,14 +621,4 @@ function psShrink(file, done){
   fr.readAsDataURL(file);
 }
 
-/* the way in from Home: the week's ticks on the paper-or-app table, when there are any */
-function renderHomeTrk(){
-  var sub=document.getElementById('homeTrkSub'); if(!sub) return;
-  var st=S.trk, n=0;
-  if(st && st.cfg && st.cfg.week){
-    var r=trkRec('week', {next:false}, false);
-    if(r) Object.keys(r.ticks).forEach(function(k){ r.ticks[k].forEach(function(v){ if(v) n++; }); });
-  }
-  sub.textContent = n ? t('trk.home.n',{n:n}) : t('trk.home.s');
-}
 """

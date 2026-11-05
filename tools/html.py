@@ -62,13 +62,13 @@ def nav(back=True, next_id=None, next_key='c.next', skip=None):
 # Four tabs fit a phone. Tasks, Learn and Body sit behind More.
 TABS = [('home', 'home', 'n.tab.home'),
         ('goals', 'target', 'a.tab.goals'),
+        ('sheet', 'calendar', 'n.tab.trk'),
         ('progress', 'trending', 'n.tab.prog'),
         ('more', 'sliders', 'n.tab.more')]
 MORE = [('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
         ('learn', 'brain', 'n.tab.learn', 'more.learn'),
         ('body', 'activity', 'a.tab.body', 'more.body'),
-        ('circle', 'compass', 'cir.t', 'more.circle'),
-        ('sheet', 'calendar', 'trk.t', 'more.sheet')]
+        ('circle', 'compass', 'cir.t', 'more.circle')]
 
 LANGS = [('he', 'עברית', 'עב'), ('en', 'English', 'EN'), ('fr', 'Français', 'FR'),
          ('ru', 'Русский', 'RU'), ('ar', 'العربية', 'ع')]
@@ -340,7 +340,6 @@ def build_body(logo):
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
   <section class="dash-box today3" id="todayBox"></section>
-  <button type="button" class="home-trk" id="homeTrk" data-more="sheet">{i("calendar")}<span><b data-i18n="trk.t"></b><small id="homeTrkSub" data-i18n="trk.home.s"></small></span>{i("chevron")}</button>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
   <div class="dstrip" id="dashStats"></div>
@@ -700,6 +699,9 @@ def build_body(logo):
  <div class="modal-btns"><a class="btn btn-ghost" id="vidOut" target="_blank" rel="noopener"><span data-i18n="res.out"></span></a>
   <button class="btn btn-primary" id="vidClose" data-i18n="res.close"></button></div>
 </div></div>
+
+<div class="updbar" id="updBar" hidden role="status">{i("sparkles")}<span data-i18n="upd.new"></span>
+ <button class="btn btn-primary btn-sm" id="updGo" data-i18n="upd.go"></button></div>
 
 <div class="modal-bg" id="srchModal"><div class="modal srch-modal" role="dialog" aria-modal="true" aria-labelledby="srchTitle">
  <h3 id="srchTitle" data-i18n="srch.t"></h3>
