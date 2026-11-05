@@ -68,7 +68,8 @@ TABS = [('home', 'home', 'n.tab.home'),
 MORE = [('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
         ('learn', 'brain', 'n.tab.learn', 'more.learn'),
         ('body', 'activity', 'a.tab.body', 'more.body'),
-        ('circle', 'compass', 'cir.t', 'more.circle')]
+        ('circle', 'compass', 'cir.t', 'more.circle'),
+        ('games', 'star', 'gm.t', 'more.games')]
 
 LANGS = [('he', 'עברית', 'עב'), ('en', 'English', 'EN'), ('fr', 'Français', 'FR'),
          ('ru', 'Русский', 'RU'), ('ar', 'العربية', 'ع')]
@@ -340,6 +341,7 @@ def build_body(logo):
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
   <section class="dash-box today3" id="todayBox"></section>
+  <button type="button" class="home-game" id="gameRow" hidden></button>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
   <div class="dstrip" id="dashStats"></div>
@@ -358,6 +360,11 @@ def build_body(logo):
  <div class="page" id="page-sheet" role="tabpanel">
   <h2 class="ptitle" data-i18n="trk.t"></h2><p class="psub" data-i18n="trk.s"></p>
   <section class="dash-box" id="trkBox"></section>
+ </div>
+
+ <div class="page" id="page-games" role="tabpanel">
+  <h2 class="ptitle" data-i18n="gm.t"></h2><p class="psub" data-i18n="gm.s"></p>
+  <section class="dash-box" id="gmBox"></section>
  </div>
 
  <div class="page" id="page-tasks" role="tabpanel">
