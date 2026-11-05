@@ -621,4 +621,135 @@ function psShrink(file, done){
   fr.readAsDataURL(file);
 }
 
+
+/* ================= games: a minute that builds proactive thinking =================
+   Three short games, six cards each, one tap a card, kind feedback right
+   away and never a "wrong": in my hands or not; flip a reactive sentence;
+   a moment before reacting. Cards are chosen for the age (up to 17 / 18
+   and up). Each game gives XP, and Today's game (one a day, in turn) adds a
+   bonus. */
+/* each card: [number, level]; circle cards also carry their answer. Level 3
+   brings the subtle ones - in my hands only in part, sentences where every
+   version sounds reasonable, situations with pressure from others. */
+var GAME_CIRCLE={t:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part']],
+                 a:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part']]};
+var GAME_FLIP=[[1,1],[2,1],[4,1],[5,1],[9,1],[3,2],[6,2],[7,2],[8,2],[10,2],[11,3],[12,3],[13,3]];
+var GAME_REACT={t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3]], a:[[4,1],[5,1],[6,1],[1,2],[2,2],[3,2],[7,3],[8,3]]};
+/* how many cards of each level a round holds, by the player's level in that game */
+var GAME_MIX=[[3,2,1],[2,2,2],[1,2,3]];
+var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'}];
+var gmRun=null;   // {id, cards:[...], i, right, answered}
+function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
+function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
+function gmDaily(){
+  var d=new Date(), start=new Date(d.getFullYear(),0,0), n=Math.floor((d-start)/864e5);
+  /* someone whose check-in found choice the area to grow starts the rotation on reacting */
+  var off=(hasProfile() && weakDim()==='choice') ? 2 : 0;
+  return GAME_IDS[(n+off)%GAME_IDS.length].id;
+}
+function gmState(){ if(!S.games) S.games={played:{}, daily:null}; if(!S.games.lvl) S.games.lvl={}; return S.games; }
+function gmCards(id){
+  var age=gmAge(), pool=[];
+  if(id==='circle'){
+    GAME_CIRCLE[age].forEach(function(c){ pool.push({lv:c[1], q:t('gm.circle.'+age+c[0]), ans:c[2]}); });
+  } else {
+    var defs = id==='flip' ? GAME_FLIP : GAME_REACT[age];
+    defs.forEach(function(c){
+      var k = id==='flip' ? 'gm.flip.'+c[0] : 'gm.react.'+age+c[0];
+      pool.push({lv:c[1], q:t(k+'.q'), best:t(k+'.a'),
+        opts:gmShuffle([{t:t(k+'.a'),k:'a'},{t:t(k+'.b'),k:'b'},{t:t(k+'.c'),k:'c'}])});
+    });
+  }
+  /* easy first, harder as the round goes; the mix leans harder as the player improves */
+  var L=gmState().lvl[id]||0, want=GAME_MIX[L], out=[], by={1:[],2:[],3:[]};
+  gmShuffle(pool).forEach(function(c){ by[c.lv].push(c); });
+  [1,2,3].forEach(function(lv){ out=out.concat(by[lv].splice(0,want[lv-1])); });
+  [2,1,3].forEach(function(lv){ while(out.length<6 && by[lv].length) out.push(by[lv].shift()); });
+  return out.sort(function(x,y){ return x.lv-y.lv; });
+}
+function gmStart(id){ gmRun={id:id, cards:gmCards(id), i:0, right:0, pts:0, answered:null}; renderGames(); var b=document.getElementById('gmBox'); if(b) b.scrollIntoView({block:'start'}); }
+function renderGameRow(){
+  var b=document.getElementById('gameRow'); if(!b) return;
+  var id=gmDaily(), g=GAME_IDS.filter(function(x){ return x.id===id; })[0], done=gmState().daily===dayKey();
+  b.hidden=false;
+  b.className='home-game'+(done?' done':'');
+  b.innerHTML=ic(g.icon)+'<span><small>'+esc(t('gm.daily'))+'</small><b>'+esc(t('gm.'+id))+'</b></span>'+
+    '<em>'+esc(done ? t('gm.daily.done') : t('gm.min'))+'</em>';
+  if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
+}
+function renderGames(){
+  var box=document.getElementById('gmBox'); if(!box) return;
+  var st=gmState(), daily=gmDaily();
+  if(!gmRun){
+    box.innerHTML='<div class="gm-list">'+GAME_IDS.map(function(g){
+      var isD=g.id===daily, n=st.played[g.id]||0;
+      return '<button type="button" class="gm-card'+(isD?' daily':'')+'" data-gm="'+g.id+'"><span class="gm-ic">'+ic(g.icon)+'</span>'+
+        '<span class="gm-txt"><b>'+esc(t('gm.'+g.id))+'</b><small>'+esc(t('gm.'+g.id+'.s'))+'</small>'+
+        (isD ? '<em>'+esc(st.daily===dayKey() ? t('gm.daily.done') : t('gm.daily'))+'</em>' : '')+'</span>'+
+        (n ? '<span class="gm-n numf">✓'+n+'</span>' : '')+'</button>'; }).join('')+'</div>';
+    box.querySelectorAll('[data-gm]').forEach(function(b){ b.addEventListener('click',function(){ gmStart(b.dataset.gm); }); });
+    return;
+  }
+  var R=gmRun, total=R.cards.length;
+  if(R.i>=total){ gmFinish(box); return; }
+  var c=R.cards[R.i];
+  var dots='<div class="gm-dots">'+R.cards.map(function(_,k){ return '<i class="'+(k<R.i?'on':k===R.i?'cur':'')+'"></i>'; }).join('')+'</div>';
+  var ask=t('gm.q.'+R.id);
+  var opts = R.id==='circle'
+    ? '<div class="gm-opts '+(c.lv===3?'three':'two')+'"><button type="button" class="gm-opt" data-ans="in">'+ic('check')+'<span>'+esc(t('gm.in'))+'</span></button>'+
+        (c.lv===3 ? '<button type="button" class="gm-opt" data-ans="part">'+ic('compass')+'<span>'+esc(t('gm.part'))+'</span></button>' : '')+
+        '<button type="button" class="gm-opt" data-ans="out">'+ic('seedling')+'<span>'+esc(t('gm.out'))+'</span></button></div>'
+    : '<div class="gm-opts">'+c.opts.map(function(o){ return '<button type="button" class="gm-opt" data-ans="'+o.k+'">'+esc(o.t)+'</button>'; }).join('')+'</div>';
+  var fb='';
+  if(R.answered){
+    var a=R.answered, good, msg, show='';
+    if(R.id==='circle'){ good=a===c.ans; msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x'); }
+    else if(R.id==='flip'){ good=a==='a'; msg=t(good?'gm.f.ok':'gm.f.x'); if(!good) show=c.best; }
+    else { good=a==='a'; msg=t('gm.r.'+a); if(!good) show=c.best; }
+    fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
+      '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
+  }
+  var up = R.i>0 && c.lv>R.cards[R.i-1].lv && !R.answered ? '<p class="gm-up">'+esc(t('gm.up'))+'</p>' : '';
+  box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+up+
+    '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(ask)+'</p>'+opts+fb+
+    '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button></div>';
+  box.querySelectorAll('[data-ans]').forEach(function(b){
+    if(R.answered){ b.disabled=true; if(b.dataset.ans===R.answered) b.classList.add('picked');
+      if((R.id==='circle'&&b.dataset.ans===c.ans)||(R.id!=='circle'&&b.dataset.ans==='a')) b.classList.add('best'); return; }
+    b.addEventListener('click',function(){
+      R.answered=b.dataset.ans;
+      if((R.id==='circle'&&R.answered===c.ans)||(R.id!=='circle'&&R.answered==='a')){ R.right++; R.pts+=c.lv===3?3:2; }
+      renderGames();
+    });
+  });
+  var nx=box.querySelector('#gmNext'); if(nx) nx.addEventListener('click',function(){ R.i++; R.answered=null; renderGames(); });
+  box.querySelector('#gmQuit').addEventListener('click',function(){ gmRun=null; renderGames(); });
+}
+function gmFinish(box){
+  var R=gmRun, st=gmState(), today=dayKey(), total=R.cards.length;
+  if(!R.paid){
+    R.paid=true;
+    var before=levelInfo(), gain=10+R.pts, bonus=0;
+    st.played[R.id]=(st.played[R.id]||0)+1;
+    /* five or six right: the next round leans harder; two or fewer: a little easier */
+    var L=st.lvl[R.id]||0;
+    if(R.right>=total-1 && L<2){ st.lvl[R.id]=L+1; R.harder=true; }
+    else if(R.right<=2 && L>0) st.lvl[R.id]=L-1;
+    if(R.id===gmDaily() && st.daily!==today){ st.daily=today; bonus=15; }
+    addPts(gain+bonus); markActiveToday(); save();
+    R.gain=gain; R.bonus=bonus; R.before=before;
+    celebrate(); renderGameRow();
+  }
+  var after=levelInfo();
+  box.innerHTML='<div class="gm-end"><div class="ps-reward"><div class="av-big t'+after.tier+'">'+avatarSvg(after.tier, avatarLabel(after))+'</div>'+
+    '<div><p class="ps-rmsg">'+esc(t('gm.end',{n:R.right, t:total}))+'</p><p>'+esc(t(R.right>=total-1?'gm.end.hi':'gm.end.lo'))+'</p>'+
+    '<p class="ps-rxp">'+esc(t('ps.rxp',{n:R.gain}))+'</p>'+(R.bonus?'<p class="ps-rxp">'+esc(t('gm.bonus',{n:R.bonus}))+'</p>':'')+
+    (R.harder?'<p class="gm-harder">'+esc(t('gm.harder'))+'</p>':'')+
+    '<div class="xp big"><i style="width:'+after.pct+'%"></i></div>'+
+    '<p class="ps-rlvl">'+esc(after.level>R.before.level ? t('av.lvlup',{n:after.level}) : t('av.next',{n:after.need, l:after.level+1}))+'</p></div></div>'+
+    '<div class="row-btns"><button class="btn btn-primary" id="gmAgain">'+ic('refresh')+'<span>'+esc(t('gm.again'))+'</span></button>'+
+    '<button class="btn btn-ghost" id="gmBack">'+esc(t('gm.done'))+'</button></div></div>';
+  box.querySelector('#gmAgain').addEventListener('click',function(){ gmStart(R.id); });
+  box.querySelector('#gmBack').addEventListener('click',function(){ gmRun=null; renderGames(); });
+}
 """
