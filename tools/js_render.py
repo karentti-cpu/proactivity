@@ -1661,7 +1661,7 @@ function bindSettings(){
   });
 }
 function renderDash(){
-  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderHomeTrk();
+  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats();
   renderAvatarCard(); renderInvite();
 }
 
@@ -1788,7 +1788,7 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
 /* One <nav> serves as top tabs on a wide screen and as the bottom bar on a
    phone, so there is a single set of buttons and a single source of truth. */
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
-var UNDER_MORE=['tasks','learn','body','circle','sheet'];
+var UNDER_MORE=['tasks','learn','body','circle'];
 function goPage(name){
   var tabName = UNDER_MORE.indexOf(name)>=0 ? 'more' : name;
   document.querySelectorAll('.tab').forEach(function(x){
@@ -1814,13 +1814,8 @@ document.querySelectorAll('.tab').forEach(function(tab){
 document.querySelectorAll('[data-more]').forEach(function(b){
   b.addEventListener('click',function(){ goPage(b.dataset.more); });
 });
-function lastTab(){
-  try{
-    var v=localStorage.getItem('proactive_tab');
-    if(v && document.getElementById('page-'+v)) return v;
-  }catch(e){}
-  return 'home';
-}
+/* the app always opens on Today, whatever page was open last */
+function lastTab(){ return 'home'; }
 
 /* ================= boot ================= */
 function renderTasks(){ renderRing(); renderCats(); }

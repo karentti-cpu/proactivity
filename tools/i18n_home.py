@@ -195,7 +195,8 @@ HOME = {
 'n.o.6.finish':  ('סיימנו — נכנסים', 'Done — let us go in', 'Terminé — on entre', 'Готово — заходим', 'انتهينا — ندخل'),
 
 # ================= NAV =================
-'n.tab.home':    ('בית', 'Home', 'Accueil', 'Главная', 'الرئيسية'),
+'n.tab.home':    ('היום', 'Today', 'Aujourd\'hui', 'Сегодня', 'اليوم'),
+'n.tab.trk':     ('טבלאות', 'Tables', 'Tableaux', 'Таблицы', 'الجداول'),
 'n.tab.tasks':   ('משימות', 'Tasks', 'Tâches', 'Задачи', 'المهام'),
 'n.tab.prog':    ('התקדמות', 'Progress', 'Progrès', 'Прогресс', 'التقدّم'),
 'n.tab.learn':   ('ללמוד', 'Learn', 'Apprendre', 'Учиться', 'تعلّم'),

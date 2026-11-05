@@ -217,15 +217,20 @@ function registerSW(){
     navigator.serviceWorker.register('sw.js').then(function(r){ reg=r; }).catch(function(){});
   }catch(e){}
   function check(){ if(reg) reg.update().catch(function(){}); }
+  /* a new version: while the app is on screen, a bar offers to refresh
+     (one tap); if it is put away first, it refreshes by itself unseen */
   navigator.serviceWorker.addEventListener('controllerchange',function(){
     if(!swHadController){ swHadController=true; return; }    /* the very first install, nothing to refresh */
-    swReloadDue=true; swReloadNow();
+    swReloadDue=true;
+    if(document.visibilityState==='visible'){ var bar=document.getElementById('updBar'); if(bar) bar.hidden=false; }
+    else swReloadNow();
   });
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='visible') check();
-    swReloadNow();
+    else swReloadNow();
   });
-  document.addEventListener('focusout',function(){ setTimeout(swReloadNow,300); });
+  var go=document.getElementById('updGo');
+  if(go) go.addEventListener('click',function(){ swReloadDue=true; try{ sessionStorage.setItem('proactive_updated','1'); }catch(e){} location.reload(); });
   setInterval(check, 30*60*1000);
   try{
     if(sessionStorage.getItem('proactive_updated')){
