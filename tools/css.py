@@ -696,6 +696,8 @@ body.no-scroll{overflow:hidden;}
   background:var(--acc-dim);color:var(--fg);font:inherit;text-align:start;cursor:pointer;}
 .vision-line svg{width:18px;height:18px;color:var(--acc);flex:none;margin-top:3px;}
 .vision-line small{display:block;font-size:var(--t-xs);color:var(--acc);font-weight:700;}
+.vision-line>span{flex:1;min-width:0;}
+.vision-line .vis-edit{width:16px;height:16px;color:var(--fg-3);flex:none;margin-top:3px;}
 .vision-line b{display:block;font-size:var(--t-body);line-height:1.4;}
 .vision .row-btns{margin-top:var(--s3);}
 .vision .mg-picks .t3idea.on,.cir-item .opt.on{border-style:solid;border-color:var(--acc);background:var(--acc-dim);color:var(--acc);font-weight:700;}
