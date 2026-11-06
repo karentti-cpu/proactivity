@@ -28,6 +28,7 @@ from i18n_chain import CHAIN
 from i18n_suggest import SUGGEST
 from i18n_ready import READY
 from i18n_games import GAMES
+from i18n_games2 import GAMES2
 from i18n_pro import PRO
 from i18n_avatar import AVATAR
 from assets import sprite
@@ -54,7 +55,7 @@ def merged_table():
                       (CONTENT, 'i18n_content'), (PLAN, 'i18n_plan'),
                       (MINI, 'i18n_mini'), (FOOD, 'i18n_food'),
                       (QUIZ, 'i18n_quiz'), (HOME, 'i18n_home'),
-                      (QBANDS, 'i18n_qbands'), (CHAIN, 'i18n_chain'), (SUGGEST, 'i18n_suggest'), (READY, 'i18n_ready'), (GAMES, 'i18n_games'),
+                      (QBANDS, 'i18n_qbands'), (CHAIN, 'i18n_chain'), (SUGGEST, 'i18n_suggest'), (READY, 'i18n_ready'), (GAMES, 'i18n_games'), (GAMES2, 'i18n_games2'),
                       (PRO, 'i18n_pro'), (AVATAR, 'i18n_avatar')):
         for k, v in src.items():
             if k in table:
