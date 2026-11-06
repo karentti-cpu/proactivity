@@ -623,51 +623,103 @@ function psShrink(file, done){
 
 
 /* ================= games: a minute that builds proactive thinking =================
-   Three short games, six cards each, one tap a card, kind feedback right
-   away and never a "wrong": in my hands or not; flip a reactive sentence;
-   a moment before reacting. Cards are chosen for the age (up to 17 / 18
-   and up). Each game gives XP, and Today's game (one a day, in turn) adds a
-   bonus. */
-/* each card: [number, level]; circle cards also carry their answer. Level 3
-   brings the subtle ones - in my hands only in part, sentences where every
-   version sounds reasonable, situations with pressure from others. */
-var GAME_CIRCLE={t:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part']],
-                 a:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part']]};
-var GAME_FLIP=[[1,1],[2,1],[4,1],[5,1],[9,1],[3,2],[6,2],[7,2],[8,2],[10,2],[11,3],[12,3],[13,3]];
-var GAME_REACT={t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3]], a:[[4,1],[5,1],[6,1],[1,2],[2,2],[3,2],[7,3],[8,3]]};
-/* how many cards of each level a round holds, by the player's level in that game */
-var GAME_MIX=[[3,2,1],[2,2,2],[1,2,3]];
-var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'}];
-var gmRun=null;   // {id, cards:[...], i, right, answered}
+   Five short games, one tap a card, kind feedback right away and never a
+   "wrong": in my hands or not; flip a reactive sentence; a moment before
+   reacting; the first step; a speed round. Cards are chosen for the age
+   (up to 17 / 18 and up).
+   The games learn the player: each card remembers how it went, so new
+   cards and the ones that were hard come first and the easy ones rest; the
+   level rises after two right answers in a row and eases after a miss;
+   Today's game leans to the game that needs practice; and the end of a
+   round says what the games have learned. */
+/* each card: [number, level]; circle and speed cards also carry their
+   answer. Level 3-4 bring the subtle ones: in my hands only in part, and a
+   fourth answer that sounds reasonable but still lets others decide. */
+var GAME_CIRCLE={t:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part'],[12,3,'part'],[13,4,'part'],[14,4,'in'],[15,4,'out']],
+                 a:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part'],[12,3,'part'],[13,4,'in'],[14,4,'out'],[15,4,'part']]};
+var GAME_FLIP=[[1,1],[2,1],[4,1],[5,1],[9,1],[3,2],[6,2],[7,2],[8,2],[10,2],[11,3],[12,3],[13,3],[14,3],[15,3],[16,4],[17,4],[18,4]];
+var GAME_REACT={t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3],[9,3],[10,4],[11,4]], a:[[4,1],[5,1],[6,1],[1,2],[2,2],[3,2],[7,3],[8,3],[9,3],[10,4],[11,4]]};
+var GAME_STEP=[[1,1],[2,1],[3,1],[4,2],[5,2],[6,3],[7,3],[8,4],[9,4],[10,4]];
+var GAME_SPEED=[[1,1,'c'],[2,1,'r'],[3,1,'c'],[4,1,'r'],[5,1,'c'],[6,1,'r'],[7,1,'c'],[8,1,'r'],[9,2,'c'],[10,2,'r'],[11,2,'c'],[12,2,'r'],
+                [13,2,'c'],[14,2,'r'],[15,2,'c'],[16,2,'r'],[17,3,'r'],[18,3,'c'],[19,3,'r'],[20,3,'c'],[21,3,'r'],[22,3,'c'],[23,3,'r'],[24,3,'c']];
+var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
+var GAME_NEW=['step','speed'], GAME_LEN=6, GAME_SECS=45;
+var gmRun=null, gmTick=null;
 function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
+function gmState(){
+  if(!S.games) S.games={played:{}, daily:null};
+  ['lvl','mem','acc'].forEach(function(k){ if(!S.games[k]) S.games[k]={}; });
+  return S.games;
+}
+/* Today's game: one a day, never the same as yesterday, leaning to a game
+   not tried yet, then to the one with the fewest right answers */
 function gmDaily(){
-  var d=new Date(), start=new Date(d.getFullYear(),0,0), n=Math.floor((d-start)/864e5);
-  /* someone whose check-in found choice the area to grow starts the rotation on reacting */
-  var off=(hasProfile() && weakDim()==='choice') ? 2 : 0;
-  return GAME_IDS[(n+off)%GAME_IDS.length].id;
+  var st=gmState(), today=dayKey();
+  if(st.dpick && st.dpick.day===today) return st.dpick.id;
+  var prev=st.dpick && st.dpick.id, d=new Date(), n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5), best=null, bs=99;
+  GAME_IDS.forEach(function(g,i){
+    if(g.id===prev) return;
+    var a=st.acc[g.id], s=!st.played[g.id] ? -1 : (a && a[0] ? a[1]/a[0] : .5);
+    if(g.id==='react' && hasProfile() && weakDim()==='choice') s-=.15;
+    s+=((i+n)%GAME_IDS.length)*.01;
+    if(s<bs){ bs=s; best=g.id; }
+  });
+  st.dpick={day:today, id:best};
+  return best;
 }
-function gmState(){ if(!S.games) S.games={played:{}, daily:null}; if(!S.games.lvl) S.games.lvl={}; return S.games; }
-function gmCards(id){
+function gmPool(id){
   var age=gmAge(), pool=[];
-  if(id==='circle'){
-    GAME_CIRCLE[age].forEach(function(c){ pool.push({lv:c[1], q:t('gm.circle.'+age+c[0]), ans:c[2]}); });
-  } else {
-    var defs = id==='flip' ? GAME_FLIP : GAME_REACT[age];
-    defs.forEach(function(c){
-      var k = id==='flip' ? 'gm.flip.'+c[0] : 'gm.react.'+age+c[0];
-      pool.push({lv:c[1], q:t(k+'.q'), best:t(k+'.a'),
-        opts:gmShuffle([{t:t(k+'.a'),k:'a'},{t:t(k+'.b'),k:'b'},{t:t(k+'.c'),k:'c'}])});
-    });
-  }
-  /* easy first, harder as the round goes; the mix leans harder as the player improves */
-  var L=gmState().lvl[id]||0, want=GAME_MIX[L], out=[], by={1:[],2:[],3:[]};
-  gmShuffle(pool).forEach(function(c){ by[c.lv].push(c); });
-  [1,2,3].forEach(function(lv){ out=out.concat(by[lv].splice(0,want[lv-1])); });
-  [2,1,3].forEach(function(lv){ while(out.length<6 && by[lv].length) out.push(by[lv].shift()); });
-  return out.sort(function(x,y){ return x.lv-y.lv; });
+  if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
+  else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
+  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : GAME_REACT[age]).forEach(function(c){
+    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true});
+  });
+  return pool;
 }
-function gmStart(id){ gmRun={id:id, cards:gmCards(id), i:0, right:0, pts:0, answered:null}; renderGames(); var b=document.getElementById('gmBox'); if(b) b.scrollIntoView({block:'start'}); }
+/* the next card: at the level the round has reached; among those, a card
+   that was hard last time, then a new one, then the less sure ones; a card
+   already seen today rests */
+function gmPick(R){
+  var st=gmState(), today=dayKey(), used={}, best=null, bs=-1e9;
+  R.cards.forEach(function(c){ used[c.key]=1; });
+  function score(c){ var m=st.mem[c.key]; if(!m) return 3; if(m[2]===today) return .2; if(!m[3]) return 4; return 1+(1-m[1]/m[0]); }
+  gmShuffle(R.pool).forEach(function(c){
+    if(used[c.key]) return;
+    var sc=score(c)-Math.abs(c.lv-R.lv)*10;
+    if(sc>bs){ bs=sc; best=c; }
+  });
+  if(!best) return null;
+  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, back:!!(m && !m[3] && m[2]!==today)};
+  if(best.multi){
+    var ks=best.lv>=3 ? ['a','b','c','d'] : R.id==='step' ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
+    card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
+  } else card.q=t(k);
+  R.cards.push(card);
+  return card;
+}
+/* remember how a card went, and move the round's level: up after two right
+   in a row (three in the speed round), down a step after a miss */
+function gmRecord(R,c,ok){
+  var st=gmState(), m=st.mem[c.key]||[0,0,'',0], a=st.acc[R.id]||[0,0];
+  st.mem[c.key]=[m[0]+1, m[1]+(ok?1:0), dayKey(), ok?1:0];
+  st.acc[R.id]=[a[0]+1, a[1]+(ok?1:0)];
+  R.n++;
+  if(ok){ R.right++; R.pts+=R.id==='speed' ? (c.lv>=3?2:1) : (c.lv>=3?3:2); }
+  var prev=R.lv;
+  if(ok){ R.streak++; if(R.streak>=(R.id==='speed'?3:2) && R.lv<R.maxLv){ R.lv++; R.streak=0; } }
+  else { R.streak=0; if(R.lv>1) R.lv--; }
+  R.shift = R.lv>prev ? 'up' : R.lv<prev ? 'down' : null;
+}
+function gmStop(){ if(gmTick){ clearInterval(gmTick); gmTick=null; } }
+function gmStart(id){
+  gmStop();
+  var pool=gmPool(id), maxLv=Math.max.apply(null,pool.map(function(c){ return c.lv; })), L=gmState().lvl[id]||0;
+  gmRun={id:id, pool:pool, maxLv:maxLv, lv:Math.min(maxLv,Math.max(1,L)), streak:0, cards:[], i:0, n:0, right:0, pts:0, answered:null};
+  renderGames();
+  var b=document.getElementById('gmBox'); if(b) b.scrollIntoView({block:'start'});
+}
 function renderGameRow(){
   var b=document.getElementById('gameRow'); if(!b) return;
   var id=gmDaily(), g=GAME_IDS.filter(function(x){ return x.id===id; })[0], done=gmState().daily===dayKey();
@@ -679,76 +731,142 @@ function renderGameRow(){
     '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
   if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
 }
+function gmLvLabel(id){ var L=Math.max(1,gmState().lvl[id]||0); return '<span class="gm-lv l'+L+'">'+esc(t('gm.lv'+L))+'</span>'; }
 function renderGames(){
   var box=document.getElementById('gmBox'); if(!box) return;
   var st=gmState(), daily=gmDaily();
   if(!gmRun){
+    gmStop();
     box.innerHTML='<div class="gm-list">'+GAME_IDS.map(function(g){
-      var isD=g.id===daily, n=st.played[g.id]||0;
+      var isD=g.id===daily, n=st.played[g.id]||0, isNew=!n && GAME_NEW.indexOf(g.id)>=0;
       return '<button type="button" class="gm-card'+(isD?' daily':'')+'" data-gm="'+g.id+'"><span class="gm-ic">'+ic(g.icon)+'</span>'+
-        '<span class="gm-txt"><b>'+esc(t('gm.'+g.id))+'</b><small>'+esc(t('gm.'+g.id+'.s'))+'</small>'+
+        '<span class="gm-txt"><b>'+esc(t('gm.'+g.id))+(isNew ? ' <span class="gm-newb">'+esc(t('gm.new'))+'</span>' : n ? ' '+gmLvLabel(g.id) : '')+'</b>'+
+        '<small>'+esc(t('gm.'+g.id+'.s'))+'</small>'+
         (isD ? '<em>'+esc(st.daily===dayKey() ? t('gm.daily.done') : t('gm.daily'))+'</em>' : '')+'</span>'+
         (n ? '<span class="gm-n numf">✓'+n+'</span>' : '')+'</button>'; }).join('')+'</div>';
     box.querySelectorAll('[data-gm]').forEach(function(b){ b.addEventListener('click',function(){ gmStart(b.dataset.gm); }); });
     return;
   }
-  var R=gmRun, total=R.cards.length;
-  if(R.i>=total){ gmFinish(box); return; }
+  var R=gmRun;
+  if(R.id==='speed'){ gmSpeed(box); return; }
+  if(R.i>=GAME_LEN || (R.i>=R.cards.length && !gmPick(R))){ gmFinish(box); return; }
   var c=R.cards[R.i];
-  var dots='<div class="gm-dots">'+R.cards.map(function(_,k){ return '<i class="'+(k<R.i?'on':k===R.i?'cur':'')+'"></i>'; }).join('')+'</div>';
-  var ask=t('gm.q.'+R.id);
+  var dots='<div class="gm-dots">'+Array.apply(null,Array(GAME_LEN)).map(function(_,k){ return '<i class="'+(k<R.i?'on':k===R.i?'cur':'')+'"></i>'; }).join('')+'</div>';
   var opts = R.id==='circle'
-    ? '<div class="gm-opts '+(c.lv===3?'three':'two')+'"><button type="button" class="gm-opt" data-ans="in">'+ic('check')+'<span>'+esc(t('gm.in'))+'</span></button>'+
-        (c.lv===3 ? '<button type="button" class="gm-opt" data-ans="part">'+ic('compass')+'<span>'+esc(t('gm.part'))+'</span></button>' : '')+
+    ? '<div class="gm-opts '+(c.lv>=3?'three':'two')+'"><button type="button" class="gm-opt" data-ans="in">'+ic('check')+'<span>'+esc(t('gm.in'))+'</span></button>'+
+        (c.lv>=3 ? '<button type="button" class="gm-opt" data-ans="part">'+ic('compass')+'<span>'+esc(t('gm.part'))+'</span></button>' : '')+
         '<button type="button" class="gm-opt" data-ans="out">'+ic('seedling')+'<span>'+esc(t('gm.out'))+'</span></button></div>'
     : '<div class="gm-opts">'+c.opts.map(function(o){ return '<button type="button" class="gm-opt" data-ans="'+o.k+'">'+esc(o.t)+'</button>'; }).join('')+'</div>';
   var fb='';
   if(R.answered){
-    var a=R.answered, good, msg, show='';
-    if(R.id==='circle'){ good=a===c.ans; msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x'); }
-    else if(R.id==='flip'){ good=a==='a'; msg=t(good?'gm.f.ok':'gm.f.x'); if(!good) show=c.best; }
-    else { good=a==='a'; msg=t('gm.r.'+a); if(!good) show=c.best; }
+    var a=R.answered, good=a===c.ans, msg, show='';
+    if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
+    else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
+    else msg=t((R.id==='step'?'gm.s.':'gm.r.')+a);
+    if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
   }
-  var up = R.i>0 && c.lv>R.cards[R.i-1].lv && !R.answered ? '<p class="gm-up">'+esc(t('gm.up'))+'</p>' : '';
-  box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+up+
-    '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(ask)+'</p>'+opts+fb+
+  var note='';
+  if(!R.answered){
+    if(R.shiftAt===R.i) note='<p class="gm-up'+(R.shiftDir==='down'?' down':'')+'">'+esc(t(R.shiftDir==='down'?'gm.down':'gm.up'))+'</p>';
+    else if(c.back) note='<p class="gm-back">'+esc(t('gm.again.q'))+'</p>';
+  }
+  box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
+    '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
     '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button></div>';
   box.querySelectorAll('[data-ans]').forEach(function(b){
-    if(R.answered){ b.disabled=true; if(b.dataset.ans===R.answered) b.classList.add('picked');
-      if((R.id==='circle'&&b.dataset.ans===c.ans)||(R.id!=='circle'&&b.dataset.ans==='a')) b.classList.add('best'); return; }
+    if(R.answered){ b.disabled=true; if(b.dataset.ans===R.answered) b.classList.add('picked'); if(b.dataset.ans===c.ans) b.classList.add('best'); return; }
     b.addEventListener('click',function(){
       R.answered=b.dataset.ans;
-      if((R.id==='circle'&&R.answered===c.ans)||(R.id!=='circle'&&R.answered==='a')){ R.right++; R.pts+=c.lv===3?3:2; }
+      gmRecord(R,c,R.answered===c.ans);
+      if(R.shift){ R.shiftAt=R.i+1; R.shiftDir=R.shift; }
       renderGames();
     });
   });
   var nx=box.querySelector('#gmNext'); if(nx) nx.addEventListener('click',function(){ R.i++; R.answered=null; renderGames(); });
   box.querySelector('#gmQuit').addEventListener('click',function(){ gmRun=null; renderGames(); });
 }
+/* the speed round: as many sentences as fit in 45 seconds, a tap each,
+   a short flash of feedback and straight on */
+function gmSpeed(box){
+  var R=gmRun;
+  var quit='<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button>';
+  function bindQuit(){ box.querySelector('#gmQuit').addEventListener('click',function(){ gmStop(); gmRun=null; renderGames(); }); }
+  if(!R.started){
+    box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.speed'))+'</b></div>'+
+      '<div class="gm-sp-intro">'+ic('zap')+'<p>'+esc(t('gm.sp.go'))+'</p></div>'+
+      '<button class="btn btn-primary btn-block" id="gmGo">'+esc(t('gm.sp.start'))+'</button>'+quit+'</div>';
+    box.querySelector('#gmGo').addEventListener('click',function(){
+      R.started=true; R.end=Date.now()+GAME_SECS*1000; renderGames();
+      gmTick=setInterval(function(){
+        if(gmRun!==R){ gmStop(); return; }
+        var left=Math.max(0,(R.end-Date.now())/1000), el=document.getElementById('gmLeft'), bar=document.getElementById('gmBar');
+        if(el) el.textContent=t('gm.sp.left',{n:Math.ceil(left)});
+        if(bar) bar.style.width=(left/GAME_SECS*100)+'%';
+        if(left<=0 && !R.flash) renderGames();
+      },250);
+    });
+    bindQuit(); return;
+  }
+  var left=(R.end-Date.now())/1000;
+  if(R.over || left<=0 || (R.i>=R.cards.length && !gmPick(R))){ R.over=true; gmStop(); gmFinish(box); return; }
+  var c=R.cards[R.i], f=R.flash;
+  box.innerHTML='<div class="gm-play gm-sp"><div class="gm-head"><b>'+esc(t('gm.speed'))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+
+      '<span class="gm-sp-score numf">✓ '+R.right+'</span><span class="gm-timer numf" id="gmLeft">'+esc(t('gm.sp.left',{n:Math.ceil(left)}))+'</span></div>'+
+    '<div class="gm-tbar"><i id="gmBar" style="width:'+(left/GAME_SECS*100)+'%"></i></div>'+
+    '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.speed'))+'</p>'+
+    '<div class="gm-opts two"><button type="button" class="gm-opt" data-sp="c">'+ic('check')+'<span>'+esc(t('gm.sp.c'))+'</span></button>'+
+      '<button type="button" class="gm-opt" data-sp="r">'+ic('refresh')+'<span>'+esc(t('gm.sp.r'))+'</span></button></div>'+
+    (f ? '<p class="gm-flash '+(f.ok?'good':'soft')+'">'+esc(f.ok ? t('gm.sp.ok') : t('gm.sp.x',{c:t('gm.sp.'+c.ans)}))+'</p>' : '<p class="gm-flash"></p>')+
+    quit+'</div>';
+  box.querySelectorAll('[data-sp]').forEach(function(b){
+    if(f){ b.disabled=true; if(b.dataset.sp===c.ans) b.classList.add('best'); else if(!f.ok) b.classList.add('picked'); return; }
+    b.addEventListener('click',function(){
+      var ok=b.dataset.sp===c.ans;
+      gmRecord(R,c,ok); R.flash={ok:ok}; renderGames();
+      setTimeout(function(){ if(gmRun!==R) return; R.flash=null; R.i++; renderGames(); }, ok?450:1300);
+    });
+  });
+  bindQuit();
+}
+/* what the games have learned: the game that goes best, and the one worth
+   more practice (after a few answers in each) */
+function gmInsight(){
+  var st=gmState(), rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=4 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean);
+  if(!rows.length) return '';
+  rows.sort(function(x,y){ return y.r-x.r; });
+  var s=rows[0], g=rows[rows.length-1], txt;
+  if(rows.length>1 && s.r-g.r>=.1) txt=t('gm.learn',{s:t('gm.'+s.id), g:t('gm.'+g.id)});
+  else if(s.r>=.7) txt=t('gm.learn1',{s:t('gm.'+s.id)});
+  else return '';
+  return '<p class="gm-learn">'+ic('sparkles')+'<span>'+esc(txt)+'</span></p>';
+}
 function gmFinish(box){
-  var R=gmRun, st=gmState(), today=dayKey(), total=R.cards.length;
+  var R=gmRun, st=gmState(), today=dayKey(), total=R.n;
   if(!R.paid){
     R.paid=true;
     var before=levelInfo(), gain=10+R.pts, bonus=0;
     st.played[R.id]=(st.played[R.id]||0)+1;
-    /* five or six right: the next round leans harder; two or fewer: a little easier */
-    var L=st.lvl[R.id]||0;
-    if(R.right>=total-1 && L<2){ st.lvl[R.id]=L+1; R.harder=true; }
-    else if(R.right<=2 && L>0) st.lvl[R.id]=L-1;
+    /* a strong round: the next one starts harder; a hard one: a little easier */
+    var L=st.lvl[R.id]||0, up, down;
+    if(R.id==='speed'){ up=total>=8 && R.right/total>=.85; down=total>=4 && R.right/total<.5; }
+    else { up=total>=GAME_LEN-1 && R.right>=total-1; down=R.right<=2; }
+    if(up && L<3){ st.lvl[R.id]=L+1; R.harder=true; }
+    else if(down && L>0) st.lvl[R.id]=L-1;
     if(R.id===gmDaily() && st.daily!==today){ st.daily=today; bonus=15; }
     addPts(gain+bonus); markActiveToday(); save();
     R.gain=gain; R.bonus=bonus; R.before=before;
     celebrate(); renderGameRow();
   }
-  var after=levelInfo();
+  var after=levelInfo(), hi=total>0 && R.right>=total-1;
   box.innerHTML='<div class="gm-end"><div class="ps-reward"><div class="av-big t'+after.tier+'">'+avatarSvg(after.tier, avatarLabel(after))+'</div>'+
-    '<div><p class="ps-rmsg">'+esc(t('gm.end',{n:R.right, t:total}))+'</p><p>'+esc(t(R.right>=total-1?'gm.end.hi':'gm.end.lo'))+'</p>'+
+    '<div><p class="ps-rmsg">'+esc(t('gm.end',{n:R.right, t:total}))+'</p><p>'+esc(t(hi?'gm.end.hi':'gm.end.lo'))+'</p>'+
     '<p class="ps-rxp">'+esc(t('ps.rxp',{n:R.gain}))+'</p>'+(R.bonus?'<p class="ps-rxp">'+esc(t('gm.bonus',{n:R.bonus}))+'</p>':'')+
     (R.harder?'<p class="gm-harder">'+esc(t('gm.harder'))+'</p>':'')+
     '<div class="xp big"><i style="width:'+after.pct+'%"></i></div>'+
     '<p class="ps-rlvl">'+esc(after.level>R.before.level ? t('av.lvlup',{n:after.level}) : t('av.next',{n:after.need, l:after.level+1}))+'</p></div></div>'+
+    gmInsight()+
     '<div class="row-btns"><button class="btn btn-primary" id="gmAgain">'+ic('refresh')+'<span>'+esc(t('gm.again'))+'</span></button>'+
     '<button class="btn btn-ghost" id="gmBack">'+esc(t('gm.done'))+'</button></div></div>';
   box.querySelector('#gmAgain').addEventListener('click',function(){ gmStart(R.id); });
