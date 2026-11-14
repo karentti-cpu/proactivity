@@ -642,8 +642,10 @@ var GAME_REACT={t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3],[9,3],[10,4],
 var GAME_STEP=[[1,1],[2,1],[3,1],[4,2],[5,2],[6,3],[7,3],[8,4],[9,4],[10,4]];
 var GAME_SPEED=[[1,1,'c'],[2,1,'r'],[3,1,'c'],[4,1,'r'],[5,1,'c'],[6,1,'r'],[7,1,'c'],[8,1,'r'],[9,2,'c'],[10,2,'r'],[11,2,'c'],[12,2,'r'],
                 [13,2,'c'],[14,2,'r'],[15,2,'c'],[16,2,'r'],[17,3,'r'],[18,3,'c'],[19,3,'r'],[20,3,'c'],[21,3,'r'],[22,3,'c'],[23,3,'r'],[24,3,'c']];
-var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
-var GAME_NEW=['step','speed'], GAME_LEN=6, GAME_SECS=45;
+/* calm: [number, level, the feeling the situation brings] */
+var GAME_CALM=[[1,1,'angry'],[2,1,'stress'],[3,1,'tired'],[4,2,'hurt'],[5,2,'frust'],[6,3,'disap'],[7,3,'fear'],[8,4,'angry'],[9,4,'stress'],[10,4,'sad']];
+var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'calm',icon:'wind'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
+var GAME_NEW=['step','speed','calm'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
@@ -672,8 +674,8 @@ function gmPool(id){
   var age=gmAge(), pool=[];
   if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
-  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : GAME_REACT[age]).forEach(function(c){
-    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true});
+  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : id==='calm' ? GAME_CALM : GAME_REACT[age]).forEach(function(c){
+    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : id==='calm' ? 'gm.calm.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
   });
   return pool;
 }
@@ -690,9 +692,9 @@ function gmPick(R){
     if(sc>bs){ bs=sc; best=c; }
   });
   if(!best) return null;
-  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, back:!!(m && !m[3] && m[2]!==today)};
+  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
-    var ks=best.lv>=3 ? ['a','b','c','d'] : R.id==='step' ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    var ks=best.lv>=3 ? ['a','b','c','d'] : (R.id==='step'||R.id==='calm') ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
@@ -731,6 +733,7 @@ function renderGameRow(){
     '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
   if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
 }
+function gmFeel(k){ var f=PZ_FEELS.filter(function(x){ return x.k===k; })[0]; return (f?f.e+' ':'')+esc(t('pz.f.'+k)); }
 function gmLvLabel(id){ var L=Math.max(1,gmState().lvl[id]||0); return '<span class="gm-lv l'+L+'">'+esc(t('gm.lv'+L))+'</span>'; }
 function renderGames(){
   var box=document.getElementById('gmBox'); if(!box) return;
@@ -762,7 +765,7 @@ function renderGames(){
     var a=R.answered, good=a===c.ans, msg, show='';
     if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
-    else msg=t((R.id==='step'?'gm.s.':'gm.r.')+a);
+    else msg=t((R.id==='step'?'gm.s.':R.id==='calm'?'gm.k.':'gm.r.')+a);
     if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
@@ -773,6 +776,7 @@ function renderGames(){
     else if(c.back) note='<p class="gm-back">'+esc(t('gm.again.q'))+'</p>';
   }
   box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
+    (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : '')+
     '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
     '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button></div>';
   box.querySelectorAll('[data-ans]').forEach(function(b){
@@ -872,4 +876,91 @@ function gmFinish(box){
   box.querySelector('#gmAgain').addEventListener('click',function(){ gmStart(R.id); });
   box.querySelector('#gmBack').addEventListener('click',function(){ gmRun=null; renderGames(); });
 }
+
+/* ================= a moment to pause =================
+   Self-regulation in one minute: stop, three breaths, name the feeling,
+   choose a response. Each pause is kept in the day's log, so My week can
+   show how often the player paused and chose, and what they felt. */
+var PZ_FEELS=[{k:'angry',e:'😠'},{k:'stress',e:'😰'},{k:'hurt',e:'😔'},{k:'tired',e:'😴'},
+              {k:'disap',e:'😞'},{k:'fear',e:'😟'},{k:'frust',e:'😤'},{k:'sad',e:'😢'}];
+var pz=null, pzTimer=null;
+function pzStop(){ if(pzTimer){ clearTimeout(pzTimer); pzTimer=null; } }
+function pzOpen(){ pzStop(); pz={step:1}; pzRender(); document.getElementById('pauseModal').classList.add('on'); }
+function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); }
+function pzWeekCount(){
+  var log=S.log||{}, n=0;
+  weekOf(0).forEach(function(d){ n+=((log[d]||{}).pauses||[]).length; });
+  return n;
+}
+function pzRender(){
+  var box=document.getElementById('pzBody'); if(!box||!pz) return;
+  var dots='<div class="pz-dots">'+[1,2,3,4].map(function(k){ return '<i class="'+(k<pz.step?'on':k===pz.step?'cur':'')+'"></i>'; }).join('')+'</div>';
+  if(pz.step===1){
+    box.innerHTML=dots+'<p class="pz-big">'+esc(t('pz.1'))+'</p><p class="pz-sub">'+esc(t('pz.1.s'))+'</p>'+
+      '<button class="btn btn-primary btn-block" id="pzGo">'+ic('wind')+'<span>'+esc(t('pz.go'))+'</span></button>';
+    box.querySelector('#pzGo').addEventListener('click',function(){ pz.step=2; pz.br=0; pz.phase='in'; pzRender(); pzBreathe(); });
+  } else if(pz.step===2){
+    box.innerHTML=dots+'<div class="pz-breath"><div class="pz-circle '+pz.phase+'"></div><b id="pzPhase">'+esc(t('pz.'+pz.phase))+'</b></div>'+
+      '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(3,pz.br+1)}))+'</p>'+
+      '<button class="btn btn-ghost btn-block" id="pzNext">'+esc(t('pz.next'))+'</button>';
+    box.querySelector('#pzNext').addEventListener('click',function(){ pzStop(); pz.step=3; pzRender(); });
+  } else if(pz.step===3){
+    box.innerHTML=dots+'<p class="pz-big">'+esc(t('pz.2'))+'</p><p class="pz-sub">'+esc(t('pz.2.s'))+'</p>'+
+      '<div class="pz-feels">'+PZ_FEELS.map(function(f){
+        return '<button type="button" class="pz-feel" data-pzf="'+f.k+'"><span>'+f.e+'</span>'+esc(t('pz.f.'+f.k))+'</button>'; }).join('')+'</div>';
+    box.querySelectorAll('[data-pzf]').forEach(function(b){ b.addEventListener('click',function(){ pz.f=b.dataset.pzf; pz.step=4; pzRender(); }); });
+  } else if(pz.step===4){
+    var f=PZ_FEELS.filter(function(x){ return x.k===pz.f; })[0];
+    box.innerHTML=dots+'<p class="pz-felt">'+f.e+' '+esc(t('pz.f.'+f.k))+'</p>'+
+      '<p class="pz-big">'+esc(t('pz.3'))+'</p><p class="pz-sub">'+esc(t('pz.3.s'))+'</p>'+
+      '<div class="pz-acts">'+[1,2,3,4,5].map(function(n){
+        return '<button type="button" class="pz-act" data-pza="'+n+'">'+esc(t('pz.a'+n))+'</button>'; }).join('')+'</div>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="120" placeholder="'+esc(t('pz.own'))+'">'+
+      '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.ok'))+'</button></div>';
+    function choose(txt){
+      if(!txt) return;
+      if(!S.log || !S.log[dayKey()]) logDay();
+      var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[];
+      L.pauses.push({f:pz.f, a:txt});
+      pz.a=txt; pz.step=5; addPts(10); markActiveToday(); save(); celebrate(); pzRender();
+    }
+    box.querySelectorAll('[data-pza]').forEach(function(b){ b.addEventListener('click',function(){ choose(t('pz.a'+b.dataset.pza)); }); });
+    var own=box.querySelector('#pzOwn');
+    box.querySelector('#pzOk').addEventListener('click',function(){ var v=own.value.trim(); if(v) choose(v); else own.focus(); });
+    own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); var v=own.value.trim(); if(v) choose(v); } });
+  } else {
+    var n=pzWeekCount();
+    box.innerHTML='<div class="pz-end"><div class="pz-endic">'+ic('check')+'</div>'+
+      '<p class="pz-big">'+esc(t('pz.done'))+'</p><p class="pz-chosen">„'+esc(pz.a)+'”</p>'+
+      '<p class="ps-rxp">'+esc(t('ps.rxp',{n:10}))+'</p>'+
+      '<p class="pz-sub">'+esc(n>1 ? t('pz.week',{n:n}) : t('pz.week1'))+'</p></div>'+
+      '<div class="row-btns">'+(pz.addedDay ? '' : '<button class="btn btn-ghost" id="pzAdd">'+ic('plus')+'<span>'+esc(t('pz.add'))+'</span></button>')+
+      '<button class="btn btn-primary" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+    var ad=box.querySelector('#pzAdd');
+    if(ad) ad.addEventListener('click',function(){
+      if(addDayItem(pz.a)){ markActiveToday(); save(); }
+      pz.addedDay=true; toast(t('pz.added')); pzRender(); renderToday3();
+    });
+    box.querySelector('#pzEnd').addEventListener('click',function(){ pzClose(); renderDash(); });
+  }
+}
+/* three breaths: four seconds in, five out */
+function pzBreathe(){
+  pzStop();
+  if(!pz || pz.step!==2) return;
+  pzTimer=setTimeout(function(){
+    if(!pz || pz.step!==2) return;
+    if(pz.phase==='in') pz.phase='out';
+    else { pz.br++; pz.phase='in'; }
+    if(pz.br>=3){ pz.step=3; pzRender(); return; }
+    var c=document.querySelector('.pz-circle'), ph=document.getElementById('pzPhase'), nn=document.getElementById('pzN');
+    if(c) c.className='pz-circle '+pz.phase;
+    if(ph) ph.textContent=t('pz.'+pz.phase);
+    if(nn) nn.textContent=t('pz.n',{n:Math.min(3,pz.br+1)});
+    pzBreathe();
+  }, pz.phase==='in' ? 4000 : 5000);
+}
+document.getElementById('pauseBtn').addEventListener('click',pzOpen);
+document.getElementById('pzX').addEventListener('click',pzClose);
+document.getElementById('pauseModal').addEventListener('click',function(e){ if(e.target.id==='pauseModal') pzClose(); });
 """
