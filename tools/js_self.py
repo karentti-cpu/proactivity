@@ -1092,7 +1092,7 @@ function renderLearned(){
   var tot=0, done=0; two.forEach(function(d){ ((log[d]||{}).items||[]).forEach(function(x){ tot++; if(x.done) done++; }); });
   /* the share only when it is encouraging; otherwise the things done, which always are */
   if(tot>=6 && done/tot>=.4) lines.push(['check', t('ln.done',{p:Math.round(done/tot*100)})]);
-  else if(done>=1) lines.push(['check', t('ln.done.n',{n:done})]);
+  else if(done>=2) lines.push(['check', t('ln.done.n',{n:done})]);
   var pf={}; Object.keys(log).forEach(function(d){ (log[d].pauses||[]).forEach(function(z){ pf[z.f]=(pf[z.f]||0)+1; }); });
   var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
   if(topf && pf[topf]>=2){ var fe=PZ_FEELS.filter(function(x){ return x.k===topf; })[0]; lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+t('pz.f.'+topf)})]); }
