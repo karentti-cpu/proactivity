@@ -793,6 +793,17 @@ body.no-scroll{overflow:hidden;}
 .gm-flash{min-height:26px;text-align:center;font-weight:800;margin:var(--s3) 0 0;}
 .gm-flash.good{color:var(--acc);}
 .gm-flash.soft{color:#B57A10;}
+.help-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:hs;}
+.help-steps li{display:flex;gap:12px;align-items:flex-start;}
+.hp-ic{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;background:var(--acc-dim);}
+.hp-ic svg{width:20px;height:20px;color:var(--acc);}
+.help-steps b{display:block;font-size:16px;margin-bottom:2px;}
+.help-steps small{display:block;font-size:var(--t-sm);color:var(--fg-2);line-height:1.55;}
+.help-tips-t{display:flex;align-items:center;gap:8px;font-size:16px;margin:var(--s5) 0 var(--s2);}
+.help-tips-t svg{width:18px;height:18px;color:#D99A26;}
+.help-tips{margin:0;padding-inline-start:20px;display:grid;gap:6px;font-size:var(--t-sm);color:var(--fg-2);line-height:1.55;}
+#howto .help-steps{max-width:560px;margin:var(--s4) auto 0;text-align:start;}
+#howto .help-tips-t,#howto .help-tips{max-width:560px;margin-inline:auto;text-align:start;}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
