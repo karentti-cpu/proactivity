@@ -5,8 +5,6 @@ Order of tuple values: he, en, fr, ru, ar
 
 HELP = {
 'help.t':   ('איך משתמשים', 'How to use it', 'Comment l\'utiliser', 'Как пользоваться', 'طريقة الاستخدام'),
-'help.s':   ('כמה דקות ביום, בשבעה צעדים פשוטים.', 'A few minutes a day, in seven simple steps.', 'Quelques minutes par jour, en sept étapes simples.',
-             'Несколько минут в день — семь простых шагов.', 'دقائق قليلة في اليوم، في سبع خطوات بسيطة.'),
 'more.help':('הסבר קצר על כל חלק באפליקציה', 'A short guide to every part of the app', 'Un petit guide de chaque partie de l\'app',
              'Короткое объяснение каждого раздела', 'شرح قصير لكل جزء في التطبيق'),
 

@@ -73,7 +73,7 @@ MORE = [('help', 'book', 'help.t', 'more.help'),
         ('games', 'star', 'gm.t', 'more.games')]
 
 # How to use it: the same steps on the landing page and under More.
-HELP_STEPS = [('sun', 1), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sliders', 7)]
+HELP_STEPS = [('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sliders', 7)]
 def help_html():
     steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
                     for ic_, n in HELP_STEPS)
@@ -347,6 +347,7 @@ def build_body(logo):
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
   <section class="dash-box today3" id="todayBox"></section>
+  <button type="button" class="pause-btn" id="pauseBtn"><span class="pz-ic">{i("wind")}</span><span><b data-i18n="pz.btn"></b><small data-i18n="pz.btn.s"></small></span>{i("chevron")}</button>
   <button type="button" class="home-game" id="gameRow" hidden></button>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
@@ -725,6 +726,12 @@ def build_body(logo):
  <h3 id="srchTitle" data-i18n="srch.t"></h3>
  <div id="srchBody"></div>
  <div class="modal-btns"><button class="btn btn-primary" id="srchClose" data-i18n="res.close"></button></div>
+</div></div>
+
+<div class="modal-bg" id="pauseModal"><div class="modal pz-modal" role="dialog" aria-modal="true" aria-labelledby="pzTitle">
+ <div class="pz-top"><h3 id="pzTitle">{i("wind")}<span data-i18n="pz.btn"></span></h3>
+  <button type="button" class="t3act" id="pzX" aria-label="close">{i("x")}</button></div>
+ <div id="pzBody"></div>
 </div></div>
 
 <div class="modal-bg" id="shareModal"><div class="modal share-modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">

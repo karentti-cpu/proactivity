@@ -735,7 +735,7 @@ function logDay(){
   if(!S.log) S.log={};
   var prev=S.log[td.day]||{};
   S.log[td.day]={
-    note: prev.note||'', feel: prev.feel||'', choice: prev.choice||'',
+    note: prev.note||'', feel: prev.feel||'', choice: prev.choice||'', pauses: prev.pauses||[],
     items: td.items.filter(function(x){ return x.t.trim(); })
              .map(function(x){ return {t:x.t.trim(), done:!!x.done, gid:x.gid||null, url:x.url||null}; }),
     steps: (S.goals||[]).filter(function(g){ return g.doneDay===td.day; }).map(function(g){ return g.id; }),
@@ -1041,7 +1041,7 @@ function normLine(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,'
 function renderMyWeek(){
   var box=document.getElementById('weekBox'); if(!box) return;
   var log=S.log||{}, days=weekOf(wkOff), today=dayKey();
-  function has(d){ var L=log[d]; return !!(L && (L.items.some(function(x){ return x.done; }) || L.steps.length || (L.rest||[]).length || L.note || L.feel || L.choice)); }
+  function has(d){ var L=log[d]; return !!(L && (L.items.some(function(x){ return x.done; }) || L.steps.length || (L.rest||[]).length || L.note || L.feel || L.choice || (L.pauses||[]).length)); }
   var used=days.filter(has);
   if(!wkSel || days.indexOf(wkSel)<0) wkSel = days.indexOf(today)>=0 ? today : (used[used.length-1]||days[0]);
   var older=Object.keys(log).some(function(d){ return d<days[0]; });
@@ -1050,11 +1050,12 @@ function renderMyWeek(){
   days.forEach(function(d){ ((log[d]||{}).steps||[]).forEach(function(id){ seen[id]=1; }); });
   var goals=live.concat((S.goals||[]).filter(function(g){ return seen[g.id] && live.indexOf(g)<0; }));
   function lang(d,o){ try{ return new Date(d+'T00:00:00').toLocaleDateString(cur,o); }catch(e){ return d; } }
-  var steps=0, things=0, feels={}, rep={}, choices=0;
+  var steps=0, things=0, feels={}, rep={}, choices=0, pauses=0, pzf={};
   days.forEach(function(d){
     var L=log[d]; if(!L) return;
     steps+=L.steps.length;
     if(L.choice) choices++;
+    (L.pauses||[]).forEach(function(z){ pauses++; if(z.f) pzf[z.f]=(pzf[z.f]||0)+1; });
     if(L.feel) feels[L.feel]=(feels[L.feel]||0)+1;
     L.items.forEach(function(x){
       if(x.done) things++;
@@ -1072,9 +1073,14 @@ function renderMyWeek(){
     bindWeek(); return;
   }
   /* the week in numbers - only the ones that are there */
-  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[choices,'wk.choices'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
+  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
   var tilesHtml=tiles.length ? '<div class="wk-tiles">'+tiles.map(function(c){
     return '<div class="wk-tile"><b class="numf">'+c[0]+'</b><span>'+esc(t(c[1]))+'</span></div>'; }).join('')+'</div>' : '';
+  /* the feelings named in this week's pauses, the most frequent first */
+  var pzk=Object.keys(pzf).sort(function(x,y){ return pzf[y]-pzf[x]; });
+  if(pzk.length) tilesHtml+='<div class="wk-pzf"><span>'+esc(t('wk.pzfeel'))+':</span>'+pzk.map(function(k){
+    var f=PZ_FEELS.filter(function(x){ return x.k===k; })[0];
+    return '<b>'+(f?f.e+' ':'')+esc(t('pz.f.'+k))+(pzf[k]>1?' ×'+pzf[k]:'')+'</b>'; }).join('')+'</div>';
   function cells(fn){ return '<div class="wk-cells">'+days.map(fn).join('')+'</div>'; }
   var hdr=cells(function(d){
     return '<button type="button" class="wk-day'+(d===wkSel?' on':'')+(d===today?' today':'')+'" data-wk-day="'+d+'"'+
