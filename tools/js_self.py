@@ -642,8 +642,10 @@ var GAME_REACT={t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3],[9,3],[10,4],
 var GAME_STEP=[[1,1],[2,1],[3,1],[4,2],[5,2],[6,3],[7,3],[8,4],[9,4],[10,4]];
 var GAME_SPEED=[[1,1,'c'],[2,1,'r'],[3,1,'c'],[4,1,'r'],[5,1,'c'],[6,1,'r'],[7,1,'c'],[8,1,'r'],[9,2,'c'],[10,2,'r'],[11,2,'c'],[12,2,'r'],
                 [13,2,'c'],[14,2,'r'],[15,2,'c'],[16,2,'r'],[17,3,'r'],[18,3,'c'],[19,3,'r'],[20,3,'c'],[21,3,'r'],[22,3,'c'],[23,3,'r'],[24,3,'c']];
-var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
-var GAME_NEW=['step','speed'], GAME_LEN=6, GAME_SECS=45;
+/* calm: [number, level, the feeling the situation brings] */
+var GAME_CALM=[[1,1,'angry'],[2,1,'stress'],[3,1,'tired'],[4,2,'hurt'],[5,2,'frust'],[6,3,'disap'],[7,3,'fear'],[8,4,'angry'],[9,4,'stress'],[10,4,'sad']];
+var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'calm',icon:'wind'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
+var GAME_NEW=['step','speed','calm'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
@@ -672,8 +674,8 @@ function gmPool(id){
   var age=gmAge(), pool=[];
   if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
-  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : GAME_REACT[age]).forEach(function(c){
-    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true});
+  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : id==='calm' ? GAME_CALM : GAME_REACT[age]).forEach(function(c){
+    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : id==='calm' ? 'gm.calm.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
   });
   return pool;
 }
@@ -690,9 +692,9 @@ function gmPick(R){
     if(sc>bs){ bs=sc; best=c; }
   });
   if(!best) return null;
-  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, back:!!(m && !m[3] && m[2]!==today)};
+  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
-    var ks=best.lv>=3 ? ['a','b','c','d'] : R.id==='step' ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    var ks=best.lv>=3 ? ['a','b','c','d'] : (R.id==='step'||R.id==='calm') ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
@@ -731,6 +733,7 @@ function renderGameRow(){
     '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
   if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
 }
+function gmFeel(k){ var f=PZ_FEELS.filter(function(x){ return x.k===k; })[0]; return (f?f.e+' ':'')+esc(t('pz.f.'+k)); }
 function gmLvLabel(id){ var L=Math.max(1,gmState().lvl[id]||0); return '<span class="gm-lv l'+L+'">'+esc(t('gm.lv'+L))+'</span>'; }
 function renderGames(){
   var box=document.getElementById('gmBox'); if(!box) return;
@@ -762,7 +765,7 @@ function renderGames(){
     var a=R.answered, good=a===c.ans, msg, show='';
     if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
-    else msg=t((R.id==='step'?'gm.s.':'gm.r.')+a);
+    else msg=t((R.id==='step'?'gm.s.':R.id==='calm'?'gm.k.':'gm.r.')+a);
     if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
@@ -773,6 +776,7 @@ function renderGames(){
     else if(c.back) note='<p class="gm-back">'+esc(t('gm.again.q'))+'</p>';
   }
   box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
+    (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : '')+
     '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
     '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button></div>';
   box.querySelectorAll('[data-ans]').forEach(function(b){
