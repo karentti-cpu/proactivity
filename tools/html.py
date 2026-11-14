@@ -65,11 +65,21 @@ TABS = [('home', 'home', 'n.tab.home'),
         ('sheet', 'calendar', 'n.tab.trk'),
         ('progress', 'trending', 'n.tab.prog'),
         ('more', 'sliders', 'n.tab.more')]
-MORE = [('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
+MORE = [('help', 'book', 'help.t', 'more.help'),
+        ('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
         ('learn', 'brain', 'n.tab.learn', 'more.learn'),
         ('body', 'activity', 'a.tab.body', 'more.body'),
         ('circle', 'compass', 'cir.t', 'more.circle'),
         ('games', 'star', 'gm.t', 'more.games')]
+
+# How to use it: the same steps on the landing page and under More.
+HELP_STEPS = [('sun', 1), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sliders', 7)]
+def help_html():
+    steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
+                    for ic_, n in HELP_STEPS)
+    tips = ''.join(f'<li data-i18n="help.tip.{n}"></li>' for n in (1, 2, 3))
+    return (f'<ol class="help-steps">{steps}</ol>'
+            f'<h3 class="help-tips-t">{i("sparkles")}<span data-i18n="help.tip.t"></span></h3><ul class="help-tips">{tips}</ul>')
 
 LANGS = [('he', 'עברית', 'עב'), ('en', 'English', 'EN'), ('fr', 'Français', 'FR'),
          ('ru', 'Русский', 'RU'), ('ar', 'العربية', 'ع')]
@@ -116,14 +126,10 @@ def build_body(logo):
    <p class="sc-close">{i("seedling")}<span data-i18n="n.def.close"></span></p>
   </section>
 
-  <section class="blk" id="pricing">
-   <h2 data-i18n="l.pr.t"></h2>
-   <p class="lede" style="margin-bottom:var(--s5)" data-i18n="l.pr.sub"></p>
-   <div class="plans">{plan_card("monthly")}{plan_card("annual", True)}</div>
-   <p class="trust plans-soon" data-i18n="l.pr.soon"></p>
-   <p class="trust contact-line"><span data-i18n="l.pr.ask"></span>
-    <a data-contact href="#"></a></p>
-   <p class="trust" data-i18n="l.pr.trust"></p>
+  <section class="blk" id="howto">
+   <h2 data-i18n="help.t"></h2>
+   <p class="lede" data-i18n="help.s"></p>
+   {help_html()}
   </section>
 
   <section class="blk faq">
@@ -350,6 +356,11 @@ def build_body(logo):
  <div class="page" id="page-more" role="tabpanel">
   <h2 class="ptitle" data-i18n="n.tab.more"></h2>
   <div class="more-list">{''.join(f'<button class="more-item" data-more="{p}">{i(ic_)}<span><b data-i18n="{k}"></b><small data-i18n="{d}"></small></span>{i("chevron")}</button>' for p, ic_, k, d in MORE)}</div>
+ </div>
+
+ <div class="page" id="page-help" role="tabpanel">
+  <h2 class="ptitle" data-i18n="help.t"></h2><p class="psub" data-i18n="help.s"></p>
+  <section class="dash-box">{help_html()}</section>
  </div>
 
  <div class="page" id="page-circle" role="tabpanel">
