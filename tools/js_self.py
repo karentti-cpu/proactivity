@@ -987,4 +987,122 @@ function pzBreathe(){
 document.getElementById('pauseBtn').addEventListener('click',pzOpen);
 document.getElementById('pzX').addEventListener('click',pzClose);
 document.getElementById('pauseModal').addEventListener('click',function(e){ if(e.target.id==='pauseModal') pzClose(); });
+
+/* ================= a tool for you, and what I have learned =================
+   The app reads what the player already did - pauses and their feelings,
+   evening feelings, how much of the list gets done, goals left without a
+   step, the games, the check-in - and offers one tool a day, saying why.
+   "Not now" is remembered: a tool turned down three times is not offered
+   again. Nothing leaves the device. */
+function tlDays(n){ var out=[], d=new Date(); for(var i=0;i<n;i++){ out.push(dayKey(d)); d.setDate(d.getDate()-1); } return out; }
+function tlState(){ if(!S.tools) S.tools={dis:{}, used:{}}; if(!S.tools.dis) S.tools.dis={}; if(!S.tools.used) S.tools.used={}; return S.tools; }
+var DIM_GAME={choice:'react', init:'step', goal:'step', time:'speed', solve:'flip', plan:'step'};
+function gmName(id){ return t('gm.'+id); }
+function tlCandidates(){
+  var log=S.log||{}, wk=tlDays(7), out=[], st=gmState();
+  function go(id){ return function(){ goPage('games'); gmStart(id); }; }
+  /* pauses with a hard feeling */
+  var pz=0, pf={};
+  wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ pz++; pf[z.f]=(pf[z.f]||0)+1; }); });
+  var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
+  if(pz>=2 && ['angry','stress','frust','hurt','fear'].indexOf(topf)>=0)
+    out.push({id:'calm', s:9, t:t('tl.calm.t'), w:t('tl.calm.w',{n:pz, f:t('pz.f.'+topf)}), icon:'wind', act:go('calm')});
+  /* a long list, little of it done */
+  var tot=0, done=0, days=0;
+  wk.slice(1).forEach(function(d){ var L=log[d]; if(!L||!L.items.length) return; days++; tot+=L.items.length; L.items.forEach(function(x){ if(x.done) done++; }); });
+  if(days>=3 && tot>=6 && done/tot<.5)
+    out.push({id:'less', s:8, t:t('tl.less.t'), w:t('tl.less.w'), icon:'check', act:function(){ goPage('home'); toast(t('tl.less.ok')); var b=document.getElementById('todayBox'); if(b) b.scrollIntoView({block:'start'}); }});
+  /* a goal with no step for four days or more */
+  var today=dayKey();
+  liveGoals().some(function(g){
+    if(!g.startedAt || daysBetween(g.startedAt,today)<4) return false;
+    var last=null;
+    Object.keys(log).sort().forEach(function(d){ if((log[d].steps||[]).indexOf(g.id)>=0 || (log[d].rest||[]).indexOf(g.id)>=0) last=d; });
+    var n=daysBetween(last||g.startedAt, today);
+    if(n<4 || g.doneDay===today) return false;
+    out.push({id:'stuck', s:8.5, t:t('tl.stuck.t',{g:g.title}), w:t('tl.stuck.w',{n:n}), icon:'target', act:function(){
+      var td=today3(); if(td.picked.indexOf(g.id)<0) td.picked.push(g.id); save(); goPage('home'); toast(t('tl.stuck.ok'));
+      var b=document.getElementById('todayBox'); if(b) b.scrollIntoView({block:'start'}); }});
+    return true;
+  });
+  /* tired evenings */
+  var tired=wk.slice(0,5).filter(function(d){ return (log[d]||{}).feel==='tired'; }).length;
+  if(tired>=2) out.push({id:'tired', s:7.5, t:t('tl.tired.t'), w:t('tl.tired.w'), icon:'wind', act:function(){ pzOpen(); }});
+  /* feelings that get mixed up */
+  var fa=st.acc.feel;
+  if(fa && fa[0]>=5 && fa[1]/fa[0]<.7) out.push({id:'dict', s:6, t:t('tl.dict.t'), w:t('tl.dict.w'), icon:'book', act:function(){
+    goPage('games'); var d=document.querySelector('#gmBox .fl-dict'); if(d){ d.open=true; d.scrollIntoView({block:'start'}); } }});
+  /* the game with the most room to grow, and the one ready for more */
+  var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean)
+                   .sort(function(x,y){ return x.r-y.r; });
+  if(rows.length && rows[0].r<.6) out.push({id:'game_'+rows[0].id, s:5.5, t:t('tl.game.t',{g:gmName(rows[0].id)}), w:t('tl.game.w'), icon:'star', act:go(rows[0].id)});
+  var top=rows[rows.length-1];
+  if(top && top.r>=.9 && (st.lvl[top.id]||0)<3) out.push({id:'up_'+top.id, s:5, t:t('tl.up.t',{g:gmName(top.id)}), w:t('tl.up.w'), icon:'trending',
+    act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); goPage('games'); gmStart(top.id); }});
+  /* the pause, never tried */
+  var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length; });
+  var active=wk.filter(function(d){ return log[d]; }).length;
+  if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen(); }});
+  /* the check-in's area to grow */
+  if(hasProfile()){
+    var d=weakDim(), gid=DIM_GAME[d]||'react';
+    out.push({id:'dim', s:3, t:t('tl.dim.t',{d:t('dim.'+d)}), w:t('tl.dim.w',{d:t('dim.'+d), g:gmName(gid)}), icon:'gauge', act:go(gid)});
+  }
+  /* a new game not played yet */
+  var fresh=GAME_NEW.filter(function(id){ return !st.played[id]; })[0];
+  if(fresh) out.push({id:'new_'+fresh, s:2, t:t('tl.new.t',{g:gmName(fresh)}), w:t('tl.new.w'), icon:'sparkles', act:go(fresh)});
+  return out;
+}
+/* one tool a day: the strongest reason, less each time it was turned down */
+function tlToday(){
+  var ts=tlState(), today=dayKey();
+  if(ts.hid===today) return null;
+  var c=tlCandidates().filter(function(x){ return (ts.dis[x.id]||0)<3; });
+  c.forEach(function(x){ x.r=x.s-2*(ts.dis[x.id]||0)-((ts.used[x.id]||{}).day===today ? 20 : 0); });
+  c.sort(function(a,b){ return b.r-a.r; });
+  var best=c.filter(function(x){ return x.r>0; })[0]||null;
+  /* the day's tool stays the same, unless a clearly stronger reason has appeared since */
+  if(ts.pick && ts.pick.day===today){ var keep=c.filter(function(x){ return x.id===ts.pick.id; })[0]; if(keep && !(best && best.r>keep.r+1)) return keep; }
+  ts.pick=best ? {day:today, id:best.id} : null;
+  return best;
+}
+function renderTool(){
+  var box=document.getElementById('toolBox'); if(!box) return;
+  var x=tlToday();
+  if(!x){ box.hidden=true; box.innerHTML=''; return; }
+  box.hidden=false;
+  box.innerHTML='<div class="tl-head">'+ic('sparkles')+'<span>'+esc(t('tl.t'))+'</span></div>'+
+    '<div class="tl-main"><span class="tl-ic">'+ic(x.icon)+'</span><b>'+esc(x.t)+'</b></div>'+
+    '<p class="tl-why"><span>'+esc(t('tl.why'))+'</span> '+esc(x.w)+'</p>'+
+    '<div class="row-btns"><button class="btn btn-primary btn-sm" id="tlTry">'+esc(t('tl.try'))+'</button>'+
+    '<button class="btn btn-quiet btn-sm" id="tlNot">'+esc(t('tl.not'))+'</button></div>';
+  box.querySelector('#tlTry').addEventListener('click',function(){
+    var ts=tlState(); ts.used[x.id]={day:dayKey(), n:((ts.used[x.id]||{}).n||0)+1}; ts.hid=dayKey(); save();
+    box.hidden=true; x.act();
+  });
+  box.querySelector('#tlNot').addEventListener('click',function(){
+    var ts=tlState(); ts.dis[x.id]=(ts.dis[x.id]||0)+1; ts.hid=dayKey(); save(); box.hidden=true;
+  });
+}
+function renderLearned(){
+  var box=document.getElementById('learnBox'); if(!box) return;
+  var log=S.log||{}, two=tlDays(14), lines=[], st=gmState();
+  var h=S.hours||{}, ht=(h.m||0)+(h.n||0)+(h.e||0);
+  if(ht>=8){ var w=['m','n','e'].sort(function(a,b){ return (h[b]||0)-(h[a]||0); })[0]; lines.push(['clock', t('ln.time',{w:t('ln.time.'+w)})]); }
+  var tot=0, done=0; two.forEach(function(d){ ((log[d]||{}).items||[]).forEach(function(x){ tot++; if(x.done) done++; }); });
+  /* the share only when it is encouraging; otherwise the things done, which always are */
+  if(tot>=6 && done/tot>=.4) lines.push(['check', t('ln.done',{p:Math.round(done/tot*100)})]);
+  else if(done>=1) lines.push(['check', t('ln.done.n',{n:done})]);
+  var pf={}; Object.keys(log).forEach(function(d){ (log[d].pauses||[]).forEach(function(z){ pf[z.f]=(pf[z.f]||0)+1; }); });
+  var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
+  if(topf && pf[topf]>=2){ var fe=PZ_FEELS.filter(function(x){ return x.k===topf; })[0]; lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+t('pz.f.'+topf)})]); }
+  var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
+  if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
+  if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
+  var act=two.filter(function(d){ return log[d]; }).length;
+  if(act>=3) lines.push(['calendar', t('ln.days',{n:act})]);
+  box.innerHTML='<h3 class="boxh">'+ic('sparkles')+'<span>'+esc(t('ln.t'))+'</span></h3><p class="psub">'+esc(t('ln.s'))+'</p>'+
+    (lines.length ? '<ul class="ln-list">'+lines.slice(0,5).map(function(l){ return '<li>'+ic(l[0])+'<span>'+esc(l[1])+'</span></li>'; }).join('')+'</ul>'
+                  : '<p class="hint">'+esc(t('ln.none'))+'</p>');
+}
 """

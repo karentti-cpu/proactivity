@@ -317,6 +317,8 @@ function toast(msg){
    after the praise toast most awards fire right behind this call, so the two
    do not overwrite each other. */
 function addPts(n){
+  /* when in the day the steps happen, for "what I have learned about you" */
+  if(n>0){ var h=new Date().getHours(), b=h<12?'m':h<17?'n':'e'; if(!S.hours) S.hours={m:0,n:0,e:0}; S.hours[b]=(S.hours[b]||0)+1; }
   var before=levelInfo();
   S.points=Math.max(0,S.points+n); save();
   var after=levelInfo();

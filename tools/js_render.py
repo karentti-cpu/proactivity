@@ -1650,7 +1650,7 @@ function bindSettings(){
   });
 }
 function renderDash(){
-  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow();
+  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool();
   renderAvatarCard(); renderInvite();
 }
 
@@ -1791,7 +1791,7 @@ function goPage(name){
   try{ localStorage.setItem('proactive_tab', name); }catch(e){}
   if(name==='home') renderDash();
   if(name==='goals') renderGoals();
-  if(name==='progress'){ renderMyWeek(); renderProfile('profBody'); renderAchievements(); renderSettings(); renderTrend(); renderBackupLast(); }
+  if(name==='progress'){ renderMyWeek(); renderLearned(); renderProfile('profBody'); renderAchievements(); renderSettings(); renderTrend(); renderBackupLast(); }
   if(name==='circle') renderCircle();
   if(name==='sheet') renderTrackers();
   if(name==='games'){ gmRun=null; renderGames(); }
