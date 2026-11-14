@@ -348,6 +348,7 @@ def build_body(logo):
   </section>
   <section class="dash-box today3" id="todayBox"></section>
   <button type="button" class="pause-btn" id="pauseBtn"><span class="pz-ic">{i("wind")}</span><span><b data-i18n="pz.btn"></b><small data-i18n="pz.btn.s"></small></span>{i("chevron")}</button>
+  <section class="dash-box tl-box" id="toolBox" hidden></section>
   <button type="button" class="home-game" id="gameRow" hidden></button>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
@@ -436,6 +437,7 @@ def build_body(logo):
   <h2 class="ptitle" data-i18n="n.pg.t"></h2><p class="psub" data-i18n="n.pg.s"></p>
 
   <section class="dash-box" id="weekBox"></section>
+  <section class="dash-box ln-box" id="learnBox"></section>
 
   <section class="dash-box">
    <h3 class="boxh">{i("gauge")}<span data-i18n="rs.t"></span></h3>

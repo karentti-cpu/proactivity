@@ -644,8 +644,22 @@ var GAME_SPEED=[[1,1,'c'],[2,1,'r'],[3,1,'c'],[4,1,'r'],[5,1,'c'],[6,1,'r'],[7,1
                 [13,2,'c'],[14,2,'r'],[15,2,'c'],[16,2,'r'],[17,3,'r'],[18,3,'c'],[19,3,'r'],[20,3,'c'],[21,3,'r'],[22,3,'c'],[23,3,'r'],[24,3,'c']];
 /* calm: [number, level, the feeling the situation brings] */
 var GAME_CALM=[[1,1,'angry'],[2,1,'stress'],[3,1,'tired'],[4,2,'hurt'],[5,2,'frust'],[6,3,'disap'],[7,3,'fear'],[8,4,'angry'],[9,4,'stress'],[10,4,'sad']];
-var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'calm',icon:'wind'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
-var GAME_NEW=['step','speed','calm'], GAME_LEN=6, GAME_SECS=45;
+/* the twenty feelings, and the feeling game: [number, level, answer, the feelings close to it] */
+var FEELINGS=[{k:'joy',e:'😄'},{k:'pride',e:'🏆'},{k:'relief',e:'😮‍💨'},{k:'grat',e:'🙏'},{k:'excite',e:'🤩'},{k:'curious',e:'🧐'},{k:'calm',e:'😌'},
+  {k:'anger',e:'😠'},{k:'frust',e:'😤'},{k:'hurt',e:'😔'},{k:'jeal',e:'😒'},{k:'shame',e:'🙈'},{k:'embar',e:'😳'},{k:'guilt',e:'😣'},
+  {k:'fear',e:'😨'},{k:'worry',e:'😟'},{k:'sad',e:'😢'},{k:'disap',e:'😞'},{k:'lonely',e:'🥺'},{k:'bored',e:'🥱'}];
+var GAME_FEEL=[[1,1,'joy',['excite']],[2,1,'fear',['worry']],[3,1,'anger',['frust']],[4,1,'sad',['lonely']],[5,1,'excite',['joy']],[6,1,'bored',['calm']],
+  [7,2,'relief',['joy']],[8,2,'pride',['joy']],[9,2,'grat',['joy']],[10,2,'disap',['sad']],[11,2,'worry',['fear']],[12,2,'lonely',['sad']],[13,2,'curious',['excite']],[14,2,'calm',['relief']],
+  [15,3,'guilt',['shame','fear']],[16,3,'embar',['shame','hurt']],[17,3,'jeal',['disap','anger']],[18,3,'frust',['anger','disap']],[19,3,'hurt',['anger','shame']],[20,3,'disap',['sad','frust']],
+  [21,4,'shame',['embar','guilt']],[22,4,'worry',['fear','shame']],[23,4,'relief',['calm','joy']],[24,4,'lonely',['sad','bored']]];
+function feelOf(k){ return FEELINGS.filter(function(x){ return x.k===k; })[0]; }
+function feelDict(){
+  return '<details class="fl-dict"><summary>'+ic('book')+'<span><b>'+esc(t('gm.dict'))+'</b><small>'+esc(t('gm.dict.s'))+'</small></span>'+ic('chevron','fl-c')+'</summary>'+
+    '<div class="fl-grid">'+FEELINGS.map(function(f){
+      return '<div class="fl-item"><span class="fl-e">'+f.e+'</span><span><b>'+esc(t('fe.'+f.k))+'</b><small>'+esc(t('fe.'+f.k+'.m'))+'</small></span></div>'; }).join('')+'</div></details>';
+}
+var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'calm',icon:'wind'},{id:'feel',icon:'face'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
+var GAME_NEW=['step','speed','calm','feel'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
@@ -673,6 +687,7 @@ function gmDaily(){
 function gmPool(id){
   var age=gmAge(), pool=[];
   if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
+  else if(id==='feel') GAME_FEEL.forEach(function(c){ pool.push({key:'gm.fl.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
   else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : id==='calm' ? GAME_CALM : GAME_REACT[age]).forEach(function(c){
     pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : id==='calm' ? 'gm.calm.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
@@ -692,12 +707,18 @@ function gmPick(R){
     if(sc>bs){ bs=sc; best=c; }
   });
   if(!best) return null;
-  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
+  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
     var ks=best.lv>=3 ? ['a','b','c','d'] : (R.id==='step'||R.id==='calm') ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
+  if(R.id==='feel'){
+    /* the answer, the close feelings once the level allows, and the rest at random */
+    var n=best.lv>=3 ? 4 : 3, picks=[best.ans].concat(best.lv>=2 ? best.near.slice(0,n-1) : []);
+    gmShuffle(FEELINGS).forEach(function(f){ if(picks.length<n && picks.indexOf(f.k)<0 && best.near.indexOf(f.k)<0) picks.push(f.k); });
+    card.fopts=gmShuffle(picks);
+  }
   R.cards.push(card);
   return card;
 }
@@ -746,7 +767,7 @@ function renderGames(){
         '<span class="gm-txt"><b>'+esc(t('gm.'+g.id))+(isNew ? ' <span class="gm-newb">'+esc(t('gm.new'))+'</span>' : n ? ' '+gmLvLabel(g.id) : '')+'</b>'+
         '<small>'+esc(t('gm.'+g.id+'.s'))+'</small>'+
         (isD ? '<em>'+esc(st.daily===dayKey() ? t('gm.daily.done') : t('gm.daily'))+'</em>' : '')+'</span>'+
-        (n ? '<span class="gm-n numf">✓'+n+'</span>' : '')+'</button>'; }).join('')+'</div>';
+        (n ? '<span class="gm-n numf">✓'+n+'</span>' : '')+'</button>'; }).join('')+'</div>'+feelDict();
     box.querySelectorAll('[data-gm]').forEach(function(b){ b.addEventListener('click',function(){ gmStart(b.dataset.gm); }); });
     return;
   }
@@ -755,7 +776,9 @@ function renderGames(){
   if(R.i>=GAME_LEN || (R.i>=R.cards.length && !gmPick(R))){ gmFinish(box); return; }
   var c=R.cards[R.i];
   var dots='<div class="gm-dots">'+Array.apply(null,Array(GAME_LEN)).map(function(_,k){ return '<i class="'+(k<R.i?'on':k===R.i?'cur':'')+'"></i>'; }).join('')+'</div>';
-  var opts = R.id==='circle'
+  var opts = R.id==='feel'
+    ? '<div class="gm-opts fl-opts">'+c.fopts.map(function(k){ var f=feelOf(k); return '<button type="button" class="gm-opt" data-ans="'+k+'"><span class="fl-e">'+f.e+'</span><span>'+esc(t('fe.'+k))+'</span></button>'; }).join('')+'</div>'
+    : R.id==='circle'
     ? '<div class="gm-opts '+(c.lv>=3?'three':'two')+'"><button type="button" class="gm-opt" data-ans="in">'+ic('check')+'<span>'+esc(t('gm.in'))+'</span></button>'+
         (c.lv>=3 ? '<button type="button" class="gm-opt" data-ans="part">'+ic('compass')+'<span>'+esc(t('gm.part'))+'</span></button>' : '')+
         '<button type="button" class="gm-opt" data-ans="out">'+ic('seedling')+'<span>'+esc(t('gm.out'))+'</span></button></div>'
@@ -763,7 +786,8 @@ function renderGames(){
   var fb='';
   if(R.answered){
     var a=R.answered, good=a===c.ans, msg, show='';
-    if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
+    if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
+    else if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
     else msg=t((R.id==='step'?'gm.s.':R.id==='calm'?'gm.k.':'gm.r.')+a);
     if(!good && c.best) show=c.best;
@@ -778,7 +802,7 @@ function renderGames(){
   box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
     (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : '')+
     '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
-    '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button></div>';
+    '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button>'+(R.id==='feel'?feelDict():'')+'</div>';
   box.querySelectorAll('[data-ans]').forEach(function(b){
     if(R.answered){ b.disabled=true; if(b.dataset.ans===R.answered) b.classList.add('picked'); if(b.dataset.ans===c.ans) b.classList.add('best'); return; }
     b.addEventListener('click',function(){
@@ -963,4 +987,122 @@ function pzBreathe(){
 document.getElementById('pauseBtn').addEventListener('click',pzOpen);
 document.getElementById('pzX').addEventListener('click',pzClose);
 document.getElementById('pauseModal').addEventListener('click',function(e){ if(e.target.id==='pauseModal') pzClose(); });
+
+/* ================= a tool for you, and what I have learned =================
+   The app reads what the player already did - pauses and their feelings,
+   evening feelings, how much of the list gets done, goals left without a
+   step, the games, the check-in - and offers one tool a day, saying why.
+   "Not now" is remembered: a tool turned down three times is not offered
+   again. Nothing leaves the device. */
+function tlDays(n){ var out=[], d=new Date(); for(var i=0;i<n;i++){ out.push(dayKey(d)); d.setDate(d.getDate()-1); } return out; }
+function tlState(){ if(!S.tools) S.tools={dis:{}, used:{}}; if(!S.tools.dis) S.tools.dis={}; if(!S.tools.used) S.tools.used={}; return S.tools; }
+var DIM_GAME={choice:'react', init:'step', goal:'step', time:'speed', solve:'flip', plan:'step'};
+function gmName(id){ return t('gm.'+id); }
+function tlCandidates(){
+  var log=S.log||{}, wk=tlDays(7), out=[], st=gmState();
+  function go(id){ return function(){ goPage('games'); gmStart(id); }; }
+  /* pauses with a hard feeling */
+  var pz=0, pf={};
+  wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ pz++; pf[z.f]=(pf[z.f]||0)+1; }); });
+  var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
+  if(pz>=2 && ['angry','stress','frust','hurt','fear'].indexOf(topf)>=0)
+    out.push({id:'calm', s:9, t:t('tl.calm.t'), w:t('tl.calm.w',{n:pz, f:t('pz.f.'+topf)}), icon:'wind', act:go('calm')});
+  /* a long list, little of it done */
+  var tot=0, done=0, days=0;
+  wk.slice(1).forEach(function(d){ var L=log[d]; if(!L||!L.items.length) return; days++; tot+=L.items.length; L.items.forEach(function(x){ if(x.done) done++; }); });
+  if(days>=3 && tot>=6 && done/tot<.5)
+    out.push({id:'less', s:8, t:t('tl.less.t'), w:t('tl.less.w'), icon:'check', act:function(){ goPage('home'); toast(t('tl.less.ok')); var b=document.getElementById('todayBox'); if(b) b.scrollIntoView({block:'start'}); }});
+  /* a goal with no step for four days or more */
+  var today=dayKey();
+  liveGoals().some(function(g){
+    if(!g.startedAt || daysBetween(g.startedAt,today)<4) return false;
+    var last=null;
+    Object.keys(log).sort().forEach(function(d){ if((log[d].steps||[]).indexOf(g.id)>=0 || (log[d].rest||[]).indexOf(g.id)>=0) last=d; });
+    var n=daysBetween(last||g.startedAt, today);
+    if(n<4 || g.doneDay===today) return false;
+    out.push({id:'stuck', s:8.5, t:t('tl.stuck.t',{g:g.title}), w:t('tl.stuck.w',{n:n}), icon:'target', act:function(){
+      var td=today3(); if(td.picked.indexOf(g.id)<0) td.picked.push(g.id); save(); goPage('home'); toast(t('tl.stuck.ok'));
+      var b=document.getElementById('todayBox'); if(b) b.scrollIntoView({block:'start'}); }});
+    return true;
+  });
+  /* tired evenings */
+  var tired=wk.slice(0,5).filter(function(d){ return (log[d]||{}).feel==='tired'; }).length;
+  if(tired>=2) out.push({id:'tired', s:7.5, t:t('tl.tired.t'), w:t('tl.tired.w'), icon:'wind', act:function(){ pzOpen(); }});
+  /* feelings that get mixed up */
+  var fa=st.acc.feel;
+  if(fa && fa[0]>=5 && fa[1]/fa[0]<.7) out.push({id:'dict', s:6, t:t('tl.dict.t'), w:t('tl.dict.w'), icon:'book', act:function(){
+    goPage('games'); var d=document.querySelector('#gmBox .fl-dict'); if(d){ d.open=true; d.scrollIntoView({block:'start'}); } }});
+  /* the game with the most room to grow, and the one ready for more */
+  var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean)
+                   .sort(function(x,y){ return x.r-y.r; });
+  if(rows.length && rows[0].r<.6) out.push({id:'game_'+rows[0].id, s:5.5, t:t('tl.game.t',{g:gmName(rows[0].id)}), w:t('tl.game.w'), icon:'star', act:go(rows[0].id)});
+  var top=rows[rows.length-1];
+  if(top && top.r>=.9 && (st.lvl[top.id]||0)<3) out.push({id:'up_'+top.id, s:5, t:t('tl.up.t',{g:gmName(top.id)}), w:t('tl.up.w'), icon:'trending',
+    act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); goPage('games'); gmStart(top.id); }});
+  /* the pause, never tried */
+  var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length; });
+  var active=wk.filter(function(d){ return log[d]; }).length;
+  if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen(); }});
+  /* the check-in's area to grow */
+  if(hasProfile()){
+    var d=weakDim(), gid=DIM_GAME[d]||'react';
+    out.push({id:'dim', s:3, t:t('tl.dim.t',{d:t('dim.'+d)}), w:t('tl.dim.w',{d:t('dim.'+d), g:gmName(gid)}), icon:'gauge', act:go(gid)});
+  }
+  /* a new game not played yet */
+  var fresh=GAME_NEW.filter(function(id){ return !st.played[id]; })[0];
+  if(fresh) out.push({id:'new_'+fresh, s:2, t:t('tl.new.t',{g:gmName(fresh)}), w:t('tl.new.w'), icon:'sparkles', act:go(fresh)});
+  return out;
+}
+/* one tool a day: the strongest reason, less each time it was turned down */
+function tlToday(){
+  var ts=tlState(), today=dayKey();
+  if(ts.hid===today) return null;
+  var c=tlCandidates().filter(function(x){ return (ts.dis[x.id]||0)<3; });
+  c.forEach(function(x){ x.r=x.s-2*(ts.dis[x.id]||0)-((ts.used[x.id]||{}).day===today ? 20 : 0); });
+  c.sort(function(a,b){ return b.r-a.r; });
+  var best=c.filter(function(x){ return x.r>0; })[0]||null;
+  /* the day's tool stays the same, unless a clearly stronger reason has appeared since */
+  if(ts.pick && ts.pick.day===today){ var keep=c.filter(function(x){ return x.id===ts.pick.id; })[0]; if(keep && !(best && best.r>keep.r+1)) return keep; }
+  ts.pick=best ? {day:today, id:best.id} : null;
+  return best;
+}
+function renderTool(){
+  var box=document.getElementById('toolBox'); if(!box) return;
+  var x=tlToday();
+  if(!x){ box.hidden=true; box.innerHTML=''; return; }
+  box.hidden=false;
+  box.innerHTML='<div class="tl-head">'+ic('sparkles')+'<span>'+esc(t('tl.t'))+'</span></div>'+
+    '<div class="tl-main"><span class="tl-ic">'+ic(x.icon)+'</span><b>'+esc(x.t)+'</b></div>'+
+    '<p class="tl-why"><span>'+esc(t('tl.why'))+'</span> '+esc(x.w)+'</p>'+
+    '<div class="row-btns"><button class="btn btn-primary btn-sm" id="tlTry">'+esc(t('tl.try'))+'</button>'+
+    '<button class="btn btn-quiet btn-sm" id="tlNot">'+esc(t('tl.not'))+'</button></div>';
+  box.querySelector('#tlTry').addEventListener('click',function(){
+    var ts=tlState(); ts.used[x.id]={day:dayKey(), n:((ts.used[x.id]||{}).n||0)+1}; ts.hid=dayKey(); save();
+    box.hidden=true; x.act();
+  });
+  box.querySelector('#tlNot').addEventListener('click',function(){
+    var ts=tlState(); ts.dis[x.id]=(ts.dis[x.id]||0)+1; ts.hid=dayKey(); save(); box.hidden=true;
+  });
+}
+function renderLearned(){
+  var box=document.getElementById('learnBox'); if(!box) return;
+  var log=S.log||{}, two=tlDays(14), lines=[], st=gmState();
+  var h=S.hours||{}, ht=(h.m||0)+(h.n||0)+(h.e||0);
+  if(ht>=8){ var w=['m','n','e'].sort(function(a,b){ return (h[b]||0)-(h[a]||0); })[0]; lines.push(['clock', t('ln.time',{w:t('ln.time.'+w)})]); }
+  var tot=0, done=0; two.forEach(function(d){ ((log[d]||{}).items||[]).forEach(function(x){ tot++; if(x.done) done++; }); });
+  /* the share only when it is encouraging; otherwise the things done, which always are */
+  if(tot>=6 && done/tot>=.4) lines.push(['check', t('ln.done',{p:Math.round(done/tot*100)})]);
+  else if(done>=2) lines.push(['check', t('ln.done.n',{n:done})]);
+  var pf={}; Object.keys(log).forEach(function(d){ (log[d].pauses||[]).forEach(function(z){ pf[z.f]=(pf[z.f]||0)+1; }); });
+  var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
+  if(topf && pf[topf]>=2){ var fe=PZ_FEELS.filter(function(x){ return x.k===topf; })[0]; lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+t('pz.f.'+topf)})]); }
+  var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
+  if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
+  if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
+  var act=two.filter(function(d){ return log[d]; }).length;
+  if(act>=3) lines.push(['calendar', t('ln.days',{n:act})]);
+  box.innerHTML='<h3 class="boxh">'+ic('sparkles')+'<span>'+esc(t('ln.t'))+'</span></h3><p class="psub">'+esc(t('ln.s'))+'</p>'+
+    (lines.length ? '<ul class="ln-list">'+lines.slice(0,5).map(function(l){ return '<li>'+ic(l[0])+'<span>'+esc(l[1])+'</span></li>'; }).join('')+'</ul>'
+                  : '<p class="hint">'+esc(t('ln.none'))+'</p>');
+}
 """
