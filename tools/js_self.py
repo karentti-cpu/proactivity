@@ -34,10 +34,12 @@ function renderVision(){
     box.className='vision';
     box.innerHTML='<button type="button" class="vision-line" data-vis-edit aria-label="'+esc(t('ge.btn'))+'">'+ic('compass')+
       '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span>'+ic('edit','vis-edit')+'</button>'+
+      ((S.values&&S.values.list&&S.values.list.length) ? '<button type="button" class="vis-vals" data-vis-vals>'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</button>' : '')+
       (due ? '<div class="vis-chk"><p>'+esc(t('vis.chk'))+'</p><div class="row-btns">'+
         '<button class="btn btn-ghost btn-sm" data-vis-keep>'+ic('check')+'<span>'+esc(t('vis.keep'))+'</span></button>'+
         '<button class="btn btn-quiet btn-sm" data-vis-change>'+ic('edit')+'<span>'+esc(t('vis.change'))+'</span></button></div></div>' : '');
     box.querySelector('[data-vis-edit]').addEventListener('click',function(){ visEdit=true; renderVision(); });
+    var vv=box.querySelector('[data-vis-vals]'); if(vv) vv.addEventListener('click',function(){ goPage('values'); });
     var kp=box.querySelector('[data-vis-keep]');
     if(kp) kp.addEventListener('click',function(){ P.visionNext=inDays(30); save(); toast(t('vis.saved')); renderVision(); });
     var ch=box.querySelector('[data-vis-change]');
@@ -807,7 +809,9 @@ GAME_IDS=GAME_IDS.concat([{id:'opt',icon:'sun'},{id:'kind',icon:'seedling'},{id:
 /* games whose answers are a set of words: feelings, strengths */
 var GM_WORDS={feel:{keys:function(){ return FEELINGS.map(function(f){ return f.k; }); }, lab:function(k){ return t('fe.'+k); }, emo:function(k){ var f=feelOf(k); return f?f.e:''; }},
               str:{keys:function(){ return VS_KEYS; }, lab:function(k){ return t('vs.'+k); }, emo:function(){ return ''; }}};
-var GAME_NEW=['step','speed','calm','feel','opt','kind','str'], GAME_LEN=6, GAME_SECS=45;
+var GAME_VACT=[[1,1,'honest'],[2,1,'kind'],[3,1,'perse'],[4,2,'grat'],[5,2,'fair'],[6,2,'brave'],[7,3,'forg'],[8,3,'selfr'],[9,3,'lovea'],[10,4,'curio'],[11,4,'team'],[12,4,'hope']];
+GAME_IDS.push({id:'vact',icon:'compass'});
+var GAME_NEW=['step','speed','calm','feel','opt','kind','str','vact'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 /* who is playing: me, one of my children, or someone else (an age group,
    nothing saved). The cards follow the player's age: k up to 12, t up to
@@ -861,6 +865,7 @@ function gmPoolAll(id){
   else if(id==='feel') GAME_FEEL.forEach(function(c){ pool.push({key:'gm.fl.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='str') GAME_STR.forEach(function(c){ pool.push({key:'gm.str.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
+  else if(id==='vact') GAME_VACT.forEach(function(c){ pool.push({key:'gm.vact.'+c[0], lv:c[1], multi:true, val:c[2]}); });
   else ({flip:GAME_FLIP, step:GAME_STEP, calm:GAME_CALM, opt:GAME_OPT, kind:GAME_KIND}[id] || GAME_REACT[age]).forEach(function(c){
     pool.push({key:({flip:'gm.flip.', step:'gm.step.', calm:'gm.calm.', opt:'gm.opt.', kind:'gm.kind.'}[id] || 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
   });
@@ -872,16 +877,17 @@ function gmPoolAll(id){
 function gmPick(R){
   var st=gmState(), today=dayKey(), used={}, best=null, bs=-1e9;
   R.cards.forEach(function(c){ used[c.key]=1; });
-  function score(c){ var m=st.mem[c.key]; if(!m) return 3; if(m[2]===today) return .2; if(!m[3]) return 4; return 1+(1-m[1]/m[0]); }
+  var myVals=(S.values&&S.values.list)||[];
+  function score(c){ var b=(c.val && myVals.indexOf(c.val)>=0) ? 1.5 : 0, m=st.mem[c.key]; if(!m) return 3+b; if(m[2]===today) return .2; if(!m[3]) return 4+b; return 1+(1-m[1]/m[0])+b; }
   gmShuffle(R.pool).forEach(function(c){
     if(used[c.key]) return;
     var sc=score(c)-Math.abs(c.lv-R.lv)*10;
     if(sc>bs){ bs=sc; best=c; }
   });
   if(!best) return null;
-  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
+  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, val:best.val, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
-    var ks=best.lv>=3 ? ['a','b','c','d'] : (['step','calm','opt','kind'].indexOf(R.id)>=0) ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    var ks=best.lv>=3 ? ['a','b','c','d'] : (['step','calm','opt','kind','vact'].indexOf(R.id)>=0) ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
@@ -981,7 +987,7 @@ function renderGames(){
     else if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
     else if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
-    else msg=t(({step:'gm.s.', calm:'gm.k.', opt:'gm.o.', kind:'gm.y.'}[R.id]||'gm.r.')+a);
+    else msg=t(({step:'gm.s.', calm:'gm.k.', opt:'gm.o.', kind:'gm.y.', vact:'gm.va.'}[R.id]||'gm.r.')+a);
     if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
@@ -993,7 +999,7 @@ function renderGames(){
   }
   var forWho=gmKidP() ? '<p class="gm-forwho">'+esc(t('gm.playing',{n:gmKidP().name}))+'</p>' : gmPlayer.k==='guest' ? '<p class="gm-forwho">'+esc(t('gm.playing',{n:t('gm.b.'+(gmPlayer.band||'a'))}))+'</p>' : '';
   box.innerHTML='<div class="gm-play">'+forWho+'<div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
-    (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : '')+
+    (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : c.val ? '<p class="gm-feel gm-val">'+vlEmo(c.val)+' '+esc(vlName(c.val))+'</p>' : '')+
     '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
     '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button>'+(R.id==='feel'?feelDict():'')+'</div>';
   box.querySelectorAll('[data-ans]').forEach(function(b){
@@ -1179,14 +1185,18 @@ function pzRender(){
     box.querySelector('#pzGo').addEventListener('click',function(){ pzStartBreath('dayend'); });
   } else if(pz.step==='intent'){
     var Li=pzLog();
+    var myV=(S.values&&S.values.list)||[];
     box.innerHTML=(P.vision ? '<p class="pz-felt">'+esc(t('in.vis',{v:P.vision}))+'</p>' : '')+
       '<p class="pz-big">'+esc(t('in.q'))+'</p>'+
+      (myV.length ? '<p class="pz-sub pz-rt">'+esc(t('vl.mine'))+'</p><div class="mg-picks pz-chips">'+myV.map(function(k){
+        return '<button type="button" class="t3idea t3chip vl-ichip'+(Li.intent===vlName(k)?' on':'')+'" data-inv="'+k+'"><span>'+vlEmo(k)+' '+esc(vlName(k))+'</span></button>'; }).join('')+'</div>' : '')+
       '<div class="mg-picks pz-chips">'+['patience','courage','calm','generous','persist','listen','joy','resp','curious'].map(function(k){
         return '<button type="button" class="t3idea t3chip'+(Li.intent===t('q.'+k)?' on':'')+'" data-inq="'+k+'"><span>'+esc(t('q.'+k))+'</span></button>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="60" placeholder="'+esc(t('in.own'))+'">'+
       '<button class="btn btn-primary" id="pzOk">'+esc(t('in.ok'))+'</button></div>';
     var setI=function(x){ if(!x) return; var L=pzLog(), first=!L.intent; L.intent=x; if(first){ addPts(5); markActiveToday(); } save(); toast(t('in.saved',{x:x})); pzClose(); };
     box.querySelectorAll('[data-inq]').forEach(function(b){ b.addEventListener('click',function(){ setI(t('q.'+b.dataset.inq)); }); });
+    box.querySelectorAll('[data-inv]').forEach(function(b){ b.addEventListener('click',function(){ setI(vlName(b.dataset.inv)); }); });
     var oi=box.querySelector('#pzOwn');
     box.querySelector('#pzOk').addEventListener('click',function(){ var v=oi.value.trim(); if(v) setI(v); else oi.focus(); });
     oi.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); setI(oi.value.trim()); } });
@@ -1425,6 +1435,8 @@ function tlCandidates(){
   /* no gratitude written in the last three days, in the evening */
   var gr=S.grat||{}, recent=tlDays(3).some(function(d){ return gr[d]; });
   if(!recent && new Date().getHours()>=17 && active>=1) out.push({id:'grat', s:6.5, t:t('tl.grat.t'), w:t('tl.grat.w'), icon:'book', act:function(){ goPage('well'); }});
+  /* no values yet, after a few active days */
+  if(!(S.values && S.values.list && S.values.list.length) && active>=3) out.push({id:'values', s:6, t:t('tl.vl.t'), w:t('tl.vl.w'), icon:'compass', act:function(){ goPage('values'); }});
   /* the pause, never tried */
   var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length || log[d].breath; });
   if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen('day'); }});
@@ -1484,6 +1496,8 @@ function renderLearned(){
   var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
   if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
   var ini=two.reduce(function(n,d){ return n+initCount(log[d],d); },0); if(ini>=2) lines.unshift(['rocket', t('ln.init',{n:ini})]);
+  var vck=(S.values&&S.values.check&&S.values.check[weekKey()])||{}, vbest=Object.keys(vck).sort(function(a,b){ return vck[b]-vck[a]; })[0];
+  if(vbest && vck[vbest]>=3) lines.push(['compass', t('ln.val',{v:vlEmo(vbest)+' '+vlName(vbest)})]);
   if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
   var act=two.filter(function(d){ return log[d]; }).length;
   if(act>=3) lines.push(['calendar', t('ln.days',{n:act})]);
@@ -1509,13 +1523,16 @@ function renderWell(){
   var hist=days.length ? '<details class="gr-hist"><summary>'+ic('book')+'<span>'+esc(t('gr.hist',{n:days.length}))+'</span></summary>'+
     days.slice(0,30).map(function(d){ return '<div class="gr-day"><b>'+esc(fmtDay(d))+'</b><ul>'+S.grat[d].map(function(x){
       return '<li>'+esc(x.t)+(x.w?' <small>· '+esc(x.w)+'</small>':'')+'</li>'; }).join('')+'</ul></div>'; }).join('')+'</details>' : '';
-  /* strength of the week */
-  var wk=weekKey(), sw=(S.well&&S.well.str&&S.well.str.week===wk) ? S.well.str.k : null;
-  var str = (sw && !wlStrPick)
-    ? '<p class="wl-pick">'+esc(t('st.week',{s:t('vs.'+sw)}))+'</p><p class="wl-idea"><b>'+esc(t('st.idea'))+'</b> '+esc(t('vs.'+sw+'.i'))+'</p>'+
-      '<div class="row-btns"><button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('vs.'+sw+'.i'))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
-      '<button class="btn btn-quiet btn-sm" id="stChange">'+esc(t('st.change'))+'</button></div>'
-    : '<div class="mg-picks">'+VS_KEYS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+esc(t('vs.'+k))+'</span></button>'; }).join('')+'</div>';
+  /* strength of the week: chosen from the strengths picked in My values */
+  var mineS=((S.values&&S.values.list)||[]).filter(function(k){ return VALUE_LIST.some(function(v){ return v[0]===k; }); });
+  var wk=weekKey(), sw=(S.well&&S.well.str&&S.well.str.week===wk && mineS.indexOf(S.well.str.k)>=0) ? S.well.str.k : null;
+  var str = !mineS.length
+    ? '<p class="wl-idea">'+esc(t('st.none'))+'</p><button class="btn btn-ghost btn-sm" id="stGo">'+ic('compass')+'<span>'+esc(t('st.go'))+'</span></button>'
+    : (sw && !wlStrPick)
+    ? '<p class="wl-pick">'+vlEmo(sw)+' '+esc(t('st.week',{s:vlName(sw)}))+'</p><p class="wl-idea"><b>'+esc(t('st.idea'))+'</b> '+esc(viaIdea(sw))+'</p>'+
+      '<div class="row-btns"><button class="btn btn-ghost btn-sm" data-wladd="'+esc(viaIdea(sw))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
+      (mineS.length>1 ? '<button class="btn btn-quiet btn-sm" id="stChange">'+esc(t('st.change'))+'</button>' : '')+'</div>'
+    : '<p class="wl-idea">'+esc(t('st.mine'))+'</p><div class="mg-picks">'+mineS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+vlEmo(k)+' '+esc(vlName(k))+'</span></button>'; }).join('')+'</div>';
   if(wlKd===null){ var n=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5); wlKd=n%KD_N+1; }
   box.innerHTML=
     '<section class="dash-box wl-card"><h3 class="boxh">'+ic('book')+'<span>'+esc(t('gr.t'))+'</span></h3><p class="psub">'+esc(t('gr.s'))+'</p>'+
@@ -1544,6 +1561,7 @@ function renderWell(){
   box.querySelectorAll('[data-vs]').forEach(function(b){ b.addEventListener('click',function(){
     if(!S.well) S.well={}; S.well.str={week:wk, k:b.dataset.vs}; wlStrPick=false; save(); renderWell(); }); });
   var sc=box.querySelector('#stChange'); if(sc) sc.addEventListener('click',function(){ wlStrPick=true; renderWell(); });
+  var sg=box.querySelector('#stGo'); if(sg) sg.addEventListener('click',function(){ goPage('values'); });
   box.querySelector('#kdMore').addEventListener('click',function(){ wlKd=wlKd%KD_N+1; renderWell(); });
   box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ gmPlayer={k:'me'}; goPage('games'); gmStart(b.dataset.wlgame); }); });
   box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
@@ -1730,4 +1748,69 @@ function renderFbAsk(){
 document.getElementById('fbOpen').addEventListener('click',fbOpen);
 document.getElementById('fbX').addEventListener('click',fbClose);
 document.getElementById('fbModal').addEventListener('click',function(e){ if(e.target.id==='fbModal') fbClose(); });
+
+/* ================= my values =================
+   Up to five values, each with what it means to me and a small step for the
+   week; a weekly check of how much I lived by them. They feed the "choose"
+   step of the daily path, the vision card, a tool and an insight. */
+/* the 24 character strengths of positive psychology (VIA), in their six virtues;
+   values chosen from the earlier list keep working (OLD_VALUES) */
+var VIA_GROUPS=[['wisdom',[['creat','🎨'],['curio','🔍'],['judg','⚖️'],['lovel','📚'],['persp','🦉']]],
+  ['courage',[['brave','🦁'],['perse','🧗'],['honest','🤝'],['zest','⚡']]],
+  ['human',[['lovea','❤️'],['kind','💛'],['socint','🫶']]],
+  ['justice',[['team','👥'],['fair','🤲'],['lead','🧭']]],
+  ['temper',[['forg','🕊️'],['humil','🌾'],['prud','🛡️'],['selfr','🧘']]],
+  ['transc',[['beauty','🌅'],['grat','🙏'],['hope','🌈'],['humor','😄'],['spirit','✨']]]];
+var VALUE_LIST=[]; VIA_GROUPS.forEach(function(g){ VALUE_LIST=VALUE_LIST.concat(g[1]); });
+var OLD_VALUES=[['family','👨‍👩‍👧'],['health','💪'],['freedom','🕊️'],['learn','📚'],['love','❤️'],['giving','🎁'],['resp','✅'],['create','🎨'],['growth','🌱'],['faith','✨'],
+  ['respect','🙏'],['justice','⚖️'],['courage','🦁'],['peace','🌿'],['adv','🧭'],['friend','🫶'],['commun','🏘️'],['excel','🏆'],['joy','😄'],['secure','🏠'],['indep','🚀'],['balance','🧘']];
+var VL_MAX=5;
+/* an idea for using each strength this week (the first twelve were written before) */
+var VIA_IDEA={curio:'curious', brave:'brave', kind:'kind', humor:'humor', perse:'persist', creat:'create', grat:'grat', fair:'fair', hope:'hope', lovel:'learn', lead:'lead', selfr:'self'};
+function viaIdea(k){ return VIA_IDEA[k] ? t('vs.'+VIA_IDEA[k]+'.i') : t('v.'+k+'.i'); }
+function vlState(){ if(!S.values) S.values={list:[], def:{}, step:{}, check:{}}; ['def','step','check'].forEach(function(k){ if(!S.values[k]) S.values[k]={}; }); if(!S.values.list) S.values.list=[]; return S.values; }
+function vlEmo(k){ var v=VALUE_LIST.concat(OLD_VALUES).filter(function(x){ return x[0]===k; })[0]; return v?v[1]:'✨'; }
+function vlName(k){ return t('v.'+k); }
+function renderValues(){
+  var box=document.getElementById('valuesBox'); if(!box) return;
+  var st=vlState(), list=st.list, full=list.length>=VL_MAX, wk=weekKey();
+  var prevWk=(function(){ var d=new Date(wk+'T00:00:00'); d.setDate(d.getDate()-7); return dayKey(d); })();
+  var chk=st.check[wk]||{}, prev=st.check[prevWk]||{};
+  box.innerHTML=
+    '<section class="dash-box"><div class="boxh-row"><h3 class="boxh">'+ic('compass')+'<span>'+esc(t('vl.pick'))+'</span></h3>'+
+      '<span class="boxh-n">'+esc(t('vl.n',{n:list.length}))+'</span></div>'+
+      '<p class="vl-src">'+esc(t('vl.src'))+'</p>'+
+      VIA_GROUPS.map(function(g){ return '<div class="vl-group"><div class="mg-lab">'+esc(t('vt.'+g[0]))+'</div><div class="vl-grid">'+g[1].map(function(v){ var on=list.indexOf(v[0])>=0;
+        return '<button type="button" class="vl-chip'+(on?' on':'')+'" data-vl="'+v[0]+'"'+(!on&&full?' disabled':'')+'><span>'+v[1]+'</span><i><b>'+esc(vlName(v[0]))+'</b><small>'+esc(t('v.'+v[0]+'.m'))+'</small></i></button>'; }).join('')+'</div></div>'; }).join('')+
+      /* a value kept from the earlier list stays shown, so it can be removed */
+      (list.filter(function(k){ return !VALUE_LIST.some(function(v){ return v[0]===k; }); }).map(function(k){
+        return '<button type="button" class="vl-chip on vl-old" data-vl="'+k+'"><span>'+vlEmo(k)+'</span><b>'+esc(vlName(k))+'</b></button>'; }).join(''))+'</section>'+
+    (list.length ? list.map(function(k){
+      return '<section class="dash-box vl-card"><h3 class="vl-name"><span>'+vlEmo(k)+'</span>'+esc(vlName(k))+'</h3>'+
+        (VALUE_LIST.some(function(v){ return v[0]===k; }) ? '<p class="vl-mean">'+esc(t('v.'+k+'.m'))+'</p>' : '')+
+        '<label class="mg-lab" for="vlDef_'+k+'">'+esc(t('vl.def'))+'</label>'+
+        '<input type="text" id="vlDef_'+k+'" data-vldef="'+k+'" maxlength="100" value="'+esc(st.def[k]||'')+'" placeholder="'+esc(t('vl.def.ph'))+'">'+
+        '<label class="mg-lab" for="vlStep_'+k+'">'+esc(t('vl.step'))+'</label>'+
+        '<div class="addrow"><input type="text" id="vlStep_'+k+'" data-vlstep="'+k+'" maxlength="80" value="'+esc(st.step[k]||'')+'" placeholder="'+esc(t('vl.step.ph'))+'">'+
+        '<button class="btn btn-ghost" data-vladd="'+k+'" title="'+esc(t('wl.add'))+'">'+ic('plus')+'<span>'+esc(t('t3.tab.today'))+'</span></button></div></section>'; }).join('')+
+      '<section class="dash-box"><h3 class="boxh">'+ic('check')+'<span>'+esc(t('vl.check'))+'</span></h3>'+
+        list.map(function(k){ var n=chk[k]||0;
+          return '<div class="vl-row"><span class="vl-rn">'+vlEmo(k)+' '+esc(vlName(k))+'</span><div class="vl-dots"><small>'+esc(t('vl.lo'))+'</small>'+
+            [1,2,3,4,5].map(function(i){ return '<button type="button" class="vl-dot'+(i<=n?' on':'')+'" data-vlc="'+k+'" data-n="'+i+'" aria-label="'+i+'"></button>'; }).join('')+
+            '<small>'+esc(t('vl.hi'))+'</small></div>'+(prev[k]?'<small class="vl-last">'+esc(t('vl.last',{n:prev[k]}))+'</small>':'')+'</div>'; }).join('')+
+      '</section>'
+    : '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('vl.empty'))+'</span></p>');
+  box.querySelectorAll('[data-vl]').forEach(function(b){ b.addEventListener('click',function(){
+    var k=b.dataset.vl, i=list.indexOf(k);
+    if(i>=0) list.splice(i,1); else if(list.length<VL_MAX){ list.push(k); if(list.length===1){ addPts(10); markActiveToday(); } }
+    save(); renderValues(); if(typeof renderVision==='function') renderVision(); }); });
+  box.querySelectorAll('[data-vldef]').forEach(function(inp){ inp.addEventListener('change',function(){ st.def[inp.dataset.vldef]=inp.value.trim(); save(); toast(t('vl.saved')); }); });
+  box.querySelectorAll('[data-vlstep]').forEach(function(inp){ inp.addEventListener('change',function(){ st.step[inp.dataset.vlstep]=inp.value.trim(); save(); }); });
+  box.querySelectorAll('[data-vladd]').forEach(function(b){ b.addEventListener('click',function(){
+    var k=b.dataset.vladd, inp=box.querySelector('[data-vlstep="'+k+'"]'), v=inp.value.trim(); if(!v){ inp.focus(); return; }
+    st.step[k]=v; if(addDayItem(v)){ var it=today3().items.filter(function(y){ return normLine(y.t)===normLine(v); })[0]; if(it) it.init=true; logDay(); markActiveToday(); save(); toast(t('pz.added')); } }); });
+  box.querySelectorAll('[data-vlc]').forEach(function(b){ b.addEventListener('click',function(){
+    if(!st.check[wk]) st.check[wk]={}; var first=!Object.keys(st.check[wk]).length;
+    st.check[wk][b.dataset.vlc]=Number(b.dataset.n); if(first){ addPts(5); markActiveToday(); } save(); renderValues(); }); });
+}
 """
