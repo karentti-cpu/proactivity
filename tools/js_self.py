@@ -705,10 +705,11 @@ function psShrink(file, done){
 /* each card: [number, level]; circle and speed cards also carry their
    answer. Level 3-4 bring the subtle ones: in my hands only in part, and a
    fourth answer that sounds reasonable but still lets others decide. */
-var GAME_CIRCLE={t:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part'],[12,3,'part'],[13,4,'part'],[14,4,'in'],[15,4,'out']],
+var GAME_CIRCLE={k:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part'],[12,4,'in']],
+                 t:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part'],[12,3,'part'],[13,4,'part'],[14,4,'in'],[15,4,'out']],
                  a:[[1,1,'in'],[2,1,'out'],[3,1,'in'],[4,1,'out'],[5,2,'in'],[6,2,'out'],[7,2,'in'],[8,2,'out'],[9,3,'part'],[10,3,'part'],[11,3,'part'],[12,3,'part'],[13,4,'in'],[14,4,'out'],[15,4,'part']]};
 var GAME_FLIP=[[1,1],[2,1],[4,1],[5,1],[9,1],[3,2],[6,2],[7,2],[8,2],[10,2],[11,3],[12,3],[13,3],[14,3],[15,3],[16,4],[17,4],[18,4]];
-var GAME_REACT={t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3],[9,3],[10,4],[11,4]], a:[[4,1],[5,1],[6,1],[1,2],[2,2],[3,2],[7,3],[8,3],[9,3],[10,4],[11,4]]};
+var GAME_REACT={k:[[1,1],[2,1],[3,2],[4,2],[5,3],[6,3]], t:[[1,1],[3,1],[6,1],[2,2],[4,2],[5,2],[7,3],[8,3],[9,3],[10,4],[11,4]], a:[[4,1],[5,1],[6,1],[1,2],[2,2],[3,2],[7,3],[8,3],[9,3],[10,4],[11,4]]};
 var GAME_STEP=[[1,1],[2,1],[3,1],[4,2],[5,2],[6,3],[7,3],[8,4],[9,4],[10,4]];
 var GAME_SPEED=[[1,1,'c'],[2,1,'r'],[3,1,'c'],[4,1,'r'],[5,1,'c'],[6,1,'r'],[7,1,'c'],[8,1,'r'],[9,2,'c'],[10,2,'r'],[11,2,'c'],[12,2,'r'],
                 [13,2,'c'],[14,2,'r'],[15,2,'c'],[16,2,'r'],[17,3,'r'],[18,3,'c'],[19,3,'r'],[20,3,'c'],[21,3,'r'],[22,3,'c'],[23,3,'r'],[24,3,'c']];
@@ -743,17 +744,35 @@ var GM_WORDS={feel:{keys:function(){ return FEELINGS.map(function(f){ return f.k
               str:{keys:function(){ return VS_KEYS; }, lab:function(k){ return t('vs.'+k); }, emo:function(){ return ''; }}};
 var GAME_NEW=['step','speed','calm','feel','opt','kind','str'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
-function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
+/* who is playing: me, one of my children, or someone else (an age group,
+   nothing saved). The cards follow the player's age: k up to 12, t up to
+   17, a for adults. A child's progress is kept with the child, and only my
+   own rounds give XP and count for Today's game and the daily path. */
+var gmPlayer={k:'me'}, gmGuest=null;
+function gmKidP(){ return gmPlayer.k==='kid' ? (S.kids||[]).filter(function(k){ return k.id===gmPlayer.id; })[0]||null : null; }
+function gmIsMe(){ return gmPlayer.k==='me' || (gmPlayer.k==='kid' && !gmKidP()); }
+function gmAge(){
+  if(gmPlayer.k==='guest') return gmPlayer.band||'a';
+  var kd=gmKidP(); if(kd) return kd.age==='t' ? 't' : 'k';
+  var n=Number(P.age);
+  if(n && n<=12) return 'k';
+  return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a';
+}
+/* cards that do not suit children are left out of their rounds */
+var GM_NOKIDS={feel:[7,11,12], step:[9], calm:[8]};
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
+function gmNorm(o){ ['lvl','mem','acc','played'].forEach(function(k){ if(!o[k]) o[k]={}; }); return o; }
+function gmMine(){ if(!S.games) S.games={played:{}, daily:null}; return gmNorm(S.games); }
 function gmState(){
-  if(!S.games) S.games={played:{}, daily:null};
-  ['lvl','mem','acc'].forEach(function(k){ if(!S.games[k]) S.games[k]={}; });
-  return S.games;
+  var kd=gmKidP();
+  if(kd){ if(!kd.games) kd.games={played:{}}; return gmNorm(kd.games); }
+  if(gmPlayer.k==='guest'){ if(!gmGuest) gmGuest={played:{}}; return gmNorm(gmGuest); }
+  return gmMine();
 }
 /* Today's game: one a day, never the same as yesterday, leaning to a game
    not tried yet, then to the one with the fewest right answers */
 function gmDaily(){
-  var st=gmState(), today=dayKey();
+  var st=gmMine(), today=dayKey();
   if(st.dpick && st.dpick.day===today) return st.dpick.id;
   var prev=st.dpick && st.dpick.id, d=new Date(), n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5), best=null, bs=99;
   GAME_IDS.forEach(function(g,i){
@@ -767,6 +786,11 @@ function gmDaily(){
   return best;
 }
 function gmPool(id){
+  var pool=gmPoolAll(id), no=gmAge()==='k' && GM_NOKIDS[id];
+  if(no) pool=pool.filter(function(c){ var n=Number((c.key.match(/(\d+)$/)||[])[1]); return no.indexOf(n)<0; });
+  return pool;
+}
+function gmPoolAll(id){
   var age=gmAge(), pool=[];
   if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
   else if(id==='feel') GAME_FEEL.forEach(function(c){ pool.push({key:'gm.fl.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
@@ -828,14 +852,14 @@ function gmStart(id){
 }
 function renderGameRow(){
   var b=document.getElementById('gameRow'); if(!b) return;
-  var id=gmDaily(), g=GAME_IDS.filter(function(x){ return x.id===id; })[0], done=gmState().daily===dayKey();
+  var id=gmDaily(), g=GAME_IDS.filter(function(x){ return x.id===id; })[0], done=gmMine().daily===dayKey();
   b.hidden=false;
   b.className='home-game'+(done?' done':'');
   b.innerHTML='<span class="hg-ic">'+ic(g.icon)+'</span>'+
     '<span class="hg-t"><small>'+esc(t('gm.daily'))+'</small><b>'+esc(t('gm.'+id))+'</b>'+
       '<em>'+esc(done ? t('gm.daily.done') : t('gm.daily.xp'))+'</em></span>'+
     '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
-  if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
+  if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ gmPlayer={k:'me'}; goPage('games'); gmStart(gmDaily()); }); }
 }
 function gmFeel(k){ var f=pzF(k); return (f?f.e+' ':'')+esc(pzLabel(k)); }
 function gmLvLabel(id){ var L=Math.max(1,gmState().lvl[id]||0); return '<span class="gm-lv l'+L+'">'+esc(t('gm.lv'+L))+'</span>'; }
@@ -844,7 +868,15 @@ function renderGames(){
   var st=gmState(), daily=gmDaily();
   if(!gmRun){
     gmStop();
-    box.innerHTML='<div class="gm-list">'+GAME_IDS.map(function(g){
+    var kp=gmKidP(); if(gmPlayer.k==='kid' && !kp) gmPlayer={k:'me'};
+    var who='<div class="trk-who gm-who"><span class="trk-who-l">'+esc(t('gm.who'))+'</span>'+
+      '<button type="button" class="trk-wb'+(gmPlayer.k==='me'?' on':'')+'" data-gwho="me">'+ic('user')+'<span>'+esc(t('gm.me'))+'</span></button>'+
+      (S.kids||[]).map(function(k){ return '<button type="button" class="trk-wb kid'+(kp&&kp.id===k.id?' on':'')+'" data-gwho="'+k.id+'">⭐<span>'+esc(k.name)+'</span></button>'; }).join('')+
+      '<button type="button" class="trk-wb'+(gmPlayer.k==='guest'?' on':'')+'" data-gwho="guest">'+ic('users')+'<span>'+esc(t('gm.other'))+'</span></button></div>'+
+      (gmPlayer.k==='guest' ? '<div class="t3seg gm-bands">'+['k','t','a'].map(function(b){
+        return '<button type="button" data-gband="'+b+'" class="'+((gmPlayer.band||'a')===b?'on':'')+'">'+esc(t('gm.b.'+b))+'</button>'; }).join('')+'</div>'+
+        '<p class="gm-forp">'+esc(t('gm.for.g'))+'</p>' : kp ? '<p class="gm-forp">'+esc(t('gm.for',{n:kp.name}))+'</p>' : '');
+    box.innerHTML=who+'<div class="gm-list">'+GAME_IDS.map(function(g){
       var isD=g.id===daily, n=st.played[g.id]||0, isNew=!n && GAME_NEW.indexOf(g.id)>=0;
       return '<button type="button" class="gm-card'+(isD?' daily':'')+'" data-gm="'+g.id+'"><span class="gm-ic">'+ic(g.icon)+'</span>'+
         '<span class="gm-txt"><b>'+esc(t('gm.'+g.id))+(isNew ? ' <span class="gm-newb">'+esc(t('gm.new'))+'</span>' : n ? ' '+gmLvLabel(g.id) : '')+'</b>'+
@@ -852,6 +884,10 @@ function renderGames(){
         (isD ? '<em>'+esc(st.daily===dayKey() ? t('gm.daily.done') : t('gm.daily'))+'</em>' : '')+'</span>'+
         (n ? '<span class="gm-n numf">✓'+n+'</span>' : '')+'</button>'; }).join('')+'</div>'+feelDict();
     box.querySelectorAll('[data-gm]').forEach(function(b){ b.addEventListener('click',function(){ gmStart(b.dataset.gm); }); });
+    box.querySelectorAll('[data-gwho]').forEach(function(b){ b.addEventListener('click',function(){
+      var w=b.dataset.gwho; gmPlayer = w==='me' ? {k:'me'} : w==='guest' ? {k:'guest', band:gmPlayer.band||'a'} : {k:'kid', id:Number(w)};
+      if(w==='guest') gmGuest=null; renderGames(); }); });
+    box.querySelectorAll('[data-gband]').forEach(function(b){ b.addEventListener('click',function(){ gmPlayer.band=b.dataset.gband; gmGuest=null; renderGames(); }); });
     return;
   }
   var R=gmRun;
@@ -967,12 +1003,28 @@ function gmFinish(box){
     else { up=total>=GAME_LEN-1 && R.right>=total-1; down=R.right<=2; }
     if(up && L<3){ st.lvl[R.id]=L+1; R.harder=true; }
     else if(down && L>0) st.lvl[R.id]=L-1;
-    if(R.id===gmDaily() && st.daily!==today){ st.daily=today; bonus=15; }
-    addPts(gain+bonus); markActiveToday(); save();
+    R.mine=gmIsMe();
+    if(R.mine){
+      if(R.id===gmDaily() && st.daily!==today){ st.daily=today; bonus=15; }
+      addPts(gain+bonus); markActiveToday();
+    }
+    save();
     R.gain=gain; R.bonus=bonus; R.before=before;
     celebrate(); renderGameRow(); renderPath();
   }
   var after=levelInfo(), hi=total>0 && R.right>=total-1;
+  if(!R.mine){
+    /* someone else's round: a cheer, no XP of mine */
+    var kp=gmKidP();
+    box.innerHTML='<div class="gm-end"><div class="pz-end"><div class="sc-heart">🎉</div><p class="ps-rmsg">'+esc(t('gm.end.o',{n:R.right, t:total}))+'</p>'+
+      (kp ? '<p>'+esc(t('kid.cheer',{n:kp.name}))+'</p>' : '<p>'+esc(t(hi?'gm.end.hi':'gm.end.lo'))+'</p>')+
+      (R.harder?'<p class="gm-harder">'+esc(t('gm.harder'))+'</p>':'')+'</div>'+
+      '<div class="row-btns"><button class="btn btn-primary" id="gmAgain">'+ic('refresh')+'<span>'+esc(t('gm.again'))+'</span></button>'+
+      '<button class="btn btn-ghost" id="gmBack">'+esc(t('gm.done'))+'</button></div></div>';
+    box.querySelector('#gmAgain').addEventListener('click',function(){ gmStart(R.id); });
+    box.querySelector('#gmBack').addEventListener('click',function(){ gmRun=null; renderGames(); });
+    return;
+  }
   box.innerHTML='<div class="gm-end"><div class="ps-reward"><div class="av-big t'+after.tier+'">'+avatarSvg(after.tier, avatarLabel(after))+'</div>'+
     '<div><p class="ps-rmsg">'+esc(t('gm.end',{n:R.right, t:total}))+'</p><p>'+esc(t(hi?'gm.end.hi':'gm.end.lo'))+'</p>'+
     '<p class="ps-rxp">'+esc(t('ps.rxp',{n:R.gain}))+'</p>'+(R.bonus?'<p class="ps-rxp">'+esc(t('gm.bonus',{n:R.bonus}))+'</p>':'')+
@@ -1254,9 +1306,9 @@ function tlState(){ if(!S.tools) S.tools={dis:{}, used:{}}; if(!S.tools.dis) S.t
 var DIM_GAME={choice:'react', init:'step', goal:'step', time:'speed', solve:'flip', plan:'step'};
 function gmName(id){ return t('gm.'+id); }
 function tlCandidates(){
-  var log=S.log||{}, wk=tlDays(7), out=[], st=gmState();
+  var log=S.log||{}, wk=tlDays(7), out=[], st=gmMine();
   var active=wk.filter(function(d){ return log[d]; }).length;
-  function go(id){ return function(){ goPage('games'); gmStart(id); }; }
+  function go(id){ return function(){ gmPlayer={k:'me'}; goPage('games'); gmStart(id); }; }
   /* pauses with a hard feeling */
   var pz=0, pf={};
   wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ pz++; pf[z.f]=(pf[z.f]||0)+1; }); });
@@ -1294,7 +1346,7 @@ function tlCandidates(){
   if(rows.length && rows[0].r<.6) out.push({id:'game_'+rows[0].id, s:5.5, t:t('tl.game.t',{g:gmName(rows[0].id)}), w:t('tl.game.w'), icon:'star', act:go(rows[0].id)});
   var top=rows[rows.length-1];
   if(top && top.r>=.9 && (st.lvl[top.id]||0)<3) out.push({id:'up_'+top.id, s:5, t:t('tl.up.t',{g:gmName(top.id)}), w:t('tl.up.w'), icon:'trending',
-    act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); goPage('games'); gmStart(top.id); }});
+    act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); gmPlayer={k:'me'}; goPage('games'); gmStart(top.id); }});
   /* hard, hurting feelings this week: a self-compassion break */
   var hurtF=null; wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ if(['hurt','sad','disap','shame','lonely'].indexOf(z.f)>=0) hurtF=z.f; }); });
   if(hurtF) out.push({id:'sc', s:7, t:t('tl.sc.t'), w:t('tl.sc.w',{f:pzLabel(hurtF)}), icon:'face', act:function(){ pzOpen('sc'); }});
@@ -1347,7 +1399,7 @@ function renderTool(){
 }
 function renderLearned(){
   var box=document.getElementById('learnBox'); if(!box) return;
-  var log=S.log||{}, two=tlDays(14), lines=[], st=gmState();
+  var log=S.log||{}, two=tlDays(14), lines=[], st=gmMine();
   var h=S.hours||{}, ht=(h.m||0)+(h.n||0)+(h.e||0);
   if(ht>=8){ var w=['m','n','e'].sort(function(a,b){ return (h[b]||0)-(h[a]||0); })[0]; lines.push(['clock', t('ln.time',{w:t('ln.time.'+w)})]); }
   var tot=0, done=0; two.forEach(function(d){ ((log[d]||{}).items||[]).forEach(function(x){ tot++; if(x.done) done++; }); });
@@ -1421,7 +1473,7 @@ function renderWell(){
     if(!S.well) S.well={}; S.well.str={week:wk, k:b.dataset.vs}; wlStrPick=false; save(); renderWell(); }); });
   var sc=box.querySelector('#stChange'); if(sc) sc.addEventListener('click',function(){ wlStrPick=true; renderWell(); });
   box.querySelector('#kdMore').addEventListener('click',function(){ wlKd=wlKd%KD_N+1; renderWell(); });
-  box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ goPage('games'); gmStart(b.dataset.wlgame); }); });
+  box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ gmPlayer={k:'me'}; goPage('games'); gmStart(b.dataset.wlgame); }); });
   box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
     if(addDayItem(b.dataset.wladd)){ markActiveToday(); save(); toast(t('pz.added')); } }); });
 }
@@ -1475,7 +1527,7 @@ function pathDone(){
     init: (L.inits||[]).length>0 || td.items.some(function(x){ return x.init && x.done; }) || trkTicksOn(today)>0,
     ahead: !!L.ahead,
     feel: (L.pauses||[]).length>0,
-    game: gmState().lastDay===today || gmState().daily===today
+    game: gmMine().lastDay===today || gmMine().daily===today
   };
 }
 function fullStreak(){
@@ -1514,7 +1566,7 @@ function renderPath(){
     else if(k==='choose') pzOpen('intent');
     else if(k==='init') pzOpen('init');
     else if(k==='ahead') pzOpen('ahead');
-    else if(k==='game'){ goPage('games'); gmStart(gmDaily()); }
+    else if(k==='game'){ gmPlayer={k:'me'}; goPage('games'); gmStart(gmDaily()); }
     else { var tb=document.getElementById('todayBox'); if(tb){ tb.scrollIntoView({behavior:'smooth',block:'start'}); var inp=tb.querySelector('[data-t3new]'); if(inp) setTimeout(function(){ inp.focus(); },400); } }
   }); });
 }

@@ -993,6 +993,9 @@ body.no-scroll{overflow:hidden;}
 .trk-cam{display:inline-grid;place-items:center;width:48px;padding:0;cursor:pointer;}
 .trk-cam svg{width:20px;height:20px;}
 .sheet-prize b{color:var(--sc);}
+.gm-who{margin-bottom:var(--s2);}
+.t3seg.gm-bands{grid-template-columns:repeat(3,1fr);margin:0 0 var(--s2);}
+.gm-forp{font-size:var(--t-sm);color:#B57A10;font-weight:600;margin:0 0 var(--s3);}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
