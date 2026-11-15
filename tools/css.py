@@ -1072,6 +1072,15 @@ body.no-scroll{overflow:hidden;}
 .vis-vals span{padding:3px 10px;border-radius:var(--r-pill);background:rgba(255,255,255,.7);font-size:var(--t-xs);font-weight:700;color:var(--acc);}
 .vl-ichip{border-style:solid;}
 .gm-val{color:var(--acc);}
+.mn-card input{width:100%;}
+.mn-card .mg-lab{display:block;margin-top:10px;}
+.mn-kinds{display:flex;flex-wrap:wrap;gap:6px;}
+.mn-kinds span{padding:3px 10px;border-radius:var(--r-pill);background:var(--ink-1);font-size:var(--t-xs);color:var(--fg-2);}
+.mn-kinds span.on{background:var(--acc-dim);color:var(--acc);font-weight:700;}
+.vis-why{display:block;width:100%;margin-top:8px;padding:0;border:0;background:none;font:inherit;font-size:var(--t-sm);color:var(--fg);text-align:start;cursor:pointer;}
+.vis-why small{color:var(--fg-2);}
+.pz-standd{margin-top:var(--s3);border-top:1px dashed var(--ink-3);padding-top:var(--s2);}
+.pz-standd summary{cursor:pointer;font-weight:700;color:var(--acc);}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}

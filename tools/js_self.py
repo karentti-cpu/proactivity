@@ -34,6 +34,7 @@ function renderVision(){
     box.className='vision';
     box.innerHTML='<button type="button" class="vision-line" data-vis-edit aria-label="'+esc(t('ge.btn'))+'">'+ic('compass')+
       '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span>'+ic('edit','vis-edit')+'</button>'+
+      ((S.meaning&&S.meaning.why) ? '<button type="button" class="vis-why" data-vis-vals>🌱 <small>'+esc(t('mn.lab'))+':</small> '+esc(S.meaning.why)+'</button>' : '')+
       ((S.values&&S.values.list&&S.values.list.length) ? '<button type="button" class="vis-vals" data-vis-vals>'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</button>' : '')+
       (due ? '<div class="vis-chk"><p>'+esc(t('vis.chk'))+'</p><div class="row-btns">'+
         '<button class="btn btn-ghost btn-sm" data-vis-keep>'+ic('check')+'<span>'+esc(t('vis.keep'))+'</span></button>'+
@@ -1317,7 +1318,10 @@ function pzRender(){
       '<div class="pz-acts">'+[1,2,3,4,5].map(function(n){
         return '<button type="button" class="pz-act" data-pza="'+n+'">'+esc(t('pz.a'+n))+'</button>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="120" placeholder="'+esc(t('pz.own'))+'">'+
-      '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.ok'))+'</button></div>';
+      '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.ok'))+'</button></div>'+
+      '<details class="pz-standd"><summary>🌱 '+esc(t('pz.stand'))+'</summary><p class="pz-sub">'+esc(t('pz.stand.s'))+'</p>'+
+        '<div class="addrow"><input type="text" id="pzStand" maxlength="120" placeholder="'+esc(t('pz.stand.ph'))+'">'+
+        '<button class="btn btn-primary" id="pzStandOk">'+esc(t('pz.ok'))+'</button></div></details>';
     var fb=box.querySelector('#pzFirst'); if(fb) fb.addEventListener('click',function(){ pzStartBreath('choose'); });
     function choose(txt){
       if(!txt) return;
@@ -1325,6 +1329,11 @@ function pzRender(){
       pz.a=txt; pz.step='end'; addPts(10); markActiveToday(); save(); celebrate(); pzRender();
     }
     box.querySelectorAll('[data-pza]').forEach(function(b){ b.addEventListener('click',function(){ choose(t('pz.a'+b.dataset.pza)); }); });
+    var stIn=box.querySelector('#pzStand'), stOk=box.querySelector('#pzStandOk');
+    if(stOk){ var stGo=function(){ var v=stIn.value.trim(); if(!v){ stIn.focus(); return; }
+        var ml=mnState().log, wk=weekKey(); if(!(ml[wk]&&ml[wk].a)) ml[wk]={q:3, a:v};
+        choose('🌱 '+v); };
+      stOk.addEventListener('click',stGo); stIn.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); stGo(); } }); }
     var own=box.querySelector('#pzOwn');
     box.querySelector('#pzOk').addEventListener('click',function(){ var v=own.value.trim(); if(v) choose(v); else own.focus(); });
     own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); var v=own.value.trim(); if(v) choose(v); } });
@@ -1799,7 +1808,8 @@ function renderValues(){
             [1,2,3,4,5].map(function(i){ return '<button type="button" class="vl-dot'+(i<=n?' on':'')+'" data-vlc="'+k+'" data-n="'+i+'" aria-label="'+i+'"></button>'; }).join('')+
             '<small>'+esc(t('vl.hi'))+'</small></div>'+(prev[k]?'<small class="vl-last">'+esc(t('vl.last',{n:prev[k]}))+'</small>':'')+'</div>'; }).join('')+
       '</section>'
-    : '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('vl.empty'))+'</span></p>');
+    : '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('vl.empty'))+'</span></p>')+meaningHtml();
+  meaningBind(box);
   box.querySelectorAll('[data-vl]').forEach(function(b){ b.addEventListener('click',function(){
     var k=b.dataset.vl, i=list.indexOf(k);
     if(i>=0) list.splice(i,1); else if(list.length<VL_MAX){ list.push(k); if(list.length===1){ addPts(10); markActiveToday(); } }
@@ -1812,5 +1822,35 @@ function renderValues(){
   box.querySelectorAll('[data-vlc]').forEach(function(b){ b.addEventListener('click',function(){
     if(!st.check[wk]) st.check[wk]={}; var first=!Object.keys(st.check[wk]).length;
     st.check[wk][b.dataset.vlc]=Number(b.dataset.n); if(first){ addPts(5); markActiveToday(); } save(); renderValues(); }); });
+}
+
+/* ================= meaning (Frankl) =================
+   One "what for" sentence, shown with the vision; a question a week, in
+   turn, from the three ways to meaning; the answers kept as a small
+   journal. In a hard moment, the pause also offers to choose a stand. */
+function mnState(){ if(!S.meaning) S.meaning={why:'', log:{}}; if(!S.meaning.log) S.meaning.log={}; return S.meaning; }
+function mnWeekQ(){ var n=Math.floor((new Date(weekKey()+'T00:00:00')-new Date(2026,0,4))/(7*864e5)); return ((n%3)+3)%3+1; }
+function meaningHtml(){
+  var m=mnState(), wk=weekKey(), q=mnWeekQ(), cur_=m.log[wk];
+  var hist=Object.keys(m.log).filter(function(k){ return k!==wk && m.log[k].a; }).sort().reverse();
+  return '<section class="dash-box mn-card"><h3 class="boxh">🌱<span>'+esc(t('mn.t'))+'</span></h3><p class="psub">'+esc(t('mn.s'))+'</p>'+
+    '<div class="mn-kinds">'+[1,2,3].map(function(k){ return '<span class="'+(k===q?'on':'')+'">'+esc(t('mn.k'+k))+'</span>'; }).join('')+'</div>'+
+    '<label class="mg-lab" for="mnWhy">'+esc(t('mn.why'))+'</label>'+
+    '<input type="text" id="mnWhy" maxlength="120" value="'+esc(m.why||'')+'" placeholder="'+esc(t('mn.why.ph'))+'">'+
+    '<label class="mg-lab" for="mnAns">'+esc(t('mn.week'))+': '+esc(t('mn.q'+q))+'</label>'+
+    '<div class="addrow"><input type="text" id="mnAns" maxlength="160" value="'+esc(cur_&&cur_.a||'')+'" placeholder="'+esc(t('mn.ph'))+'">'+
+    '<button class="btn btn-primary" id="mnSave">'+esc(t('mn.save'))+'</button></div>'+
+    (hist.length ? '<details class="gr-hist"><summary>'+ic('book')+'<span>'+esc(t('mn.hist',{n:hist.length}))+'</span></summary>'+hist.slice(0,20).map(function(k){
+      var e=m.log[k]; return '<div class="gr-day"><b>'+esc(fmtDay(k))+' · '+esc(t('mn.k'+e.q))+'</b><ul><li>'+esc(e.a)+'</li></ul></div>'; }).join('')+'</details>' : '')+
+    '</section>';
+}
+function meaningBind(box){
+  var m=mnState(), w=box.querySelector('#mnWhy'), a=box.querySelector('#mnAns');
+  if(!w) return;
+  w.addEventListener('change',function(){ m.why=w.value.trim(); save(); toast(t('vl.saved')); if(typeof renderVision==='function') renderVision(); });
+  var sv=function(){ var v=a.value.trim(); if(!v){ a.focus(); return; } var wk=weekKey(), first=!(m.log[wk]&&m.log[wk].a);
+    m.log[wk]={q:mnWeekQ(), a:v}; if(first){ addPts(10); markActiveToday(); } save(); toast(t('mn.saved')); renderValues(); };
+  box.querySelector('#mnSave').addEventListener('click',sv);
+  a.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); sv(); } });
 }
 """
