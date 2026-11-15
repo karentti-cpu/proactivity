@@ -997,24 +997,53 @@ function pzRender(){
     box.querySelector('#pzOk').addEventListener('click',function(){ var v=oi.value.trim(); if(v) setI(v); else oi.focus(); });
     oi.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); setI(oi.value.trim()); } });
   } else if(pz.step==='init'){
+    /* pick several ideas, put each in your own words, add your own; in the
+       day the main action is to plan them into My day, in the evening to
+       record what was already done */
+    if(!pz.sel) pz.sel=[];
+    var eve=new Date().getHours()>=17;
     var trows=trkTodayRows().filter(function(r){ return !r.done; });
-    box.innerHTML='<p class="pz-big">'+esc(t('it.q'))+'</p><p class="pz-sub">'+esc(t('it.s'))+'</p>'+
+    var picked=function(n){ return pz.sel.some(function(x){ return x.n===n; }); };
+    /* in the day, no more than My day has room for; in the evening it is a record, so no limit */
+    var room=eve ? 99 : Math.max(0, T3_MAX-today3().items.length), atMax=pz.sel.length>=room;
+    box.innerHTML='<p class="pz-big">'+esc(t(eve?'it.q':'it.q.m'))+'</p><p class="pz-sub">'+esc(t('it.s'))+'</p>'+
       (trows.length ? '<p class="pz-sub pz-rt">'+esc(t('it.trk'))+'</p><div class="pz-acts">'+trows.map(function(r,i){
-        return '<div class="it-row"><span>'+esc(r.row.t)+'</span><button type="button" class="btn btn-primary btn-sm" data-ittrk="'+i+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>' : '')+
-      '<div class="pz-acts">'+gmShuffle([1,2,3,4,5,6,7,8]).slice(0,4).map(function(n){
-        return '<div class="it-row"><span>'+esc(t('it.'+n))+'</span><button type="button" class="btn btn-ghost btn-sm" data-itplan="'+n+'">'+esc(t('it.plan'))+'</button>'+
-          '<button type="button" class="btn btn-primary btn-sm" data-itdid="'+n+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>'+
-      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'">'+
-      '<button class="btn btn-primary" id="pzOk">'+esc(t('it.did'))+'</button></div>';
+        return '<div class="it-row"><span>'+esc(r.row.t)+'</span><button type="button" class="btn btn-ghost btn-sm" data-ittrk="'+i+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>' : '')+
+      '<p class="pz-sub pz-rt">'+esc(t('it.pick'))+(eve ? '' : ' <b class="it-room">'+esc(room ? t('it.room',{n:room-pz.sel.length}) : t('it.full'))+'</b>')+'</p>'+
+      '<div class="mg-picks pz-chips">'+[1,2,3,4,5,6,7,8].map(function(n){
+        return '<button type="button" class="t3idea t3chip'+(picked(n)?' on':'')+'" data-itpick="'+n+'"'+(!picked(n)&&atMax?' disabled':'')+'>'+ic(picked(n)?'check':'plus')+'<span>'+esc(t('it.'+n))+'</span></button>'; }).join('')+'</div>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'"'+(atMax?' disabled':'')+'>'+
+      '<button class="btn btn-ghost" id="pzAddOwn"'+(atMax?' disabled':'')+'>'+ic('plus')+'<span>'+esc(t('it.add'))+'</span></button></div>'+
+      (pz.sel.length ? '<p class="pz-sub pz-rt">'+esc(t('it.words'))+'</p><div class="it-sel">'+pz.sel.map(function(x,i){
+        return '<div class="it-selrow">'+ic('rocket')+'<input type="text" maxlength="100" data-itsel="'+i+'" value="'+esc(x.t)+'">'+
+          '<button type="button" class="t3act" data-itdel="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+'</div>' : '')+
+      (pz.sel.length ? '<div class="row-btns it-btns">'+
+        '<button class="btn '+(eve?'btn-ghost':'btn-primary')+'" id="itPlan">'+esc(t('it.planN',{n:pz.sel.length}))+'</button>'+
+        '<button class="btn '+(eve?'btn-primary':'btn-quiet')+'" id="itDid">'+esc(t('it.didN'))+'</button></div>' : '');
+    var keepEdits=function(){ box.querySelectorAll('[data-itsel]').forEach(function(inp){ var x=pz.sel[+inp.dataset.itsel]; if(x) x.t=inp.value; }); };
+    box.querySelectorAll('[data-itpick]').forEach(function(b){ b.addEventListener('click',function(){
+      keepEdits(); var n=+b.dataset.itpick, ix=-1; pz.sel.forEach(function(x,i){ if(x.n===n) ix=i; });
+      if(ix>=0) pz.sel.splice(ix,1); else if(!atMax) pz.sel.push({n:n, t:t('it.'+n)}); pzRender(); }); });
+    var own=box.querySelector('#pzOwn');
+    var addOwn=function(){ var v=own.value.trim(); if(atMax) return; if(!v){ own.focus(); return; } keepEdits(); pz.sel.push({n:0, t:v}); pzRender(); };
+    box.querySelector('#pzAddOwn').addEventListener('click',addOwn);
+    own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addOwn(); } });
+    box.querySelectorAll('[data-itdel]').forEach(function(b){ b.addEventListener('click',function(){ keepEdits(); pz.sel.splice(+b.dataset.itdel,1); pzRender(); }); });
     box.querySelectorAll('[data-ittrk]').forEach(function(b){ b.addEventListener('click',function(){
       var r=trows[+b.dataset.ittrk]; trkTick(r.type, r.cfg, r.row, r.di); celebrate(); toast(t('it.done')); pzClose(); }); });
-    var did=function(x){ if(!x) return; var L=pzLog(); L.inits.push({t:x, h:new Date().getHours()}); addPts(15); markActiveToday(); save(); celebrate(); toast(t('it.done')); pzClose(); };
-    var plan=function(x){ var td=today3(); if(addDayItem(x)){ var it=td.items.filter(function(y){ return normLine(y.t)===normLine(x); })[0]; if(it) it.init=true; logDay(); save(); toast(t('it.planned')); } pzClose(); renderToday3(); };
-    box.querySelectorAll('[data-itdid]').forEach(function(b){ b.addEventListener('click',function(){ did(t('it.'+b.dataset.itdid)); }); });
-    box.querySelectorAll('[data-itplan]').forEach(function(b){ b.addEventListener('click',function(){ plan(t('it.'+b.dataset.itplan)); }); });
-    var on=box.querySelector('#pzOwn');
-    box.querySelector('#pzOk').addEventListener('click',function(){ var v=on.value.trim(); if(v) did(v); else on.focus(); });
-    on.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); did(on.value.trim()); } });
+    var chosen=function(){ keepEdits(); return pz.sel.map(function(x){ return x.t.trim(); }).filter(Boolean); };
+    var pb=box.querySelector('#itPlan');
+    if(pb) pb.addEventListener('click',function(){
+      var list=chosen(); if(!list.length) return; var td=today3();
+      list.forEach(function(x){ if(addDayItem(x)){ var it=td.items.filter(function(y){ return normLine(y.t)===normLine(x); })[0]; if(it) it.init=true; } });
+      logDay(); save(); toast(t('it.planned.n')); pzClose(); renderToday3();
+    });
+    var db=box.querySelector('#itDid');
+    if(db) db.addEventListener('click',function(){
+      var list=chosen(); if(!list.length) return; var L=pzLog();
+      list.forEach(function(x){ L.inits.push({t:x, h:new Date().getHours()}); });
+      addPts(15*list.length); markActiveToday(); save(); celebrate(); toast(t('it.done')); pzClose();
+    });
   } else if(pz.step==='ahead'){
     var La=pzLog(), td3=today3(), mine=(La.inits||[]).map(function(x){ return x.t; }).concat(td3.items.filter(function(x){ return x.init&&x.done; }).map(function(x){ return x.t; }));
     var undone=td3.items.filter(function(x){ return !x.done; }), carry=S.carry||[];
