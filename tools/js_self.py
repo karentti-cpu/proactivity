@@ -450,7 +450,8 @@ function trkSheetHtml(type, cfg){
     body='<table class="sheet-grid '+type+'"><thead><tr><th class="sg-goal">'+esc(t(kid?'kid.col':'ps.col.goal'))+'</th>'+
       days.map(function(d){ return '<th><span>'+esc(type==='week'?trkLoc(d,{weekday:'short'}):trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
       '<th class="sg-sum">'+esc(t('ps.col.sum'))+'</th></tr></thead><tbody>'+
-      rows.map(function(r,i){ return '<tr style="height:'+rowH+'px"><td class="sg-goal">'+(r.t && (fun||r.e) ? '<span class="sg-emo">'+trkEmo(r,i)+'</span>' : '')+esc(r.t)+'</td>'+days.map(function(){ return '<td>'+(r.t?faint:'')+'</td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
+      rows.map(function(r,i){ if(r.h) return '<tr class="sg-hrow"><td colspan="'+(days.length+2)+'">'+(fun||r.e?'<span class="sg-emo">'+trkEmo(r,i)+'</span>':'')+esc(r.t)+'</td></tr>';
+        return '<tr style="height:'+rowH+'px"'+(trkUnder(rows,i)?' class="sg-sub"':'')+'><td class="sg-goal">'+(r.t && (fun||r.e) ? '<span class="sg-emo">'+trkEmo(r,i)+'</span>' : '')+esc(r.t)+'</td>'+days.map(function(){ return '<td>'+(r.t?faint:'')+'</td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
       '</tbody></table>'+
       '<div class="sheet-lines"><p>'+esc(t(kid ? (type==='month'?'kid.q1m':'kid.q1w') : (type==='month'?'trk.q1m':'wr.q1')))+'</p>'+
         '<p>'+esc(t(kid ? (type==='month'?'kid.q2m':'kid.q2w') : (type==='month'?'trk.q2m':'wr.q2')))+'</p></div>';
@@ -514,7 +515,10 @@ function trkTick(type, cfg, row, di){
    Built around the table itself: whose (me or a child), which kind (small
    tabs), then the table - rows edited in place, ticked with a tap - and
    under it print, design and a photo of a ticked sheet. */
-var trkDesignOpen=false, trkEditRow=-1, trkKidForm=false, trkKidEdit=false;
+var trkDesignOpen=false, trkEditRow=-1, trkKidForm=false, trkKidEdit=false, trkSubFor=-1;
+/* rows are concrete goals; a row with h is a main heading over the rows below it */
+function trkRowsUsed(cfg){ return cfg.rows.filter(function(r){ return !r.h; }).length; }
+function trkUnder(rows,i){ for(var j=i-1;j>=0;j--){ if(rows[j].h) return true; } return false; }
 function trkCands(cfg){
   var have={}; cfg.rows.forEach(function(r){ have[normLine(r.t)]=1; });
   var kid=trkKid(), list;
@@ -561,7 +565,7 @@ function renderTrackers(){
   if(type==='day') grid='<p class="hint">'+ic('sun')+'<span>'+esc(t('trk.day.h'))+'</span></p>';
   else if(!cfg.rows.length) grid='<p class="trk-emptymsg">'+esc(t('trk.empty'))+'</p>';
   else if(type==='c30'){
-    var r0=cfg.rows[0], arr0=rec && rec.ticks[normLine(r0.t)], n0=arr0 ? arr0.filter(Boolean).length : 0;
+    var r0=cfg.rows.filter(function(x){ return !x.h; })[0]||cfg.rows[0], arr0=rec && rec.ticks[normLine(r0.t)], n0=arr0 ? arr0.filter(Boolean).length : 0;
     grid='<div class="trk-c30goal">'+nameCell(r0,0)+'<button class="icon-btn" data-trk-del="0" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'+
       '<div class="trk-c30">'+days.map(function(d,di){ return cell(r0,di,d); }).join('')+'</div>'+
       (n0 ? '<p class="trk-count">'+esc(t('trk.c30.count',{n:n0}))+'</p>' : '');
@@ -569,16 +573,35 @@ function renderTrackers(){
     grid='<div class="scroller"><table class="trk-grid '+type+'"><thead><tr><th class="mcol"></th>'+
       days.map(function(d){ return '<th class="'+(dayKey(d)===today?'today':'')+'"><span>'+esc(trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
       '</tr></thead><tbody>'+cfg.rows.map(function(r,i){
+        if(r.h){
+          var subAt=trkSubFor===i ? '<tr class="trk-subrow"><td colspan="'+(days.length+1)+'"><div class="addrow"><input type="text" id="trkSubIn" maxlength="60" placeholder="'+esc(t('trk.sub.ph'))+'">'+
+              '<button class="btn btn-primary btn-sm" id="trkSubAdd">'+ic('plus')+'</button></div></td></tr>' : '';
+          /* the main goal's progress: ticks of its concrete goals out of the days so far */
+          var kids_=[], j=i+1; while(j<cfg.rows.length && !cfg.rows[j].h){ kids_.push(cfg.rows[j]); j++; }
+          /* counted from the day the table began, so days before it do not weigh it down */
+          var from=(type!=='c30' && cfg.start) ? cfg.start : '', idx=[];
+          days.forEach(function(d,q){ var k=dayKey(d); if(k<=today && k>=from) idx.push(q); });
+          var tot=kids_.length*idx.length, got=0;
+          kids_.forEach(function(x){ var a=rec && rec.ticks[normLine(x.t)]; if(a) idx.forEach(function(q){ if(a[q]) got++; }); });
+          var pc=tot ? Math.round(got/tot*100) : 0;
+          var prog=tot ? '<div class="trk-hp'+(pc>=100?' full':'')+'"><span class="trk-hpbar"><i style="width:'+pc+'%"></i></span>'+
+            '<b>'+esc(pc>=100 ? t('trk.hp.full') : kid && kid.age!=='t' ? t('trk.hp.k',{n:got, t:tot}) : t('trk.hp',{p:pc}))+'</b></div>' : '';
+          return '<tr class="trk-hrow"><th colspan="'+(days.length+1)+'">'+nameCell(r,i)+
+            (trkRowsUsed(cfg)<tdef.max ? '<button type="button" class="trk-subbtn" data-trk-sub="'+i+'">'+ic('plus')+'<span>'+esc(t('trk.sub'))+'</span></button>' : '')+
+            '<button class="trk-rdel" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button>'+prog+'</th></tr>'+subAt;
+        }
         var arr=rec && rec.ticks[normLine(r.t)], n=arr ? arr.filter(Boolean).length : 0;
-        return '<tr><th class="mcol">'+nameCell(r,i)+(n?'<b class="numf">✓'+n+'</b>':'')+
+        return '<tr'+(trkUnder(cfg.rows,i)?' class="trk-sub"':'')+'><th class="mcol">'+nameCell(r,i)+(n?'<b class="numf">✓'+n+'</b>':'')+
           '<button class="trk-rdel" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></th>'+
           days.map(function(d,di){ return '<td>'+cell(r,di,d)+'</td>'; }).join('')+'</tr>'; }).join('')+
       '</tbody></table></div><p class="trk-edith">'+esc(t('trk.edit.h'))+'</p>';
   }
   var cands=tdef.max ? trkCands(cfg) : [];
-  var adder = (tdef.max && cfg.rows.length<tdef.max) ?
-    '<div class="addrow trk-addrow"><input type="text" id="trkOwn" maxlength="40" placeholder="'+esc(kid?t('trk.addrow'):t('ps.own'))+'">'+
-      '<button class="btn btn-ghost" id="trkOwnAdd">'+ic('plus')+'<span>'+esc(t('trk.addrow'))+'</span></button></div>'+
+  var adder = (tdef.max && trkRowsUsed(cfg)<tdef.max) ?
+    (type!=='c30' ? '<p class="trk-conc">'+ic('target')+'<span>'+esc(t('trk.conc'))+'</span></p>' : '')+
+    '<div class="addrow trk-addrow"><input type="text" id="trkOwn" maxlength="60" placeholder="'+esc(type==='c30'?t('ps.own'):t('trk.sub.ph'))+'">'+
+      '<button class="btn btn-ghost" id="trkOwnAdd">'+ic('plus')+'<span>'+esc(t('trk.addrow'))+'</span></button>'+
+      (type!=='c30' ? '<button class="btn btn-ghost" id="trkHeadAdd">'+ic('plus')+'<span>'+esc(t('trk.head'))+'</span></button>' : '')+'</div>'+
     (cands.length ? '<div class="mg-picks trk-ideas"><span class="trk-ideas-l">'+esc(t('trk.ideas'))+'</span>'+cands.slice(0,8).map(function(c){
         return '<button type="button" class="t3idea" data-trk-add="'+esc(c.t)+'"'+(c.gid?' data-gid="'+c.gid+'"':'')+'>'+ic('plus')+'<span>'+esc(c.t)+'</span></button>'; }).join('')+'</div>' : '') : '';
   var prize = kid && type!=='day' ? '<div class="field trk-prize"><label for="kidPrize">'+esc(t('kid.prize'))+'</label>'+
@@ -627,7 +650,23 @@ function renderTrackers(){
   box.querySelectorAll('[data-trk-next]').forEach(function(b){ b.addEventListener('click',function(){ cfg.next=b.dataset.trkNext==='1'; save(); renderTrackers(); }); });
   box.querySelectorAll('[data-trk-del]').forEach(function(b){ b.addEventListener('click',function(){ cfg.rows.splice(Number(b.dataset.trkDel),1); trkEditRow=-1; save(); renderTrackers(); }); });
   box.querySelectorAll('[data-trk-add]').forEach(function(b){ b.addEventListener('click',function(){
-    cfg.rows.push({t:b.dataset.trkAdd, gid:b.dataset.gid?Number(b.dataset.gid):null}); save(); renderTrackers(); }); });
+    var gid=b.dataset.gid?Number(b.dataset.gid):null;
+    /* a goal from the app is a main heading: its concrete goals go under it */
+    if(gid && type!=='c30'){ cfg.rows.push({t:b.dataset.trkAdd, gid:gid, h:true}); trkSubFor=cfg.rows.length-1; }
+    else cfg.rows.push({t:b.dataset.trkAdd, gid:gid});
+    save(); renderTrackers(); var si=document.getElementById('trkSubIn'); if(si) si.focus(); }); });
+  box.querySelectorAll('[data-trk-sub]').forEach(function(b){ b.addEventListener('click',function(){
+    trkSubFor=Number(b.dataset.trkSub); renderTrackers(); var si=document.getElementById('trkSubIn'); if(si) si.focus(); }); });
+  var sIn=box.querySelector('#trkSubIn');
+  if(sIn){ var addSub=function(){ var v=sIn.value.trim(); if(!v){ sIn.focus(); return; }
+      var i=trkSubFor, j=i+1; while(j<cfg.rows.length && !cfg.rows[j].h) j++;
+      var hg=cfg.rows[i]; cfg.rows.splice(j,0,{t:v, gid:hg&&hg.gid||null}); trkSubFor=-1; save(); renderTrackers(); };
+    box.querySelector('#trkSubAdd').addEventListener('click',addSub);
+    sIn.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addSub(); } if(e.key==='Escape'){ trkSubFor=-1; renderTrackers(); } }); }
+  var hAdd=box.querySelector('#trkHeadAdd');
+  if(hAdd) hAdd.addEventListener('click',function(){ var o=box.querySelector('#trkOwn'), v=o.value.trim();
+    if(!v){ o.placeholder=t('trk.head.ph'); o.focus(); return; }
+    cfg.rows.push({t:v, h:true}); trkSubFor=cfg.rows.length-1; save(); renderTrackers(); var si=document.getElementById('trkSubIn'); if(si) si.focus(); });
   box.querySelectorAll('[data-trk-rname]').forEach(function(b){ b.addEventListener('click',function(){
     trkEditRow=Number(b.dataset.trkRname); renderTrackers(); var inp=box.querySelector('[data-trk-rin]'); if(inp){ inp.focus(); inp.select(); } }); });
   box.querySelectorAll('[data-trk-rin]').forEach(function(inp){
@@ -664,7 +703,7 @@ function renderTrackers(){
   var ti=box.querySelector('#trkTitle');
   if(ti) ti.addEventListener('change',function(){ cfg.title=ti.value.trim(); save(); renderTrackers(); });
   box.querySelector('#trkPrint').addEventListener('click',function(){
-    if(tdef.max && !cfg.rows.length){ toast(t('ps.need')); return; }
+    if(tdef.max && !trkRowsUsed(cfg)){ toast(t('ps.need')); return; }
     var root=document.getElementById('printRoot');
     if(!root){ root=document.createElement('div'); root.id='printRoot'; document.body.appendChild(root); }
     root.innerHTML=trkSheetHtml(type,cfg);
@@ -1546,7 +1585,7 @@ function trkTodayRowsMine(){
     days.forEach(function(x,i){ if(dayKey(x)===today) di=i; });
     if(di<0) return;
     var rec=trkRec(type,cfg,false);
-    cfg.rows.forEach(function(r){ if(!r.t) return; var tk=rec && rec.ticks[normLine(r.t)];
+    cfg.rows.forEach(function(r){ if(!r.t || r.h) return; var tk=rec && rec.ticks[normLine(r.t)];
       out.push({type:type, cfg:cfg, row:r, di:di, done:!!(tk && tk[di])}); });
   });
   return out;

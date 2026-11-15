@@ -1006,6 +1006,29 @@ body.no-scroll{overflow:hidden;}
 .kid-ageset{display:flex;align-items:center;gap:6px;}
 .kid-ageset input{width:64px;text-align:center;font-size:18px;font-weight:800;padding:6px;}
 .kid-ageset .t3act{font-size:20px;font-weight:800;}
+.trk-hrow th{padding:12px 6px 4px !important;text-align:start;background:none;border:0;}
+.trk-hrow .trk-rname{font-size:17px;color:var(--sc);font-weight:800;}
+.trk-subbtn{display:inline-flex;align-items:center;gap:4px;margin-inline-start:10px;padding:3px 10px;border-radius:var(--r-pill);border:1px dashed var(--ink-3);background:none;font:inherit;font-size:var(--t-xs);color:var(--fg-2);cursor:pointer;vertical-align:middle;}
+.trk-subbtn svg{width:12px;height:12px;}
+.trk-sub th.mcol{padding-inline-start:18px !important;}
+.trk-sub th.mcol .trk-rname{font-weight:600;}
+.trk-subrow td{padding:4px 0 8px !important;}
+.trk-conc{display:flex;gap:8px;align-items:flex-start;font-size:var(--t-sm);color:var(--fg-2);margin:var(--s3) 0 6px;line-height:1.5;}
+.trk-conc svg{flex:none;width:16px;height:16px;color:var(--sc);margin-top:3px;}
+.trk-addrow{flex-wrap:wrap;}
+.trk-addrow input{flex:1 1 100%;}
+.sheet-grid tr.sg-hrow td{background:var(--sb);color:var(--sc);font-weight:800;font-size:15px;padding:6px 10px;text-align:start;}
+.sheet-grid tr.sg-sub td.sg-goal{padding-inline-start:18px;}
+.trk-grid th.mcol{min-width:150px;width:150px;max-width:170px;}
+.trk-grid .mcol .trk-rname{display:flex;align-items:flex-start;max-width:100%;line-height:1.3;}
+.trk-grid .mcol .trk-rname span{white-space:normal;overflow:visible;text-overflow:clip;display:inline;}
+.trk-grid .mcol .trk-rname .trk-remo{flex:none;}
+.trk-hp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:6px;max-width:calc(100vw - 90px);position:sticky;inset-inline-start:6px;}
+.trk-hrow th{white-space:normal;}
+.trk-hpbar{flex:0 0 120px;height:8px;border-radius:4px;background:var(--ink-2);overflow:hidden;}
+.trk-hpbar i{display:block;height:100%;background:var(--sc);border-radius:4px;transition:width .4s;}
+.trk-hp b{font-size:var(--t-xs);color:var(--fg-2);font-weight:700;}
+.trk-hp.full b{color:var(--sc);}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
