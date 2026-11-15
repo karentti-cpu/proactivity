@@ -747,7 +747,11 @@ function logDay(){
   while(days.length>LOG_DAYS) delete S.log[days.shift()];
 }
 var t3Open=false, t3IdeasMore=false;
+/* someone who has kept a list on three days knows what My day is: the
+   explanation steps aside */
+function t3Seasoned(){ var L=S.log||{}; return Object.keys(L).filter(function(d){ return (L[d].items||[]).length; }).length>=3; }
 function renderToday3(){
+  if(typeof renderPath==='function') setTimeout(renderPath,0);   // the daily path follows My day
   var box=document.getElementById('todayBox'); if(!box) return;
   var td=today3(), all=liveGoals(), goals=pickedGoals(), today=dayKey(), running=!!fiveTimer;
   var total=goals.length+td.items.length;
@@ -821,7 +825,7 @@ function renderToday3(){
   var chosen=total>0;
   box.innerHTML='<div class="boxh-row"><h2 class="boxh">'+ic('sun')+'<span>'+esc(t('t3.t'))+'</span></h2>'+
       (chosen ? '<span class="boxh-n numf">'+nDone+'/'+total+'</span>' : '')+'</div>'+
-    '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>'+
+    (t3Seasoned() ? '' : '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>')+
     gRows+iRows+blankRows+
     '<button type="button" class="t3open'+(t3Open?' on':'')+'" data-t3open aria-expanded="'+t3Open+'">'+ic('target')+
       '<span>'+esc(t('t3.addgoals'))+'</span>'+ic('chevron','t3open-c')+'</button>'+
@@ -1073,7 +1077,7 @@ function renderMyWeek(){
     bindWeek(); return;
   }
   /* the week in numbers - only the ones that are there */
-  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
+  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[(S.full?days.filter(function(d){ return S.full[d]; }).length:0),'wk.full'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
   var tilesHtml=tiles.length ? '<div class="wk-tiles">'+tiles.map(function(c){
     return '<div class="wk-tile"><b class="numf">'+c[0]+'</b><span>'+esc(t(c[1]))+'</span></div>'; }).join('')+'</div>' : '';
   /* the feelings named in this week's pauses, the most frequent first */
@@ -1650,7 +1654,7 @@ function bindSettings(){
   });
 }
 function renderDash(){
-  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn();
+  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn(); renderPath(); renderGreet();
   renderAvatarCard(); renderInvite();
 }
 
@@ -1827,11 +1831,16 @@ function showSplash(){
   sp.addEventListener('click',hide);
   setTimeout(hide,1600);
 }
+function renderGreet(){
+  var el=document.getElementById('greetName'); if(!el) return;
+  var h=new Date().getHours(), k=h>=5&&h<12 ? 'a.greet.m' : h>=12&&h<17 ? 'a.greet.n' : 'a.greet.e';
+  el.textContent=t(P.name ? k : 'a.greet',{name:P.name || t('a.greet.anon')});
+}
 function startApp(){
   handleShare();
   showSplash();
   var name=P.name || t('a.greet.anon');
-  document.getElementById('greetName').textContent=t('a.greet',{name:name});
+  renderGreet();
   var tag=document.getElementById('appTag'), tk=(P.gender==='m'||P.gender==='f') ? 'b.tag' : 'b.tag.n';
   if(tag){ tag.setAttribute('data-i18n',tk); tag.textContent=t(tk); }
 

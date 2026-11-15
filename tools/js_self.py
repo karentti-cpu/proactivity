@@ -890,7 +890,7 @@ function gmFinish(box){
   if(!R.paid){
     R.paid=true;
     var before=levelInfo(), gain=10+R.pts, bonus=0;
-    st.played[R.id]=(st.played[R.id]||0)+1;
+    st.played[R.id]=(st.played[R.id]||0)+1; st.lastDay=today;
     /* a strong round: the next one starts harder; a hard one: a little easier */
     var L=st.lvl[R.id]||0, up, down;
     if(R.id==='speed'){ up=total>=8 && R.right/total>=.85; down=total>=4 && R.right/total<.5; }
@@ -900,7 +900,7 @@ function gmFinish(box){
     if(R.id===gmDaily() && st.daily!==today){ st.daily=today; bonus=15; }
     addPts(gain+bonus); markActiveToday(); save();
     R.gain=gain; R.bonus=bonus; R.before=before;
-    celebrate(); renderGameRow();
+    celebrate(); renderGameRow(); renderPath();
   }
   var after=levelInfo(), hi=total>0 && R.right>=total-1;
   box.innerHTML='<div class="gm-end"><div class="ps-reward"><div class="av-big t'+after.tier+'">'+avatarSvg(after.tier, avatarLabel(after))+'</div>'+
@@ -950,7 +950,7 @@ function pzOpen(mode){
   document.getElementById('pzTitle').querySelector('span').textContent=t(mode==='feel'?'pz.ck.t':mode==='sc'?'sc.t':'pz.btn');
   pzRender(); document.getElementById('pauseModal').classList.add('on');
 }
-function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); }
+function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); renderPath(); }
 function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; return L; }
 function pzWeekCount(){
   var log=S.log||{}, n=0;
@@ -1267,5 +1267,51 @@ function renderWell(){
   box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ goPage('games'); gmStart(b.dataset.wlgame); }); });
   box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
     if(addDayItem(b.dataset.wladd)){ markActiveToday(); save(); toast(t('pz.added')); } }); });
+}
+
+/* ================= the daily path =================
+   Four small steps a day, in the order of the home page: pause, do, feel,
+   play. Each one is ticked as it happens; all four make a full day - a
+   bonus, a celebration, and a streak of full days. A tap on a step takes
+   you straight to it. */
+var PATH_STEPS=[{k:'pause',icon:'wind'},{k:'today',icon:'sun'},{k:'feel',icon:'face'},{k:'game',icon:'star'}];
+function pathDone(){
+  var today=dayKey(), L=(S.log||{})[today]||{}, td=today3();
+  return {
+    pause: !!L.breath,
+    today: td.items.some(function(x){ return x.done; }) || (S.goals||[]).some(function(g){ return g.doneDay===today; }),
+    feel: (L.pauses||[]).length>0,
+    game: gmState().lastDay===today || gmState().daily===today
+  };
+}
+function fullStreak(){
+  var n=0, d=new Date(), f=S.full||{};
+  if(!f[dayKey(d)]) d.setDate(d.getDate()-1);
+  while(f[dayKey(d)]){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function renderPath(){
+  var box=document.getElementById('pathBox'); if(!box) return;
+  var done=pathDone(), n=PATH_STEPS.filter(function(s){ return done[s.k]; }).length, today=dayKey();
+  if(!S.full) S.full={};
+  var fresh=false;
+  if(n===4 && !S.full[today]){ S.full[today]=1; fresh=true; addPts(20); save(); setTimeout(celebrate,300); toast(t('path.fullxp')); }
+  var next=PATH_STEPS.filter(function(s){ return !done[s.k]; })[0], streak=fullStreak();
+  box.className='path-box'+(n===4?' full':'');
+  box.innerHTML='<div class="path-top"><b>'+esc(t('path.t'))+'</b><span>'+esc(t('path.n',{n:n}))+'</span></div>'+
+    '<div class="path-steps">'+PATH_STEPS.map(function(s,i){
+      return (i?'<i class="path-line'+(done[PATH_STEPS[i-1].k]?' on':'')+'"></i>':'')+
+        '<button type="button" class="path-step'+(done[s.k]?' on':'')+(next&&next.k===s.k?' is-next':'')+'" data-path="'+s.k+'">'+
+        '<span class="path-dot">'+ic(done[s.k]?'check':s.icon)+'</span><small>'+esc(t('path.'+s.k))+'</small></button>'; }).join('')+'</div>'+
+    '<p class="path-msg">'+esc(n===4 ? t('path.full') : n===0 ? t('path.go') : t('path.next',{s:t('path.'+next.k)}))+
+      (streak>=2 ? ' <span class="path-streak">'+esc(t('path.streak',{n:streak}))+'</span>' : '')+'</p>';
+  if(fresh) box.classList.add('pop');
+  box.querySelectorAll('[data-path]').forEach(function(b){ b.addEventListener('click',function(){
+    var k=b.dataset.path;
+    if(k==='pause') pzOpen('day');
+    else if(k==='feel') pzOpen('feel');
+    else if(k==='game'){ goPage('games'); gmStart(gmDaily()); }
+    else { var tb=document.getElementById('todayBox'); if(tb){ tb.scrollIntoView({behavior:'smooth',block:'start'}); var inp=tb.querySelector('[data-t3new]'); if(inp) setTimeout(function(){ inp.focus(); },400); } }
+  }); });
 }
 """

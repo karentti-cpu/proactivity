@@ -347,11 +347,12 @@ def build_body(logo):
    <p class="psub" data-i18n="gnd.s"></p>
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
+  <section class="path-box" id="pathBox"></section>
   <button type="button" class="pause-btn" id="pauseBtn"></button>
   <section class="dash-box today3" id="todayBox"></section>
   <button type="button" class="pause-btn feel-btn" id="feelBtn"><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
-  <section class="dash-box tl-box" id="toolBox" hidden></section>
   <button type="button" class="home-game" id="gameRow" hidden></button>
+  <section class="dash-box tl-box" id="toolBox" hidden></section>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
   <div class="dstrip" id="dashStats"></div>
