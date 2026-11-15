@@ -754,7 +754,7 @@ function renderGameRow(){
     '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
   if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
 }
-function gmFeel(k){ var f=PZ_FEELS.filter(function(x){ return x.k===k; })[0]; return (f?f.e+' ':'')+esc(t('pz.f.'+k)); }
+function gmFeel(k){ var f=pzF(k); return (f?f.e+' ':'')+esc(pzLabel(k)); }
 function gmLvLabel(id){ var L=Math.max(1,gmState().lvl[id]||0); return '<span class="gm-lv l'+L+'">'+esc(t('gm.lv'+L))+'</span>'; }
 function renderGames(){
   var box=document.getElementById('gmBox'); if(!box) return;
@@ -901,52 +901,96 @@ function gmFinish(box){
   box.querySelector('#gmBack').addEventListener('click',function(){ gmRun=null; renderGames(); });
 }
 
-/* ================= a moment to pause =================
-   Self-regulation in one minute: stop, three breaths, name the feeling,
-   choose a response. Each pause is kept in the day's log, so My week can
-   show how often the player paused and chose, and what they felt. */
-var PZ_FEELS=[{k:'angry',e:'😠'},{k:'stress',e:'😰'},{k:'hurt',e:'😔'},{k:'tired',e:'😴'},
-              {k:'disap',e:'😞'},{k:'fear',e:'😟'},{k:'frust',e:'😤'},{k:'sad',e:'😢'}];
+/* ================= a moment to pause, and how I feel =================
+   Two daily moments of self-regulation. At the top of the day, "A moment
+   to pause": three slow breaths - in through the nose, hold, and out very
+   slowly through the mouth - before the day begins. After the tasks, "How do
+   I feel right now?": name the feeling; a pleasant one is noticed and kept,
+   a hard one gets a choice of response, with three breaths first if wanted.
+   Every check-in is kept in the day's log, so My week shows what was felt
+   and how the player chose. */
+var PZ_FEELS=[{k:'joy',e:'😄',l:'fe.joy',pos:1},{k:'calm',e:'😌',l:'fe.calm',pos:1},{k:'pride',e:'🏆',l:'fe.pride',pos:1},
+              {k:'excite',e:'🤩',l:'fe.excite',pos:1},{k:'grat',e:'🙏',l:'fe.grat',pos:1},
+              {k:'tired',e:'😴',l:'pz.f.tired'},{k:'stress',e:'😰',l:'pz.f.stress'},{k:'angry',e:'😠',l:'pz.f.angry'},
+              {k:'frust',e:'😤',l:'pz.f.frust'},{k:'worry',e:'😟',l:'fe.worry'},{k:'hurt',e:'😔',l:'pz.f.hurt'},
+              {k:'sad',e:'😢',l:'pz.f.sad'},{k:'disap',e:'😞',l:'pz.f.disap'},{k:'fear',e:'😟',l:'pz.f.fear'}];
+var PZ_SHOWN=['joy','calm','pride','excite','grat','tired','stress','angry','frust','worry','hurt','sad'];
+function pzF(k){ return PZ_FEELS.filter(function(x){ return x.k===k; })[0]; }
+function pzLabel(k){ var f=pzF(k); return f ? t(f.l) : k; }
+/* the breath: four seconds in, four held, seven out */
+var PZ_PH=[['in',4],['hold',4],['out',7]];
 var pz=null, pzTimer=null;
 function pzStop(){ if(pzTimer){ clearTimeout(pzTimer); pzTimer=null; } }
-function pzOpen(){ pzStop(); pz={step:1}; pzRender(); document.getElementById('pauseModal').classList.add('on'); }
-function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); }
+function pzOpen(mode){
+  pzStop();
+  pz = mode==='feel' ? {mode:'feel', step:'feel'} : {mode:'day', step:'intro'};
+  document.getElementById('pzTitle').querySelector('span').textContent=t(mode==='feel'?'pz.ck.t':'pz.btn');
+  pzRender(); document.getElementById('pauseModal').classList.add('on');
+}
+function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); }
+function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; return L; }
 function pzWeekCount(){
   var log=S.log||{}, n=0;
-  weekOf(0).forEach(function(d){ n+=((log[d]||{}).pauses||[]).length; });
+  weekOf(0).forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ if(z.a) n++; }); });
   return n;
 }
+function renderPauseBtn(){
+  var b=document.getElementById('pauseBtn'); if(!b) return;
+  var L=(S.log||{})[dayKey()], done=!!(L && L.breath);
+  b.classList.toggle('done',done);
+  b.innerHTML='<span class="pz-ic">'+ic(done?'check':'wind')+'</span><span><b>'+esc(t('pz.btn'))+'</b><small>'+esc(t(done?'pz.d.done':'pz.d.s'))+'</small></span>'+ic('chevron');
+}
+function pzBreathHtml(){
+  var ph=PZ_PH[pz.ph][0];
+  return '<p class="pz-sub pz-how">'+esc(t('pz.how'))+'</p>'+
+    '<div class="pz-breath"><div class="pz-circle '+ph+'"></div><div class="pz-in"><b id="pzPhase">'+esc(t('pz.'+ph))+'</b><span class="numf" id="pzSec">'+pz.sec+'</span></div></div>'+
+    '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(3,pz.br+1)}))+'</p>'+
+    '<button class="btn btn-ghost btn-block" id="pzNext">'+esc(t('pz.next'))+'</button>';
+}
+function pzStartBreath(after){ pz.after=after; pz.step='breath'; pz.br=0; pz.ph=0; pz.sec=PZ_PH[0][1]; pzRender(); pzTick(); }
 function pzRender(){
   var box=document.getElementById('pzBody'); if(!box||!pz) return;
-  var dots='<div class="pz-dots">'+[1,2,3,4].map(function(k){ return '<i class="'+(k<pz.step?'on':k===pz.step?'cur':'')+'"></i>'; }).join('')+'</div>';
-  if(pz.step===1){
-    box.innerHTML=dots+'<p class="pz-big">'+esc(t('pz.1'))+'</p><p class="pz-sub">'+esc(t('pz.1.s'))+'</p>'+
+  if(pz.step==='intro'){
+    box.innerHTML='<p class="pz-big">'+esc(t('pz.d.1'))+'</p><p class="pz-sub">'+esc(t('pz.1.s'))+'</p>'+
       '<button class="btn btn-primary btn-block" id="pzGo">'+ic('wind')+'<span>'+esc(t('pz.go'))+'</span></button>';
-    box.querySelector('#pzGo').addEventListener('click',function(){ pz.step=2; pz.br=0; pz.phase='in'; pzRender(); pzBreathe(); });
-  } else if(pz.step===2){
-    box.innerHTML=dots+'<div class="pz-breath"><div class="pz-circle '+pz.phase+'"></div><b id="pzPhase">'+esc(t('pz.'+pz.phase))+'</b></div>'+
-      '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(3,pz.br+1)}))+'</p>'+
-      '<button class="btn btn-ghost btn-block" id="pzNext">'+esc(t('pz.next'))+'</button>';
-    box.querySelector('#pzNext').addEventListener('click',function(){ pzStop(); pz.step=3; pzRender(); });
-  } else if(pz.step===3){
-    box.innerHTML=dots+'<p class="pz-big">'+esc(t('pz.2'))+'</p><p class="pz-sub">'+esc(t('pz.2.s'))+'</p>'+
-      '<div class="pz-feels">'+PZ_FEELS.map(function(f){
-        return '<button type="button" class="pz-feel" data-pzf="'+f.k+'"><span>'+f.e+'</span>'+esc(t('pz.f.'+f.k))+'</button>'; }).join('')+'</div>';
-    box.querySelectorAll('[data-pzf]').forEach(function(b){ b.addEventListener('click',function(){ pz.f=b.dataset.pzf; pz.step=4; pzRender(); }); });
-  } else if(pz.step===4){
-    var f=PZ_FEELS.filter(function(x){ return x.k===pz.f; })[0];
-    box.innerHTML=dots+'<p class="pz-felt">'+f.e+' '+esc(t('pz.f.'+f.k))+'</p>'+
+    box.querySelector('#pzGo').addEventListener('click',function(){ pzStartBreath('dayend'); });
+  } else if(pz.step==='breath'){
+    box.innerHTML=pzBreathHtml();
+    box.querySelector('#pzNext').addEventListener('click',function(){ pzStop(); pzAfterBreath(); });
+  } else if(pz.step==='dayend'){
+    box.innerHTML='<div class="pz-end"><div class="pz-endic">'+ic('check')+'</div><p class="pz-big">'+esc(t('pz.d.end'))+'</p>'+
+      (pz.paid ? '<p class="ps-rxp">'+esc(t('ps.rxp',{n:5}))+'</p>' : '')+'</div>'+
+      '<div class="row-btns"><button class="btn btn-primary" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+    box.querySelector('#pzEnd').addEventListener('click',pzClose);
+  } else if(pz.step==='feel'){
+    box.innerHTML='<p class="pz-sub">'+esc(t('pz.2.s'))+'</p>'+
+      '<div class="pz-feels">'+PZ_SHOWN.map(function(k){ var f=pzF(k);
+        return '<button type="button" class="pz-feel'+(f.pos?' pos':'')+'" data-pzf="'+k+'"><span>'+f.e+'</span>'+esc(t(f.l))+'</button>'; }).join('')+'</div>';
+    box.querySelectorAll('[data-pzf]').forEach(function(b){ b.addEventListener('click',function(){
+      pz.f=b.dataset.pzf; pz.step=pzF(pz.f).pos ? 'pos' : 'choose'; pzRender(); }); });
+  } else if(pz.step==='pos'){
+    var fp=pzF(pz.f);
+    box.innerHTML='<p class="pz-felt">'+fp.e+' '+esc(t(fp.l))+'</p><p class="pz-big">'+esc(t('pz.pos'))+'</p>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="120" placeholder="'+esc(t('pz.pos.ph'))+'">'+
+      '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.pos.ok'))+'</button></div>';
+    var keep=function(){ var L=pzLog(); L.pauses.push({f:pz.f, note:box.querySelector('#pzOwn').value.trim(), h:new Date().getHours()});
+      addPts(5); markActiveToday(); save(); toast(t('pz.pos.done')); pzClose(); };
+    box.querySelector('#pzOk').addEventListener('click',keep);
+    box.querySelector('#pzOwn').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); keep(); } });
+  } else if(pz.step==='choose'){
+    var f=pzF(pz.f);
+    box.innerHTML='<p class="pz-felt">'+f.e+' '+esc(t(f.l))+'</p>'+
+      (pz.breathed ? '' : '<button class="btn btn-ghost btn-sm pz-first" id="pzFirst">'+ic('wind')+'<span>'+esc(t('pz.first'))+'</span></button>')+
       '<p class="pz-big">'+esc(t('pz.3'))+'</p><p class="pz-sub">'+esc(t('pz.3.s'))+'</p>'+
       '<div class="pz-acts">'+[1,2,3,4,5].map(function(n){
         return '<button type="button" class="pz-act" data-pza="'+n+'">'+esc(t('pz.a'+n))+'</button>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="120" placeholder="'+esc(t('pz.own'))+'">'+
       '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.ok'))+'</button></div>';
+    var fb=box.querySelector('#pzFirst'); if(fb) fb.addEventListener('click',function(){ pzStartBreath('choose'); });
     function choose(txt){
       if(!txt) return;
-      if(!S.log || !S.log[dayKey()]) logDay();
-      var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[];
-      L.pauses.push({f:pz.f, a:txt});
-      pz.a=txt; pz.step=5; addPts(10); markActiveToday(); save(); celebrate(); pzRender();
+      var L=pzLog(); L.pauses.push({f:pz.f, a:txt, h:new Date().getHours()});
+      pz.a=txt; pz.step='end'; addPts(10); markActiveToday(); save(); celebrate(); pzRender();
     }
     box.querySelectorAll('[data-pza]').forEach(function(b){ b.addEventListener('click',function(){ choose(t('pz.a'+b.dataset.pza)); }); });
     var own=box.querySelector('#pzOwn');
@@ -968,23 +1012,36 @@ function pzRender(){
     box.querySelector('#pzEnd').addEventListener('click',function(){ pzClose(); renderDash(); });
   }
 }
-/* three breaths: four seconds in, five out */
-function pzBreathe(){
-  pzStop();
-  if(!pz || pz.step!==2) return;
-  pzTimer=setTimeout(function(){
-    if(!pz || pz.step!==2) return;
-    if(pz.phase==='in') pz.phase='out';
-    else { pz.br++; pz.phase='in'; }
-    if(pz.br>=3){ pz.step=3; pzRender(); return; }
-    var c=document.querySelector('.pz-circle'), ph=document.getElementById('pzPhase'), nn=document.getElementById('pzN');
-    if(c) c.className='pz-circle '+pz.phase;
-    if(ph) ph.textContent=t('pz.'+pz.phase);
-    if(nn) nn.textContent=t('pz.n',{n:Math.min(3,pz.br+1)});
-    pzBreathe();
-  }, pz.phase==='in' ? 4000 : 5000);
+function pzAfterBreath(){
+  if(pz.after==='dayend'){
+    var L=pzLog();
+    if(!L.breath){ L.breath=true; addPts(5); markActiveToday(); pz.paid=true; }
+    save(); pz.step='dayend';
+  } else { pz.breathed=true; pz.step='choose'; }
+  pzRender();
 }
-document.getElementById('pauseBtn').addEventListener('click',pzOpen);
+/* one second at a time, so the count inside the circle runs down */
+function pzTick(){
+  pzStop();
+  pzTimer=setTimeout(function(){
+    if(!pz || pz.step!=='breath') return;
+    pz.sec--;
+    if(pz.sec<=0){
+      pz.ph++;
+      if(pz.ph>=PZ_PH.length){ pz.ph=0; pz.br++; }
+      if(pz.br>=3){ pzAfterBreath(); return; }
+      pz.sec=PZ_PH[pz.ph][1];
+      var ph=PZ_PH[pz.ph][0], c=document.querySelector('.pz-circle'), el=document.getElementById('pzPhase'), nn=document.getElementById('pzN');
+      if(c) c.className='pz-circle '+ph;
+      if(el) el.textContent=t('pz.'+ph);
+      if(nn) nn.textContent=t('pz.n',{n:Math.min(3,pz.br+1)});
+    }
+    var sc=document.getElementById('pzSec'); if(sc) sc.textContent=pz.sec;
+    pzTick();
+  },1000);
+}
+document.getElementById('pauseBtn').addEventListener('click',function(){ pzOpen('day'); });
+document.getElementById('feelBtn').addEventListener('click',function(){ pzOpen('feel'); });
 document.getElementById('pzX').addEventListener('click',pzClose);
 document.getElementById('pauseModal').addEventListener('click',function(e){ if(e.target.id==='pauseModal') pzClose(); });
 
@@ -1006,7 +1063,7 @@ function tlCandidates(){
   wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ pz++; pf[z.f]=(pf[z.f]||0)+1; }); });
   var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
   if(pz>=2 && ['angry','stress','frust','hurt','fear'].indexOf(topf)>=0)
-    out.push({id:'calm', s:9, t:t('tl.calm.t'), w:t('tl.calm.w',{n:pz, f:t('pz.f.'+topf)}), icon:'wind', act:go('calm')});
+    out.push({id:'calm', s:9, t:t('tl.calm.t'), w:t('tl.calm.w',{n:pz, f:pzLabel(topf)}), icon:'wind', act:go('calm')});
   /* a long list, little of it done */
   var tot=0, done=0, days=0;
   wk.slice(1).forEach(function(d){ var L=log[d]; if(!L||!L.items.length) return; days++; tot+=L.items.length; L.items.forEach(function(x){ if(x.done) done++; }); });
@@ -1027,7 +1084,7 @@ function tlCandidates(){
   });
   /* tired evenings */
   var tired=wk.slice(0,5).filter(function(d){ return (log[d]||{}).feel==='tired'; }).length;
-  if(tired>=2) out.push({id:'tired', s:7.5, t:t('tl.tired.t'), w:t('tl.tired.w'), icon:'wind', act:function(){ pzOpen(); }});
+  if(tired>=2) out.push({id:'tired', s:7.5, t:t('tl.tired.t'), w:t('tl.tired.w'), icon:'wind', act:function(){ pzOpen('day'); }});
   /* feelings that get mixed up */
   var fa=st.acc.feel;
   if(fa && fa[0]>=5 && fa[1]/fa[0]<.7) out.push({id:'dict', s:6, t:t('tl.dict.t'), w:t('tl.dict.w'), icon:'book', act:function(){
@@ -1040,9 +1097,9 @@ function tlCandidates(){
   if(top && top.r>=.9 && (st.lvl[top.id]||0)<3) out.push({id:'up_'+top.id, s:5, t:t('tl.up.t',{g:gmName(top.id)}), w:t('tl.up.w'), icon:'trending',
     act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); goPage('games'); gmStart(top.id); }});
   /* the pause, never tried */
-  var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length; });
+  var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length || log[d].breath; });
   var active=wk.filter(function(d){ return log[d]; }).length;
-  if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen(); }});
+  if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen('day'); }});
   /* the check-in's area to grow */
   if(hasProfile()){
     var d=weakDim(), gid=DIM_GAME[d]||'react';
@@ -1095,7 +1152,7 @@ function renderLearned(){
   else if(done>=2) lines.push(['check', t('ln.done.n',{n:done})]);
   var pf={}; Object.keys(log).forEach(function(d){ (log[d].pauses||[]).forEach(function(z){ pf[z.f]=(pf[z.f]||0)+1; }); });
   var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
-  if(topf && pf[topf]>=2){ var fe=PZ_FEELS.filter(function(x){ return x.k===topf; })[0]; lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+t('pz.f.'+topf)})]); }
+  if(topf && pf[topf]>=2){ var fe=pzF(topf); lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+pzLabel(topf)})]); }
   var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
   if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
   if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);

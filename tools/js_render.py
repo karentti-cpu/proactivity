@@ -735,7 +735,7 @@ function logDay(){
   if(!S.log) S.log={};
   var prev=S.log[td.day]||{};
   S.log[td.day]={
-    note: prev.note||'', feel: prev.feel||'', choice: prev.choice||'', pauses: prev.pauses||[],
+    note: prev.note||'', feel: prev.feel||'', choice: prev.choice||'', pauses: prev.pauses||[], breath: !!prev.breath,
     items: td.items.filter(function(x){ return x.t.trim(); })
              .map(function(x){ return {t:x.t.trim(), done:!!x.done, gid:x.gid||null, url:x.url||null}; }),
     steps: (S.goals||[]).filter(function(g){ return g.doneDay===td.day; }).map(function(g){ return g.id; }),
@@ -1055,7 +1055,7 @@ function renderMyWeek(){
     var L=log[d]; if(!L) return;
     steps+=L.steps.length;
     if(L.choice) choices++;
-    (L.pauses||[]).forEach(function(z){ pauses++; if(z.f) pzf[z.f]=(pzf[z.f]||0)+1; });
+    (L.pauses||[]).forEach(function(z){ if(z.a) pauses++; if(z.f) pzf[z.f]=(pzf[z.f]||0)+1; });
     if(L.feel) feels[L.feel]=(feels[L.feel]||0)+1;
     L.items.forEach(function(x){
       if(x.done) things++;
@@ -1079,8 +1079,8 @@ function renderMyWeek(){
   /* the feelings named in this week's pauses, the most frequent first */
   var pzk=Object.keys(pzf).sort(function(x,y){ return pzf[y]-pzf[x]; });
   if(pzk.length) tilesHtml+='<div class="wk-pzf"><span>'+esc(t('wk.pzfeel'))+':</span>'+pzk.map(function(k){
-    var f=PZ_FEELS.filter(function(x){ return x.k===k; })[0];
-    return '<b>'+(f?f.e+' ':'')+esc(t('pz.f.'+k))+(pzf[k]>1?' ×'+pzf[k]:'')+'</b>'; }).join('')+'</div>';
+    var f=pzF(k);
+    return '<b>'+(f?f.e+' ':'')+esc(pzLabel(k))+(pzf[k]>1?' ×'+pzf[k]:'')+'</b>'; }).join('')+'</div>';
   function cells(fn){ return '<div class="wk-cells">'+days.map(fn).join('')+'</div>'; }
   var hdr=cells(function(d){
     return '<button type="button" class="wk-day'+(d===wkSel?' on':'')+(d===today?' today':'')+'" data-wk-day="'+d+'"'+
@@ -1650,7 +1650,7 @@ function bindSettings(){
   });
 }
 function renderDash(){
-  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool();
+  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn();
   renderAvatarCard(); renderInvite();
 }
 

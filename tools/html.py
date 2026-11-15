@@ -346,8 +346,9 @@ def build_body(logo):
    <p class="psub" data-i18n="gnd.s"></p>
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
+  <button type="button" class="pause-btn" id="pauseBtn"></button>
   <section class="dash-box today3" id="todayBox"></section>
-  <button type="button" class="pause-btn" id="pauseBtn"><span class="pz-ic">{i("wind")}</span><span><b data-i18n="pz.btn"></b><small data-i18n="pz.btn.s"></small></span>{i("chevron")}</button>
+  <button type="button" class="pause-btn feel-btn" id="feelBtn"><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
   <section class="dash-box tl-box" id="toolBox" hidden></section>
   <button type="button" class="home-game" id="gameRow" hidden></button>
   <section class="dash-box eve" id="eveBox" hidden></section>
