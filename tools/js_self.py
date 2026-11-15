@@ -359,6 +359,28 @@ function trkState(){
   if(!S.trk) S.trk={cfg:{}, list:[]};
   return S.trk;
 }
+/* the age row shown right under a child's name, and a short add-a-child form;
+   used on the tables page and on the games page alike */
+function kidAgeRow(kid){
+  return '<div class="kid-agerow"><span>'+esc(t('kid.agefor',{n:kid.name}))+'</span><div class="t3seg trk-ages">'+['s','m','l','t'].map(function(a){
+    return '<button type="button" data-kidage-set="'+a+'" class="'+(kid.age===a?'on':'')+'">'+esc(t('kid.a.'+a))+'</button>'; }).join('')+'</div></div>';
+}
+function kidAddForm(){
+  return '<div class="trk-kidform"><input type="text" id="kidName" maxlength="20" placeholder="'+esc(t('kid.name'))+'">'+
+    '<div class="t3seg trk-ages">'+['s','m','l','t'].map(function(a){ return '<button type="button" data-kid-age="'+a+'" class="'+(a==='m'?'on':'')+'">'+esc(t('kid.a.'+a))+'</button>'; }).join('')+'</div>'+
+    '<div class="row-btns"><button class="btn btn-primary btn-sm" id="kidSave">'+esc(t('kid.save'))+'</button></div></div>';
+}
+function kidBind(box, kid, onDone){
+  box.querySelectorAll('[data-kidage-set]').forEach(function(b){ b.addEventListener('click',function(){ kid.age=b.dataset.kidageSet; save(); onDone(kid); }); });
+  var age='m';
+  box.querySelectorAll('[data-kid-age]').forEach(function(b){ b.addEventListener('click',function(){
+    age=b.dataset.kidAge; box.querySelectorAll('[data-kid-age]').forEach(function(x){ x.classList.toggle('on',x===b); }); }); });
+  var sv=box.querySelector('#kidSave');
+  if(sv) sv.addEventListener('click',function(){
+    var inp=box.querySelector('#kidName'), nm=inp.value.trim(); if(!nm){ inp.focus(); return; }
+    if(!S.kids) S.kids=[]; var k={id:uid++, name:nm, age:age}; S.kids.push(k); save(); onDone(k, true);
+  });
+}
 var KID_HABITS={s:[1,2,3,4,5,6,12,13], m:[1,7,8,9,10,4,5,12,13,14], l:[15,16,10,11,13,14,5,12], t:[15,16,17,18,10,11,14,13]};
 function trkCfg(type){
   var st=trkState();
@@ -574,7 +596,9 @@ function renderTrackers(){
   var pastSec=past.length ? '<div class="trk-sec"><div class="mg-lab">'+esc(t('trk.past'))+'</div><div class="ps-past">'+past.map(function(x){
       var n=0; Object.keys(x.ticks).forEach(function(k){ x.ticks[k].forEach(function(v){ if(v) n++; }); });
       return '<div class="ps-pastc">'+(x.photo?'<img src="'+x.photo+'" alt="">':ic('calendar'))+'<span>'+esc(fmtDay(x.key.split(':')[1]))+'</span><b class="numf">✓ '+n+'</b></div>'; }).join('')+'</div></div>' : '';
-  box.innerHTML=who+kf+tabs+main+design+pastSec;
+  box.innerHTML=who+kf+(kid && !trkKidEdit ? kidAgeRow(kid) : '')+tabs+main+design+pastSec;
+  /* only the age row here: the tables page has its own add form */
+  if(kid && !trkKidEdit) box.querySelectorAll('[data-kidage-set]').forEach(function(b){ b.addEventListener('click',function(){ kid.age=b.dataset.kidageSet; save(); renderTrackers(); }); });
 
   /* whose */
   box.querySelectorAll('[data-who]').forEach(function(b){ b.addEventListener('click',function(){
@@ -748,7 +772,7 @@ var gmRun=null, gmTick=null;
    nothing saved). The cards follow the player's age: k up to 12, t up to
    17, a for adults. A child's progress is kept with the child, and only my
    own rounds give XP and count for Today's game and the daily path. */
-var gmPlayer={k:'me'}, gmGuest=null;
+var gmPlayer={k:'me'}, gmGuest=null, gmKidForm=false;
 function gmKidP(){ return gmPlayer.k==='kid' ? (S.kids||[]).filter(function(k){ return k.id===gmPlayer.id; })[0]||null : null; }
 function gmIsMe(){ return gmPlayer.k==='me' || (gmPlayer.k==='kid' && !gmKidP()); }
 function gmAge(){
@@ -872,7 +896,9 @@ function renderGames(){
     var who='<div class="trk-who gm-who"><span class="trk-who-l">'+esc(t('gm.who'))+'</span>'+
       '<button type="button" class="trk-wb'+(gmPlayer.k==='me'?' on':'')+'" data-gwho="me">'+ic('user')+'<span>'+esc(t('gm.me'))+'</span></button>'+
       (S.kids||[]).map(function(k){ return '<button type="button" class="trk-wb kid'+(kp&&kp.id===k.id?' on':'')+'" data-gwho="'+k.id+'">⭐<span>'+esc(k.name)+'</span></button>'; }).join('')+
+      '<button type="button" class="trk-wb add'+(gmKidForm?' on':'')+'" data-gwho="add">'+ic('plus')+'<span>'+esc(t('who.add'))+'</span></button>'+
       '<button type="button" class="trk-wb'+(gmPlayer.k==='guest'?' on':'')+'" data-gwho="guest">'+ic('users')+'<span>'+esc(t('gm.other'))+'</span></button></div>'+
+      (gmKidForm ? kidAddForm() : kp ? kidAgeRow(kp) : '')+
       (gmPlayer.k==='guest' ? '<div class="t3seg gm-bands">'+['k','t','a'].map(function(b){
         return '<button type="button" data-gband="'+b+'" class="'+((gmPlayer.band||'a')===b?'on':'')+'">'+esc(t('gm.b.'+b))+'</button>'; }).join('')+'</div>'+
         '<p class="gm-forp">'+esc(t('gm.for.g'))+'</p>' : kp ? '<p class="gm-forp">'+esc(t('gm.for',{n:kp.name}))+'</p>' : '');
@@ -884,8 +910,12 @@ function renderGames(){
         (isD ? '<em>'+esc(st.daily===dayKey() ? t('gm.daily.done') : t('gm.daily'))+'</em>' : '')+'</span>'+
         (n ? '<span class="gm-n numf">✓'+n+'</span>' : '')+'</button>'; }).join('')+'</div>'+feelDict();
     box.querySelectorAll('[data-gm]').forEach(function(b){ b.addEventListener('click',function(){ gmStart(b.dataset.gm); }); });
+    kidBind(box, kp, function(k, added){ gmKidForm=false; if(added) gmPlayer={k:'kid', id:k.id}; renderGames(); });
     box.querySelectorAll('[data-gwho]').forEach(function(b){ b.addEventListener('click',function(){
-      var w=b.dataset.gwho; gmPlayer = w==='me' ? {k:'me'} : w==='guest' ? {k:'guest', band:gmPlayer.band||'a'} : {k:'kid', id:Number(w)};
+      var w=b.dataset.gwho;
+      if(w==='add'){ gmKidForm=!gmKidForm; renderGames(); var n=document.getElementById('kidName'); if(n) n.focus(); return; }
+      gmKidForm=false;
+      gmPlayer = w==='me' ? {k:'me'} : w==='guest' ? {k:'guest', band:gmPlayer.band||'a'} : {k:'kid', id:Number(w)};
       if(w==='guest') gmGuest=null; renderGames(); }); });
     box.querySelectorAll('[data-gband]').forEach(function(b){ b.addEventListener('click',function(){ gmPlayer.band=b.dataset.gband; gmGuest=null; renderGames(); }); });
     return;
@@ -920,7 +950,8 @@ function renderGames(){
     if(R.shiftAt===R.i) note='<p class="gm-up'+(R.shiftDir==='down'?' down':'')+'">'+esc(t(R.shiftDir==='down'?'gm.down':'gm.up'))+'</p>';
     else if(c.back) note='<p class="gm-back">'+esc(t('gm.again.q'))+'</p>';
   }
-  box.innerHTML='<div class="gm-play"><div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
+  var forWho=gmKidP() ? '<p class="gm-forwho">'+esc(t('gm.playing',{n:gmKidP().name}))+'</p>' : gmPlayer.k==='guest' ? '<p class="gm-forwho">'+esc(t('gm.playing',{n:t('gm.b.'+(gmPlayer.band||'a'))}))+'</p>' : '';
+  box.innerHTML='<div class="gm-play">'+forWho+'<div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
     (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : '')+
     '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
     '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button>'+(R.id==='feel'?feelDict():'')+'</div>';

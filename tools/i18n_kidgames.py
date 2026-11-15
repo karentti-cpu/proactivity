@@ -15,6 +15,8 @@ KIDGAMES = {
               'الأسئلة مناسبة لـ{n}. يُحفظ التقدّم بشكل منفصل.'),
 'gm.for.g':  ('השאלות מותאמות לגיל שבחרת, ולא נשמרות.', 'Questions suit the age you chose, and nothing is saved.', 'Les questions sont adaptées à l\'âge choisi, et rien n\'est enregistré.',
               'Вопросы подобраны по выбранному возрасту и не сохраняются.', 'الأسئلة مناسبة للعمر الذي اخترته، ولا يُحفظ شيء.'),
+'kid.agefor':('הגיל של {n}:', '{n}\'s age:', 'Âge de {n} :', 'Возраст ({n}):', 'عمر {n}:'),
+'gm.playing':('משחקים בשביל {n} ⭐', 'Playing for {n} ⭐', 'On joue pour {n} ⭐', 'Играем за: {n} ⭐', 'نلعب من أجل {n} ⭐'),
 'gm.end.o':  ('{n} מתוך {t} בחירות טובות 🎉', '{n} of {t} good choices 🎉', '{n} bons choix sur {t} 🎉', '{n} из {t} хороших выборов 🎉', '{n} من {t} اختيارات جيدة 🎉'),
 
 'gm.circle.k1':  ('{כמה אני מתאמץ|כמה אני מתאמצת} בשיעורי הבית', 'How hard I try with my homework', 'Combien je m\'applique pour mes devoirs', 'Как я стараюсь с домашкой', 'كم أجتهد في واجباتي'),
