@@ -659,7 +659,19 @@ function feelDict(){
       return '<div class="fl-item"><span class="fl-e">'+f.e+'</span><span><b>'+esc(t('fe.'+f.k))+'</b><small>'+esc(t('fe.'+f.k+'.m'))+'</small></span></div>'; }).join('')+'</div></details>';
 }
 var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'calm',icon:'wind'},{id:'feel',icon:'face'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
-var GAME_NEW=['step','speed','calm','feel'], GAME_LEN=6, GAME_SECS=45;
+/* positive psychology games: the good glasses and talking to yourself like a
+   friend work like calm; which strength is it works like the feeling game */
+var GAME_OPT=[[1,1],[2,1],[3,2],[4,2],[5,3],[6,3],[7,4],[8,4]];
+var GAME_KIND=[[1,1],[2,1],[3,2],[4,2],[5,3],[6,3],[7,4],[8,4]];
+var GAME_STR=[[1,1,'curious',['learn']],[2,1,'brave',['fair','lead']],[3,1,'kind',['grat']],[4,1,'humor',['create']],
+  [5,2,'persist',['hope','brave']],[6,2,'create',['humor','curious']],[7,2,'grat',['hope','kind']],
+  [8,3,'fair',['lead','kind']],[9,3,'hope',['persist','grat']],[10,3,'learn',['curious','persist']],
+  [11,4,'lead',['fair','brave']],[12,4,'self',['brave','persist']]];
+GAME_IDS=GAME_IDS.concat([{id:'opt',icon:'sun'},{id:'kind',icon:'seedling'},{id:'str',icon:'gem'}]);
+/* games whose answers are a set of words: feelings, strengths */
+var GM_WORDS={feel:{keys:function(){ return FEELINGS.map(function(f){ return f.k; }); }, lab:function(k){ return t('fe.'+k); }, emo:function(k){ var f=feelOf(k); return f?f.e:''; }},
+              str:{keys:function(){ return VS_KEYS; }, lab:function(k){ return t('vs.'+k); }, emo:function(){ return ''; }}};
+var GAME_NEW=['step','speed','calm','feel','opt','kind','str'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
@@ -688,9 +700,10 @@ function gmPool(id){
   var age=gmAge(), pool=[];
   if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
   else if(id==='feel') GAME_FEEL.forEach(function(c){ pool.push({key:'gm.fl.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
+  else if(id==='str') GAME_STR.forEach(function(c){ pool.push({key:'gm.str.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
-  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : id==='calm' ? GAME_CALM : GAME_REACT[age]).forEach(function(c){
-    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : id==='calm' ? 'gm.calm.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
+  else ({flip:GAME_FLIP, step:GAME_STEP, calm:GAME_CALM, opt:GAME_OPT, kind:GAME_KIND}[id] || GAME_REACT[age]).forEach(function(c){
+    pool.push({key:({flip:'gm.flip.', step:'gm.step.', calm:'gm.calm.', opt:'gm.opt.', kind:'gm.kind.'}[id] || 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
   });
   return pool;
 }
@@ -709,14 +722,14 @@ function gmPick(R){
   if(!best) return null;
   var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
-    var ks=best.lv>=3 ? ['a','b','c','d'] : (R.id==='step'||R.id==='calm') ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    var ks=best.lv>=3 ? ['a','b','c','d'] : (['step','calm','opt','kind'].indexOf(R.id)>=0) ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
-  if(R.id==='feel'){
-    /* the answer, the close feelings once the level allows, and the rest at random */
+  if(GM_WORDS[R.id]){
+    /* the answer, the close ones once the level allows, and the rest at random */
     var n=best.lv>=3 ? 4 : 3, picks=[best.ans].concat(best.lv>=2 ? best.near.slice(0,n-1) : []);
-    gmShuffle(FEELINGS).forEach(function(f){ if(picks.length<n && picks.indexOf(f.k)<0 && best.near.indexOf(f.k)<0) picks.push(f.k); });
+    gmShuffle(GM_WORDS[R.id].keys()).forEach(function(k){ if(picks.length<n && picks.indexOf(k)<0 && best.near.indexOf(k)<0) picks.push(k); });
     card.fopts=gmShuffle(picks);
   }
   R.cards.push(card);
@@ -776,8 +789,9 @@ function renderGames(){
   if(R.i>=GAME_LEN || (R.i>=R.cards.length && !gmPick(R))){ gmFinish(box); return; }
   var c=R.cards[R.i];
   var dots='<div class="gm-dots">'+Array.apply(null,Array(GAME_LEN)).map(function(_,k){ return '<i class="'+(k<R.i?'on':k===R.i?'cur':'')+'"></i>'; }).join('')+'</div>';
-  var opts = R.id==='feel'
-    ? '<div class="gm-opts fl-opts">'+c.fopts.map(function(k){ var f=feelOf(k); return '<button type="button" class="gm-opt" data-ans="'+k+'"><span class="fl-e">'+f.e+'</span><span>'+esc(t('fe.'+k))+'</span></button>'; }).join('')+'</div>'
+  var W=GM_WORDS[R.id];
+  var opts = W
+    ? '<div class="gm-opts fl-opts">'+c.fopts.map(function(k){ var e=W.emo(k); return '<button type="button" class="gm-opt" data-ans="'+k+'">'+(e?'<span class="fl-e">'+e+'</span>':'')+'<span>'+esc(W.lab(k))+'</span></button>'; }).join('')+'</div>'
     : R.id==='circle'
     ? '<div class="gm-opts '+(c.lv>=3?'three':'two')+'"><button type="button" class="gm-opt" data-ans="in">'+ic('check')+'<span>'+esc(t('gm.in'))+'</span></button>'+
         (c.lv>=3 ? '<button type="button" class="gm-opt" data-ans="part">'+ic('compass')+'<span>'+esc(t('gm.part'))+'</span></button>' : '')+
@@ -786,10 +800,11 @@ function renderGames(){
   var fb='';
   if(R.answered){
     var a=R.answered, good=a===c.ans, msg, show='';
-    if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
+    if(R.id==='str') msg=t(good ? 'gm.sv.ok' : (c.near||[]).indexOf(a)>=0 ? 'gm.sv.x' : 'gm.sv.x2',{p:t('vs.'+a), s:t('vs.'+c.ans)});
+    else if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
     else if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
-    else msg=t((R.id==='step'?'gm.s.':R.id==='calm'?'gm.k.':'gm.r.')+a);
+    else msg=t(({step:'gm.s.', calm:'gm.k.', opt:'gm.o.', kind:'gm.y.'}[R.id]||'gm.r.')+a);
     if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
@@ -1231,7 +1246,11 @@ function renderWell(){
     '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gift')+'<span>'+esc(t('kd.t'))+'</span></h3><p class="psub">'+esc(t('kd.s'))+'</p>'+
       '<p class="wl-pick">'+esc(t('kd.'+wlKd))+'</p><div class="row-btns">'+
       '<button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('kd.'+wlKd))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
-      '<button class="btn btn-quiet btn-sm" id="kdMore">'+esc(t('kd.more'))+'</button></div></section>';
+      '<button class="btn btn-quiet btn-sm" id="kdMore">'+esc(t('kd.more'))+'</button></div></section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('star')+'<span>'+esc(t('wl.games'))+'</span></h3><div class="gm-list">'+
+      ['opt','kind','str'].map(function(id){ var g=GAME_IDS.filter(function(x){ return x.id===id; })[0];
+        return '<button type="button" class="gm-card" data-wlgame="'+id+'"><span class="gm-ic">'+ic(g.icon)+'</span><span class="gm-txt"><b>'+esc(t('gm.'+id))+'</b><small>'+esc(t('gm.'+id+'.s'))+'</small></span></button>'; }).join('')+
+    '</div></section>';
   box.querySelector('#grSave').addEventListener('click',function(){
     var list=[0,1,2].map(function(i){ return {t:box.querySelector('[data-gr="'+i+'"]').value.trim(), w:box.querySelector('[data-grw="'+i+'"]').value.trim()}; })
                     .filter(function(x){ return x.t; });
@@ -1245,6 +1264,7 @@ function renderWell(){
     if(!S.well) S.well={}; S.well.str={week:wk, k:b.dataset.vs}; wlStrPick=false; save(); renderWell(); }); });
   var sc=box.querySelector('#stChange'); if(sc) sc.addEventListener('click',function(){ wlStrPick=true; renderWell(); });
   box.querySelector('#kdMore').addEventListener('click',function(){ wlKd=wlKd%KD_N+1; renderWell(); });
+  box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ goPage('games'); gmStart(b.dataset.wlgame); }); });
   box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
     if(addDayItem(b.dataset.wladd)){ markActiveToday(); save(); toast(t('pz.added')); } }); });
 }
