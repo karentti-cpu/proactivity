@@ -66,6 +66,7 @@ TABS = [('home', 'home', 'n.tab.home'),
         ('progress', 'trending', 'n.tab.prog'),
         ('more', 'sliders', 'n.tab.more')]
 MORE = [('help', 'book', 'help.t', 'more.help'),
+        ('well', 'sparkles', 'wl.t', 'more.well'),
         ('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
         ('learn', 'brain', 'n.tab.learn', 'more.learn'),
         ('body', 'activity', 'a.tab.body', 'more.body'),
@@ -73,7 +74,7 @@ MORE = [('help', 'book', 'help.t', 'more.help'),
         ('games', 'star', 'gm.t', 'more.games')]
 
 # How to use it: the same steps on the landing page and under More.
-HELP_STEPS = [('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sliders', 7)]
+HELP_STEPS = [('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sparkles', 9), ('sliders', 7)]
 def help_html():
     steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
                     for ic_, n in HELP_STEPS)
@@ -346,8 +347,9 @@ def build_body(logo):
    <p class="psub" data-i18n="gnd.s"></p>
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
+  <button type="button" class="pause-btn" id="pauseBtn"></button>
   <section class="dash-box today3" id="todayBox"></section>
-  <button type="button" class="pause-btn" id="pauseBtn"><span class="pz-ic">{i("wind")}</span><span><b data-i18n="pz.btn"></b><small data-i18n="pz.btn.s"></small></span>{i("chevron")}</button>
+  <button type="button" class="pause-btn feel-btn" id="feelBtn"><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
   <section class="dash-box tl-box" id="toolBox" hidden></section>
   <button type="button" class="home-game" id="gameRow" hidden></button>
   <section class="dash-box eve" id="eveBox" hidden></section>
@@ -363,6 +365,11 @@ def build_body(logo):
  <div class="page" id="page-help" role="tabpanel">
   <h2 class="ptitle" data-i18n="help.t"></h2><p class="psub" data-i18n="help.s"></p>
   <section class="dash-box">{help_html()}</section>
+ </div>
+
+ <div class="page" id="page-well" role="tabpanel">
+  <h2 class="ptitle" data-i18n="wl.t"></h2><p class="psub" data-i18n="wl.s"></p>
+  <div id="wellBox"></div>
  </div>
 
  <div class="page" id="page-circle" role="tabpanel">

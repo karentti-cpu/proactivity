@@ -659,7 +659,19 @@ function feelDict(){
       return '<div class="fl-item"><span class="fl-e">'+f.e+'</span><span><b>'+esc(t('fe.'+f.k))+'</b><small>'+esc(t('fe.'+f.k+'.m'))+'</small></span></div>'; }).join('')+'</div></details>';
 }
 var GAME_IDS=[{id:'circle',icon:'compass'},{id:'flip',icon:'refresh'},{id:'react',icon:'shield'},{id:'calm',icon:'wind'},{id:'feel',icon:'face'},{id:'step',icon:'flag'},{id:'speed',icon:'zap'}];
-var GAME_NEW=['step','speed','calm','feel'], GAME_LEN=6, GAME_SECS=45;
+/* positive psychology games: the good glasses and talking to yourself like a
+   friend work like calm; which strength is it works like the feeling game */
+var GAME_OPT=[[1,1],[2,1],[3,2],[4,2],[5,3],[6,3],[7,4],[8,4]];
+var GAME_KIND=[[1,1],[2,1],[3,2],[4,2],[5,3],[6,3],[7,4],[8,4]];
+var GAME_STR=[[1,1,'curious',['learn']],[2,1,'brave',['fair','lead']],[3,1,'kind',['grat']],[4,1,'humor',['create']],
+  [5,2,'persist',['hope','brave']],[6,2,'create',['humor','curious']],[7,2,'grat',['hope','kind']],
+  [8,3,'fair',['lead','kind']],[9,3,'hope',['persist','grat']],[10,3,'learn',['curious','persist']],
+  [11,4,'lead',['fair','brave']],[12,4,'self',['brave','persist']]];
+GAME_IDS=GAME_IDS.concat([{id:'opt',icon:'sun'},{id:'kind',icon:'seedling'},{id:'str',icon:'gem'}]);
+/* games whose answers are a set of words: feelings, strengths */
+var GM_WORDS={feel:{keys:function(){ return FEELINGS.map(function(f){ return f.k; }); }, lab:function(k){ return t('fe.'+k); }, emo:function(k){ var f=feelOf(k); return f?f.e:''; }},
+              str:{keys:function(){ return VS_KEYS; }, lab:function(k){ return t('vs.'+k); }, emo:function(){ return ''; }}};
+var GAME_NEW=['step','speed','calm','feel','opt','kind','str'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 function gmAge(){ return (!P.age || ageBand(P.age)==='a13') ? 't' : 'a'; }
 function gmShuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
@@ -688,9 +700,10 @@ function gmPool(id){
   var age=gmAge(), pool=[];
   if(id==='circle') GAME_CIRCLE[age].forEach(function(c){ pool.push({key:'gm.circle.'+age+c[0], lv:c[1], ans:c[2]}); });
   else if(id==='feel') GAME_FEEL.forEach(function(c){ pool.push({key:'gm.fl.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
+  else if(id==='str') GAME_STR.forEach(function(c){ pool.push({key:'gm.str.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
-  else (id==='flip' ? GAME_FLIP : id==='step' ? GAME_STEP : id==='calm' ? GAME_CALM : GAME_REACT[age]).forEach(function(c){
-    pool.push({key:(id==='flip' ? 'gm.flip.' : id==='step' ? 'gm.step.' : id==='calm' ? 'gm.calm.' : 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
+  else ({flip:GAME_FLIP, step:GAME_STEP, calm:GAME_CALM, opt:GAME_OPT, kind:GAME_KIND}[id] || GAME_REACT[age]).forEach(function(c){
+    pool.push({key:({flip:'gm.flip.', step:'gm.step.', calm:'gm.calm.', opt:'gm.opt.', kind:'gm.kind.'}[id] || 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
   });
   return pool;
 }
@@ -709,14 +722,14 @@ function gmPick(R){
   if(!best) return null;
   var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
-    var ks=best.lv>=3 ? ['a','b','c','d'] : (R.id==='step'||R.id==='calm') ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    var ks=best.lv>=3 ? ['a','b','c','d'] : (['step','calm','opt','kind'].indexOf(R.id)>=0) ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
-  if(R.id==='feel'){
-    /* the answer, the close feelings once the level allows, and the rest at random */
+  if(GM_WORDS[R.id]){
+    /* the answer, the close ones once the level allows, and the rest at random */
     var n=best.lv>=3 ? 4 : 3, picks=[best.ans].concat(best.lv>=2 ? best.near.slice(0,n-1) : []);
-    gmShuffle(FEELINGS).forEach(function(f){ if(picks.length<n && picks.indexOf(f.k)<0 && best.near.indexOf(f.k)<0) picks.push(f.k); });
+    gmShuffle(GM_WORDS[R.id].keys()).forEach(function(k){ if(picks.length<n && picks.indexOf(k)<0 && best.near.indexOf(k)<0) picks.push(k); });
     card.fopts=gmShuffle(picks);
   }
   R.cards.push(card);
@@ -754,7 +767,7 @@ function renderGameRow(){
     '<span class="hg-go">'+esc(t(done?'gm.again':'gm.play'))+'</span>';
   if(!b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click',function(){ goPage('games'); gmStart(gmDaily()); }); }
 }
-function gmFeel(k){ var f=PZ_FEELS.filter(function(x){ return x.k===k; })[0]; return (f?f.e+' ':'')+esc(t('pz.f.'+k)); }
+function gmFeel(k){ var f=pzF(k); return (f?f.e+' ':'')+esc(pzLabel(k)); }
 function gmLvLabel(id){ var L=Math.max(1,gmState().lvl[id]||0); return '<span class="gm-lv l'+L+'">'+esc(t('gm.lv'+L))+'</span>'; }
 function renderGames(){
   var box=document.getElementById('gmBox'); if(!box) return;
@@ -776,8 +789,9 @@ function renderGames(){
   if(R.i>=GAME_LEN || (R.i>=R.cards.length && !gmPick(R))){ gmFinish(box); return; }
   var c=R.cards[R.i];
   var dots='<div class="gm-dots">'+Array.apply(null,Array(GAME_LEN)).map(function(_,k){ return '<i class="'+(k<R.i?'on':k===R.i?'cur':'')+'"></i>'; }).join('')+'</div>';
-  var opts = R.id==='feel'
-    ? '<div class="gm-opts fl-opts">'+c.fopts.map(function(k){ var f=feelOf(k); return '<button type="button" class="gm-opt" data-ans="'+k+'"><span class="fl-e">'+f.e+'</span><span>'+esc(t('fe.'+k))+'</span></button>'; }).join('')+'</div>'
+  var W=GM_WORDS[R.id];
+  var opts = W
+    ? '<div class="gm-opts fl-opts">'+c.fopts.map(function(k){ var e=W.emo(k); return '<button type="button" class="gm-opt" data-ans="'+k+'">'+(e?'<span class="fl-e">'+e+'</span>':'')+'<span>'+esc(W.lab(k))+'</span></button>'; }).join('')+'</div>'
     : R.id==='circle'
     ? '<div class="gm-opts '+(c.lv>=3?'three':'two')+'"><button type="button" class="gm-opt" data-ans="in">'+ic('check')+'<span>'+esc(t('gm.in'))+'</span></button>'+
         (c.lv>=3 ? '<button type="button" class="gm-opt" data-ans="part">'+ic('compass')+'<span>'+esc(t('gm.part'))+'</span></button>' : '')+
@@ -786,10 +800,11 @@ function renderGames(){
   var fb='';
   if(R.answered){
     var a=R.answered, good=a===c.ans, msg, show='';
-    if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
+    if(R.id==='str') msg=t(good ? 'gm.sv.ok' : (c.near||[]).indexOf(a)>=0 ? 'gm.sv.x' : 'gm.sv.x2',{p:t('vs.'+a), s:t('vs.'+c.ans)});
+    else if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
     else if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
-    else msg=t((R.id==='step'?'gm.s.':R.id==='calm'?'gm.k.':'gm.r.')+a);
+    else msg=t(({step:'gm.s.', calm:'gm.k.', opt:'gm.o.', kind:'gm.y.'}[R.id]||'gm.r.')+a);
     if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
@@ -901,52 +916,123 @@ function gmFinish(box){
   box.querySelector('#gmBack').addEventListener('click',function(){ gmRun=null; renderGames(); });
 }
 
-/* ================= a moment to pause =================
-   Self-regulation in one minute: stop, three breaths, name the feeling,
-   choose a response. Each pause is kept in the day's log, so My week can
-   show how often the player paused and chose, and what they felt. */
-var PZ_FEELS=[{k:'angry',e:'😠'},{k:'stress',e:'😰'},{k:'hurt',e:'😔'},{k:'tired',e:'😴'},
-              {k:'disap',e:'😞'},{k:'fear',e:'😟'},{k:'frust',e:'😤'},{k:'sad',e:'😢'}];
+/* ================= a moment to pause, and how I feel =================
+   Two daily moments of self-regulation. At the top of the day, "A moment
+   to pause": three slow breaths - in through the nose, hold, and out very
+   slowly through the mouth - before the day begins. After the tasks, "How do
+   I feel right now?": name the feeling; a pleasant one is noticed and kept,
+   a hard one gets a choice of response, with three breaths first if wanted.
+   Every check-in is kept in the day's log, so My week shows what was felt
+   and how the player chose. */
+var PZ_FEELS=[{k:'joy',e:'😄',l:'fe.joy',pos:1},{k:'calm',e:'😌',l:'fe.calm',pos:1},{k:'pride',e:'🏆',l:'fe.pride',pos:1},
+              {k:'excite',e:'🤩',l:'fe.excite',pos:1},{k:'grat',e:'🙏',l:'fe.grat',pos:1},
+              {k:'tired',e:'😴',l:'pz.f.tired'},{k:'stress',e:'😰',l:'pz.f.stress'},{k:'angry',e:'😠',l:'pz.f.angry'},
+              {k:'frust',e:'😤',l:'pz.f.frust'},{k:'worry',e:'😟',l:'fe.worry'},{k:'hurt',e:'😔',l:'pz.f.hurt'},
+              {k:'sad',e:'😢',l:'pz.f.sad'},{k:'disap',e:'😞',l:'pz.f.disap'},{k:'fear',e:'😟',l:'pz.f.fear'}];
+var PZ_SHOWN=['joy','calm','pride','excite','grat','tired','stress','angry','frust','worry','hurt','sad'];
+function pzF(k){ return PZ_FEELS.filter(function(x){ return x.k===k; })[0]; }
+function pzLabel(k){ var f=pzF(k); return f ? t(f.l) : k; }
+/* kinds of breath, four rounds each: slow (4 in, 4 held, 7 out), the calming
+   4-7-8, box breathing, and affectionate breathing with a hand on the heart
+   (Neff and Germer), whose phases carry a gentle phrase */
+var PZ_TYPES={slow:[['in',4],['hold',4],['out',7]], '478':[['in',4],['hold',7],['out',8]],
+              box:[['in',4],['hold',4],['out',4],['hold2',4]], comp:[['cin',5],['cout',7]]};
+var PZ_ROUNDS=4;
+var PZ_PH=PZ_TYPES.slow;
+function pzType(){ var k=(S.pref&&S.pref.breath)||'slow'; return PZ_TYPES[k] ? k : 'slow'; }
+function pzPhLabel(ph){ return t(ph==='cin'?'pz.c.in':ph==='cout'?'pz.c.out':ph==='hold2'?'pz.hold':'pz.'+ph); }
+function pzCircleCls(ph){ return ph==='cin'?'in':ph==='cout'?'out':ph; }
 var pz=null, pzTimer=null;
 function pzStop(){ if(pzTimer){ clearTimeout(pzTimer); pzTimer=null; } }
-function pzOpen(){ pzStop(); pz={step:1}; pzRender(); document.getElementById('pauseModal').classList.add('on'); }
-function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); }
+function pzOpen(mode){
+  pzStop();
+  pz = mode==='feel' ? {mode:'feel', step:'feel'} : mode==='sc' ? {mode:'sc', step:'sc0'} : {mode:'day', step:'intro'};
+  document.getElementById('pzTitle').querySelector('span').textContent=t(mode==='feel'?'pz.ck.t':mode==='sc'?'sc.t':'pz.btn');
+  pzRender(); document.getElementById('pauseModal').classList.add('on');
+}
+function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); }
+function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; return L; }
 function pzWeekCount(){
   var log=S.log||{}, n=0;
-  weekOf(0).forEach(function(d){ n+=((log[d]||{}).pauses||[]).length; });
+  weekOf(0).forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ if(z.a) n++; }); });
   return n;
 }
+function renderPauseBtn(){
+  var b=document.getElementById('pauseBtn'); if(!b) return;
+  var L=(S.log||{})[dayKey()], done=!!(L && L.breath);
+  b.classList.toggle('done',done);
+  b.innerHTML='<span class="pz-ic">'+ic(done?'check':'wind')+'</span><span><b>'+esc(t('pz.btn'))+'</b><small>'+esc(t(done?'pz.d.done':'pz.d.s'))+'</small></span>'+ic('chevron');
+}
+function pzBreathHtml(){
+  var ph=PZ_PH[pz.ph][0];
+  return '<p class="pz-sub pz-how">'+esc(t(pzType()==='comp'?'br.comp.how':'pz.how'))+'</p>'+
+    '<div class="pz-breath"><div class="pz-circle '+pzCircleCls(ph)+'" style="transition-duration:'+PZ_PH[pz.ph][1]+'s"></div><div class="pz-in"><b id="pzPhase">'+esc(pzPhLabel(ph))+'</b><span class="numf" id="pzSec">'+pz.sec+'</span></div></div>'+
+    '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(PZ_ROUNDS,pz.br+1), t:PZ_ROUNDS}))+'</p>'+
+    '<button class="btn btn-ghost btn-block" id="pzNext">'+esc(t('pz.next'))+'</button>';
+}
+function pzStartBreath(after){ PZ_PH=PZ_TYPES[pzType()]; pz.after=after; pz.step='breath'; pz.br=0; pz.ph=0; pz.sec=PZ_PH[0][1]; pzRender(); pzTick(); }
 function pzRender(){
   var box=document.getElementById('pzBody'); if(!box||!pz) return;
-  var dots='<div class="pz-dots">'+[1,2,3,4].map(function(k){ return '<i class="'+(k<pz.step?'on':k===pz.step?'cur':'')+'"></i>'; }).join('')+'</div>';
-  if(pz.step===1){
-    box.innerHTML=dots+'<p class="pz-big">'+esc(t('pz.1'))+'</p><p class="pz-sub">'+esc(t('pz.1.s'))+'</p>'+
+  if(pz.step==='intro'){
+    var cur=pzType();
+    box.innerHTML='<p class="pz-big">'+esc(t('pz.d.1'))+'</p><p class="pz-sub">'+esc(t('pz.1.s'))+'</p>'+
+      '<div class="mg-lab">'+esc(t('br.type'))+'</div><div class="pz-types">'+['slow','478','box','comp'].map(function(k){
+        return '<button type="button" class="pz-type'+(k===cur?' on':'')+'" data-brt="'+k+'"><b>'+esc(t('br.'+k))+'</b><small>'+esc(t('br.'+k+'.s'))+'</small></button>'; }).join('')+'</div>'+
       '<button class="btn btn-primary btn-block" id="pzGo">'+ic('wind')+'<span>'+esc(t('pz.go'))+'</span></button>';
-    box.querySelector('#pzGo').addEventListener('click',function(){ pz.step=2; pz.br=0; pz.phase='in'; pzRender(); pzBreathe(); });
-  } else if(pz.step===2){
-    box.innerHTML=dots+'<div class="pz-breath"><div class="pz-circle '+pz.phase+'"></div><b id="pzPhase">'+esc(t('pz.'+pz.phase))+'</b></div>'+
-      '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(3,pz.br+1)}))+'</p>'+
-      '<button class="btn btn-ghost btn-block" id="pzNext">'+esc(t('pz.next'))+'</button>';
-    box.querySelector('#pzNext').addEventListener('click',function(){ pzStop(); pz.step=3; pzRender(); });
-  } else if(pz.step===3){
-    box.innerHTML=dots+'<p class="pz-big">'+esc(t('pz.2'))+'</p><p class="pz-sub">'+esc(t('pz.2.s'))+'</p>'+
-      '<div class="pz-feels">'+PZ_FEELS.map(function(f){
-        return '<button type="button" class="pz-feel" data-pzf="'+f.k+'"><span>'+f.e+'</span>'+esc(t('pz.f.'+f.k))+'</button>'; }).join('')+'</div>';
-    box.querySelectorAll('[data-pzf]').forEach(function(b){ b.addEventListener('click',function(){ pz.f=b.dataset.pzf; pz.step=4; pzRender(); }); });
-  } else if(pz.step===4){
-    var f=PZ_FEELS.filter(function(x){ return x.k===pz.f; })[0];
-    box.innerHTML=dots+'<p class="pz-felt">'+f.e+' '+esc(t('pz.f.'+f.k))+'</p>'+
+    box.querySelectorAll('[data-brt]').forEach(function(b){ b.addEventListener('click',function(){
+      if(!S.pref) S.pref={}; S.pref.breath=b.dataset.brt; save(); pzRender(); }); });
+    box.querySelector('#pzGo').addEventListener('click',function(){ pzStartBreath('dayend'); });
+  } else if(/^sc[0-3]$/.test(pz.step)){
+    var n=+pz.step.slice(2);
+    box.innerHTML='<div class="sc-step"><div class="pz-dots">'+[0,1,2,3].map(function(k){ return '<i class="'+(k<n?'on':k===n?'cur':'')+'"></i>'; }).join('')+'</div>'+
+      (n===0 ? '<div class="sc-heart">💛</div><p class="pz-big">'+esc(t('sc.0'))+'</p>'
+             : '<p class="sc-say">'+esc(t('sc.'+n))+'</p><p class="pz-sub">'+esc(t('sc.'+n+'.s'))+'</p>')+'</div>'+
+      '<button class="btn btn-primary btn-block" id="scNext">'+esc(t(n===0?'sc.go':'sc.next'))+'</button>';
+    box.querySelector('#scNext').addEventListener('click',function(){
+      if(n<3){ pz.step='sc'+(n+1); pzRender(); return; }
+      var L=pzLog(); L.sc=(L.sc||0)+1; if(L.sc===1) addPts(5); markActiveToday(); save(); pz.step='scend'; pzRender();
+    });
+  } else if(pz.step==='scend'){
+    box.innerHTML='<div class="pz-end"><div class="sc-heart">💛</div><p class="pz-big">'+esc(t('sc.end'))+'</p></div>'+
+      '<div class="row-btns"><button class="btn btn-primary" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+    box.querySelector('#pzEnd').addEventListener('click',pzClose);
+  } else if(pz.step==='breath'){
+    box.innerHTML=pzBreathHtml();
+    box.querySelector('#pzNext').addEventListener('click',function(){ pzStop(); pzAfterBreath(); });
+  } else if(pz.step==='dayend'){
+    box.innerHTML='<div class="pz-end"><div class="pz-endic">'+ic('check')+'</div><p class="pz-big">'+esc(t('pz.d.end'))+'</p>'+
+      (pz.paid ? '<p class="ps-rxp">'+esc(t('ps.rxp',{n:5}))+'</p>' : '')+'</div>'+
+      '<div class="row-btns"><button class="btn btn-primary" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+    box.querySelector('#pzEnd').addEventListener('click',pzClose);
+  } else if(pz.step==='feel'){
+    box.innerHTML='<p class="pz-sub">'+esc(t('pz.2.s'))+'</p>'+
+      '<div class="pz-feels">'+PZ_SHOWN.map(function(k){ var f=pzF(k);
+        return '<button type="button" class="pz-feel'+(f.pos?' pos':'')+'" data-pzf="'+k+'"><span>'+f.e+'</span>'+esc(t(f.l))+'</button>'; }).join('')+'</div>';
+    box.querySelectorAll('[data-pzf]').forEach(function(b){ b.addEventListener('click',function(){
+      pz.f=b.dataset.pzf; pz.step=pzF(pz.f).pos ? 'pos' : 'choose'; pzRender(); }); });
+  } else if(pz.step==='pos'){
+    var fp=pzF(pz.f);
+    box.innerHTML='<p class="pz-felt">'+fp.e+' '+esc(t(fp.l))+'</p><p class="pz-big">'+esc(t('pz.pos'))+'</p>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="120" placeholder="'+esc(t('pz.pos.ph'))+'">'+
+      '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.pos.ok'))+'</button></div>';
+    var keep=function(){ var L=pzLog(); L.pauses.push({f:pz.f, note:box.querySelector('#pzOwn').value.trim(), h:new Date().getHours()});
+      addPts(5); markActiveToday(); save(); toast(t('pz.pos.done')); pzClose(); };
+    box.querySelector('#pzOk').addEventListener('click',keep);
+    box.querySelector('#pzOwn').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); keep(); } });
+  } else if(pz.step==='choose'){
+    var f=pzF(pz.f);
+    box.innerHTML='<p class="pz-felt">'+f.e+' '+esc(t(f.l))+'</p>'+
+      (pz.breathed ? '' : '<button class="btn btn-ghost btn-sm pz-first" id="pzFirst">'+ic('wind')+'<span>'+esc(t('pz.first'))+'</span></button>')+
       '<p class="pz-big">'+esc(t('pz.3'))+'</p><p class="pz-sub">'+esc(t('pz.3.s'))+'</p>'+
       '<div class="pz-acts">'+[1,2,3,4,5].map(function(n){
         return '<button type="button" class="pz-act" data-pza="'+n+'">'+esc(t('pz.a'+n))+'</button>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="120" placeholder="'+esc(t('pz.own'))+'">'+
       '<button class="btn btn-primary" id="pzOk">'+esc(t('pz.ok'))+'</button></div>';
+    var fb=box.querySelector('#pzFirst'); if(fb) fb.addEventListener('click',function(){ pzStartBreath('choose'); });
     function choose(txt){
       if(!txt) return;
-      if(!S.log || !S.log[dayKey()]) logDay();
-      var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[];
-      L.pauses.push({f:pz.f, a:txt});
-      pz.a=txt; pz.step=5; addPts(10); markActiveToday(); save(); celebrate(); pzRender();
+      var L=pzLog(); L.pauses.push({f:pz.f, a:txt, h:new Date().getHours()});
+      pz.a=txt; pz.step='end'; addPts(10); markActiveToday(); save(); celebrate(); pzRender();
     }
     box.querySelectorAll('[data-pza]').forEach(function(b){ b.addEventListener('click',function(){ choose(t('pz.a'+b.dataset.pza)); }); });
     var own=box.querySelector('#pzOwn');
@@ -968,23 +1054,36 @@ function pzRender(){
     box.querySelector('#pzEnd').addEventListener('click',function(){ pzClose(); renderDash(); });
   }
 }
-/* three breaths: four seconds in, five out */
-function pzBreathe(){
-  pzStop();
-  if(!pz || pz.step!==2) return;
-  pzTimer=setTimeout(function(){
-    if(!pz || pz.step!==2) return;
-    if(pz.phase==='in') pz.phase='out';
-    else { pz.br++; pz.phase='in'; }
-    if(pz.br>=3){ pz.step=3; pzRender(); return; }
-    var c=document.querySelector('.pz-circle'), ph=document.getElementById('pzPhase'), nn=document.getElementById('pzN');
-    if(c) c.className='pz-circle '+pz.phase;
-    if(ph) ph.textContent=t('pz.'+pz.phase);
-    if(nn) nn.textContent=t('pz.n',{n:Math.min(3,pz.br+1)});
-    pzBreathe();
-  }, pz.phase==='in' ? 4000 : 5000);
+function pzAfterBreath(){
+  if(pz.after==='dayend'){
+    var L=pzLog();
+    if(!L.breath){ L.breath=true; addPts(5); markActiveToday(); pz.paid=true; }
+    save(); pz.step='dayend';
+  } else { pz.breathed=true; pz.step='choose'; }
+  pzRender();
 }
-document.getElementById('pauseBtn').addEventListener('click',pzOpen);
+/* one second at a time, so the count inside the circle runs down */
+function pzTick(){
+  pzStop();
+  pzTimer=setTimeout(function(){
+    if(!pz || pz.step!=='breath') return;
+    pz.sec--;
+    if(pz.sec<=0){
+      pz.ph++;
+      if(pz.ph>=PZ_PH.length){ pz.ph=0; pz.br++; }
+      if(pz.br>=PZ_ROUNDS){ pzAfterBreath(); return; }
+      pz.sec=PZ_PH[pz.ph][1];
+      var ph=PZ_PH[pz.ph][0], c=document.querySelector('.pz-circle'), el=document.getElementById('pzPhase'), nn=document.getElementById('pzN');
+      if(c){ c.style.transitionDuration=PZ_PH[pz.ph][1]+'s'; c.className='pz-circle '+pzCircleCls(ph); }
+      if(el) el.textContent=pzPhLabel(ph);
+      if(nn) nn.textContent=t('pz.n',{n:Math.min(PZ_ROUNDS,pz.br+1), t:PZ_ROUNDS});
+    }
+    var sc=document.getElementById('pzSec'); if(sc) sc.textContent=pz.sec;
+    pzTick();
+  },1000);
+}
+document.getElementById('pauseBtn').addEventListener('click',function(){ pzOpen('day'); });
+document.getElementById('feelBtn').addEventListener('click',function(){ pzOpen('feel'); });
 document.getElementById('pzX').addEventListener('click',pzClose);
 document.getElementById('pauseModal').addEventListener('click',function(e){ if(e.target.id==='pauseModal') pzClose(); });
 
@@ -1000,13 +1099,14 @@ var DIM_GAME={choice:'react', init:'step', goal:'step', time:'speed', solve:'fli
 function gmName(id){ return t('gm.'+id); }
 function tlCandidates(){
   var log=S.log||{}, wk=tlDays(7), out=[], st=gmState();
+  var active=wk.filter(function(d){ return log[d]; }).length;
   function go(id){ return function(){ goPage('games'); gmStart(id); }; }
   /* pauses with a hard feeling */
   var pz=0, pf={};
   wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ pz++; pf[z.f]=(pf[z.f]||0)+1; }); });
   var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
   if(pz>=2 && ['angry','stress','frust','hurt','fear'].indexOf(topf)>=0)
-    out.push({id:'calm', s:9, t:t('tl.calm.t'), w:t('tl.calm.w',{n:pz, f:t('pz.f.'+topf)}), icon:'wind', act:go('calm')});
+    out.push({id:'calm', s:9, t:t('tl.calm.t'), w:t('tl.calm.w',{n:pz, f:pzLabel(topf)}), icon:'wind', act:go('calm')});
   /* a long list, little of it done */
   var tot=0, done=0, days=0;
   wk.slice(1).forEach(function(d){ var L=log[d]; if(!L||!L.items.length) return; days++; tot+=L.items.length; L.items.forEach(function(x){ if(x.done) done++; }); });
@@ -1027,7 +1127,7 @@ function tlCandidates(){
   });
   /* tired evenings */
   var tired=wk.slice(0,5).filter(function(d){ return (log[d]||{}).feel==='tired'; }).length;
-  if(tired>=2) out.push({id:'tired', s:7.5, t:t('tl.tired.t'), w:t('tl.tired.w'), icon:'wind', act:function(){ pzOpen(); }});
+  if(tired>=2) out.push({id:'tired', s:7.5, t:t('tl.tired.t'), w:t('tl.tired.w'), icon:'wind', act:function(){ pzOpen('day'); }});
   /* feelings that get mixed up */
   var fa=st.acc.feel;
   if(fa && fa[0]>=5 && fa[1]/fa[0]<.7) out.push({id:'dict', s:6, t:t('tl.dict.t'), w:t('tl.dict.w'), icon:'book', act:function(){
@@ -1039,10 +1139,15 @@ function tlCandidates(){
   var top=rows[rows.length-1];
   if(top && top.r>=.9 && (st.lvl[top.id]||0)<3) out.push({id:'up_'+top.id, s:5, t:t('tl.up.t',{g:gmName(top.id)}), w:t('tl.up.w'), icon:'trending',
     act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); goPage('games'); gmStart(top.id); }});
+  /* hard, hurting feelings this week: a self-compassion break */
+  var hurtF=null; wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ if(['hurt','sad','disap','shame','lonely'].indexOf(z.f)>=0) hurtF=z.f; }); });
+  if(hurtF) out.push({id:'sc', s:7, t:t('tl.sc.t'), w:t('tl.sc.w',{f:pzLabel(hurtF)}), icon:'face', act:function(){ pzOpen('sc'); }});
+  /* no gratitude written in the last three days, in the evening */
+  var gr=S.grat||{}, recent=tlDays(3).some(function(d){ return gr[d]; });
+  if(!recent && new Date().getHours()>=17 && active>=1) out.push({id:'grat', s:6.5, t:t('tl.grat.t'), w:t('tl.grat.w'), icon:'book', act:function(){ goPage('well'); }});
   /* the pause, never tried */
-  var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length; });
-  var active=wk.filter(function(d){ return log[d]; }).length;
-  if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen(); }});
+  var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length || log[d].breath; });
+  if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen('day'); }});
   /* the check-in's area to grow */
   if(hasProfile()){
     var d=weakDim(), gid=DIM_GAME[d]||'react';
@@ -1095,7 +1200,7 @@ function renderLearned(){
   else if(done>=2) lines.push(['check', t('ln.done.n',{n:done})]);
   var pf={}; Object.keys(log).forEach(function(d){ (log[d].pauses||[]).forEach(function(z){ pf[z.f]=(pf[z.f]||0)+1; }); });
   var topf=Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
-  if(topf && pf[topf]>=2){ var fe=PZ_FEELS.filter(function(x){ return x.k===topf; })[0]; lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+t('pz.f.'+topf)})]); }
+  if(topf && pf[topf]>=2){ var fe=pzF(topf); lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+pzLabel(topf)})]); }
   var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
   if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
   if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
@@ -1104,5 +1209,63 @@ function renderLearned(){
   box.innerHTML='<h3 class="boxh">'+ic('sparkles')+'<span>'+esc(t('ln.t'))+'</span></h3><p class="psub">'+esc(t('ln.s'))+'</p>'+
     (lines.length ? '<ul class="ln-list">'+lines.slice(0,5).map(function(l){ return '<li>'+ic(l[0])+'<span>'+esc(l[1])+'</span></li>'; }).join('')+'</ul>'
                   : '<p class="hint">'+esc(t('ln.none'))+'</p>');
+}
+
+/* ================= positive psychology =================
+   A gratitude journal (three good things and why they happened), a
+   self-compassion break, a strength to use in a new way this week, and a
+   kind act a day. */
+var VS_KEYS=['curious','brave','kind','humor','persist','create','grat','fair','hope','learn','lead','self'];
+var KD_N=10, wlKd=null, wlStrPick=false;
+function renderWell(){
+  var box=document.getElementById('wellBox'); if(!box) return;
+  if(!S.grat) S.grat={};
+  var today=dayKey(), g=S.grat[today]||[], days=Object.keys(S.grat).filter(function(d){ return d!==today && S.grat[d].length; }).sort().reverse();
+  var rows=[0,1,2].map(function(i){ var x=g[i]||{};
+    return '<div class="gr-row"><span class="gr-n numf">'+(i+1)+'</span><div class="gr-in">'+
+      '<input type="text" maxlength="140" data-gr="'+i+'" value="'+esc(x.t||'')+'" placeholder="'+esc(t('gr.ph'))+'">'+
+      '<input type="text" class="gr-why" maxlength="140" data-grw="'+i+'" value="'+esc(x.w||'')+'" placeholder="'+esc(t('gr.why'))+'"></div></div>'; }).join('');
+  var hist=days.length ? '<details class="gr-hist"><summary>'+ic('book')+'<span>'+esc(t('gr.hist',{n:days.length}))+'</span></summary>'+
+    days.slice(0,30).map(function(d){ return '<div class="gr-day"><b>'+esc(fmtDay(d))+'</b><ul>'+S.grat[d].map(function(x){
+      return '<li>'+esc(x.t)+(x.w?' <small>· '+esc(x.w)+'</small>':'')+'</li>'; }).join('')+'</ul></div>'; }).join('')+'</details>' : '';
+  /* strength of the week */
+  var wk=weekKey(), sw=(S.well&&S.well.str&&S.well.str.week===wk) ? S.well.str.k : null;
+  var str = (sw && !wlStrPick)
+    ? '<p class="wl-pick">'+esc(t('st.week',{s:t('vs.'+sw)}))+'</p><p class="wl-idea"><b>'+esc(t('st.idea'))+'</b> '+esc(t('vs.'+sw+'.i'))+'</p>'+
+      '<div class="row-btns"><button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('vs.'+sw+'.i'))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
+      '<button class="btn btn-quiet btn-sm" id="stChange">'+esc(t('st.change'))+'</button></div>'
+    : '<div class="mg-picks">'+VS_KEYS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+esc(t('vs.'+k))+'</span></button>'; }).join('')+'</div>';
+  if(wlKd===null){ var n=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5); wlKd=n%KD_N+1; }
+  box.innerHTML=
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('book')+'<span>'+esc(t('gr.t'))+'</span></h3><p class="psub">'+esc(t('gr.s'))+'</p>'+
+      rows+'<div class="row-btns"><button class="btn btn-primary btn-sm" id="grSave">'+esc(t('gr.save'))+'</button>'+
+      (g.length?'<span class="wl-done">'+esc(t('gr.done'))+'</span>':'')+'</div>'+hist+'</section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">💛<span>'+esc(t('sc.t'))+'</span></h3><p class="psub">'+esc(t('sc.s'))+'</p>'+
+      '<button class="btn btn-primary btn-sm" id="scOpen">'+esc(t('sc.go'))+'</button></section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gem')+'<span>'+esc(t('st.t'))+'</span></h3><p class="psub">'+esc(t('st.s'))+'</p>'+str+'</section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gift')+'<span>'+esc(t('kd.t'))+'</span></h3><p class="psub">'+esc(t('kd.s'))+'</p>'+
+      '<p class="wl-pick">'+esc(t('kd.'+wlKd))+'</p><div class="row-btns">'+
+      '<button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('kd.'+wlKd))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
+      '<button class="btn btn-quiet btn-sm" id="kdMore">'+esc(t('kd.more'))+'</button></div></section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('star')+'<span>'+esc(t('wl.games'))+'</span></h3><div class="gm-list">'+
+      ['opt','kind','str'].map(function(id){ var g=GAME_IDS.filter(function(x){ return x.id===id; })[0];
+        return '<button type="button" class="gm-card" data-wlgame="'+id+'"><span class="gm-ic">'+ic(g.icon)+'</span><span class="gm-txt"><b>'+esc(t('gm.'+id))+'</b><small>'+esc(t('gm.'+id+'.s'))+'</small></span></button>'; }).join('')+
+    '</div></section>';
+  box.querySelector('#grSave').addEventListener('click',function(){
+    var list=[0,1,2].map(function(i){ return {t:box.querySelector('[data-gr="'+i+'"]').value.trim(), w:box.querySelector('[data-grw="'+i+'"]').value.trim()}; })
+                    .filter(function(x){ return x.t; });
+    if(!list.length){ box.querySelector('[data-gr="0"]').focus(); return; }
+    var first=!(S.grat[today]||[]).length;
+    S.grat[today]=list; if(first){ addPts(10); markActiveToday(); }
+    save(); toast(t('gr.saved')); if(first) celebrate(); renderWell();
+  });
+  box.querySelector('#scOpen').addEventListener('click',function(){ pzOpen('sc'); });
+  box.querySelectorAll('[data-vs]').forEach(function(b){ b.addEventListener('click',function(){
+    if(!S.well) S.well={}; S.well.str={week:wk, k:b.dataset.vs}; wlStrPick=false; save(); renderWell(); }); });
+  var sc=box.querySelector('#stChange'); if(sc) sc.addEventListener('click',function(){ wlStrPick=true; renderWell(); });
+  box.querySelector('#kdMore').addEventListener('click',function(){ wlKd=wlKd%KD_N+1; renderWell(); });
+  box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ goPage('games'); gmStart(b.dataset.wlgame); }); });
+  box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
+    if(addDayItem(b.dataset.wladd)){ markActiveToday(); save(); toast(t('pz.added')); } }); });
 }
 """
