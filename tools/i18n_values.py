@@ -10,7 +10,7 @@ VALUES = {
               'Ценности — это компас: что для меня важнее всего и как это выглядит каждый день.',
               'القيم هي البوصلة: ما الأهمّ بالنسبة لي، وكيف يبدو ذلك كل يوم.'),
 'more.values':('מה הכי חשוב לי, ואיך חיים לפי זה', 'What matters most to me, and living by it', 'Ce qui compte le plus, et vivre selon ça', 'Что важнее всего и как жить по этому', 'ما الأهمّ لي، وكيف أعيش وفقه'),
-'vl.pick':   ('מה הכי חשוב לך? אפשר לבחור עד 5', 'What matters most to you? Pick up to 5', 'Qu\'est-ce qui compte le plus pour toi ? Jusqu\'à 5', 'Что для тебя важнее всего? До 5', 'ما الأهمّ لك؟ حتى 5'),
+'vl.pick':   ('מה החוזקות והערכים שהכי חשובים לך? עד 5', 'What matters most to you? Pick up to 5', 'Qu\'est-ce qui compte le plus pour toi ? Jusqu\'à 5', 'Что для тебя важнее всего? До 5', 'ما الأهمّ لك؟ حتى 5'),
 'vl.n':      ('{n} מתוך 5', '{n} of 5', '{n} sur 5', '{n} из 5', '{n} من 5'),
 'vl.def':    ('מה זה אומר בשבילי?', 'What does it mean to me?', 'Qu\'est-ce que ça veut dire pour moi ?', 'Что это значит для меня?', 'ماذا يعني لي؟'),
 'vl.def.ph': ('למשל: ארוחת ערב משותפת, בלי טלפונים', 'e.g. dinner together, without phones', 'ex. : dîner ensemble, sans téléphones', 'например: ужин вместе, без телефонов', 'مثلاً: عشاء معاً بلا هواتف'),
@@ -42,7 +42,6 @@ VALUES = {
 
 'v.family':  ('משפחה', 'Family', 'Famille', 'Семья', 'العائلة'),
 'v.health':  ('בריאות', 'Health', 'Santé', 'Здоровье', 'الصحة'),
-'v.honest':  ('יושר', 'Honesty', 'Honnêteté', 'Честность', 'الصدق'),
 'v.freedom': ('חופש', 'Freedom', 'Liberté', 'Свобода', 'الحرية'),
 'v.learn':   ('למידה', 'Learning', 'Apprendre', 'Обучение', 'التعلّم'),
 'v.love':    ('אהבה', 'Love', 'Amour', 'Любовь', 'الحبّ'),
@@ -62,6 +61,5 @@ VALUES = {
 'v.joy':     ('הנאה', 'Joy', 'Plaisir', 'Радость', 'المتعة'),
 'v.secure':  ('ביטחון', 'Security', 'Sécurité', 'Безопасность', 'الأمان'),
 'v.indep':   ('עצמאות', 'Independence', 'Indépendance', 'Независимость', 'الاستقلالية'),
-'v.kind':    ('חסד', 'Kindness', 'Bonté', 'Доброта', 'اللطف'),
 'v.balance': ('איזון', 'Balance', 'Équilibre', 'Баланс', 'التوازن'),
 }

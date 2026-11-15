@@ -1745,12 +1745,20 @@ document.getElementById('fbModal').addEventListener('click',function(e){ if(e.ta
    Up to five values, each with what it means to me and a small step for the
    week; a weekly check of how much I lived by them. They feed the "choose"
    step of the daily path, the vision card, a tool and an insight. */
-var VALUE_LIST=[['family','👨‍👩‍👧'],['health','💪'],['honest','🤝'],['freedom','🕊️'],['learn','📚'],['love','❤️'],['giving','🎁'],['resp','✅'],
-  ['create','🎨'],['growth','🌱'],['faith','✨'],['respect','🙏'],['justice','⚖️'],['courage','🦁'],['peace','🌿'],['adv','🧭'],
-  ['friend','🫶'],['commun','🏘️'],['excel','🏆'],['joy','😄'],['secure','🏠'],['indep','🚀'],['kind','💛'],['balance','🧘']];
+/* the 24 character strengths of positive psychology (VIA), in their six virtues;
+   values chosen from the earlier list keep working (OLD_VALUES) */
+var VIA_GROUPS=[['wisdom',[['creat','🎨'],['curio','🔍'],['judg','⚖️'],['lovel','📚'],['persp','🦉']]],
+  ['courage',[['brave','🦁'],['perse','🧗'],['honest','🤝'],['zest','⚡']]],
+  ['human',[['lovea','❤️'],['kind','💛'],['socint','🫶']]],
+  ['justice',[['team','👥'],['fair','🤲'],['lead','🧭']]],
+  ['temper',[['forg','🕊️'],['humil','🌾'],['prud','🛡️'],['selfr','🧘']]],
+  ['transc',[['beauty','🌅'],['grat','🙏'],['hope','🌈'],['humor','😄'],['spirit','✨']]]];
+var VALUE_LIST=[]; VIA_GROUPS.forEach(function(g){ VALUE_LIST=VALUE_LIST.concat(g[1]); });
+var OLD_VALUES=[['family','👨‍👩‍👧'],['health','💪'],['freedom','🕊️'],['learn','📚'],['love','❤️'],['giving','🎁'],['resp','✅'],['create','🎨'],['growth','🌱'],['faith','✨'],
+  ['respect','🙏'],['justice','⚖️'],['courage','🦁'],['peace','🌿'],['adv','🧭'],['friend','🫶'],['commun','🏘️'],['excel','🏆'],['joy','😄'],['secure','🏠'],['indep','🚀'],['balance','🧘']];
 var VL_MAX=5;
 function vlState(){ if(!S.values) S.values={list:[], def:{}, step:{}, check:{}}; ['def','step','check'].forEach(function(k){ if(!S.values[k]) S.values[k]={}; }); if(!S.values.list) S.values.list=[]; return S.values; }
-function vlEmo(k){ var v=VALUE_LIST.filter(function(x){ return x[0]===k; })[0]; return v?v[1]:'✨'; }
+function vlEmo(k){ var v=VALUE_LIST.concat(OLD_VALUES).filter(function(x){ return x[0]===k; })[0]; return v?v[1]:'✨'; }
 function vlName(k){ return t('v.'+k); }
 function renderValues(){
   var box=document.getElementById('valuesBox'); if(!box) return;
@@ -1760,10 +1768,15 @@ function renderValues(){
   box.innerHTML=
     '<section class="dash-box"><div class="boxh-row"><h3 class="boxh">'+ic('compass')+'<span>'+esc(t('vl.pick'))+'</span></h3>'+
       '<span class="boxh-n">'+esc(t('vl.n',{n:list.length}))+'</span></div>'+
-      '<div class="vl-grid">'+VALUE_LIST.map(function(v){ var on=list.indexOf(v[0])>=0;
-        return '<button type="button" class="vl-chip'+(on?' on':'')+'" data-vl="'+v[0]+'"'+(!on&&full?' disabled':'')+'><span>'+v[1]+'</span>'+esc(vlName(v[0]))+'</button>'; }).join('')+'</div></section>'+
+      '<p class="vl-src">'+esc(t('vl.src'))+'</p>'+
+      VIA_GROUPS.map(function(g){ return '<div class="vl-group"><div class="mg-lab">'+esc(t('vt.'+g[0]))+'</div><div class="vl-grid">'+g[1].map(function(v){ var on=list.indexOf(v[0])>=0;
+        return '<button type="button" class="vl-chip'+(on?' on':'')+'" data-vl="'+v[0]+'"'+(!on&&full?' disabled':'')+'><span>'+v[1]+'</span><i><b>'+esc(vlName(v[0]))+'</b><small>'+esc(t('v.'+v[0]+'.m'))+'</small></i></button>'; }).join('')+'</div></div>'; }).join('')+
+      /* a value kept from the earlier list stays shown, so it can be removed */
+      (list.filter(function(k){ return !VALUE_LIST.some(function(v){ return v[0]===k; }); }).map(function(k){
+        return '<button type="button" class="vl-chip on vl-old" data-vl="'+k+'"><span>'+vlEmo(k)+'</span><b>'+esc(vlName(k))+'</b></button>'; }).join(''))+'</section>'+
     (list.length ? list.map(function(k){
       return '<section class="dash-box vl-card"><h3 class="vl-name"><span>'+vlEmo(k)+'</span>'+esc(vlName(k))+'</h3>'+
+        (VALUE_LIST.some(function(v){ return v[0]===k; }) ? '<p class="vl-mean">'+esc(t('v.'+k+'.m'))+'</p>' : '')+
         '<label class="mg-lab" for="vlDef_'+k+'">'+esc(t('vl.def'))+'</label>'+
         '<input type="text" id="vlDef_'+k+'" data-vldef="'+k+'" maxlength="100" value="'+esc(st.def[k]||'')+'" placeholder="'+esc(t('vl.def.ph'))+'">'+
         '<label class="mg-lab" for="vlStep_'+k+'">'+esc(t('vl.step'))+'</label>'+
