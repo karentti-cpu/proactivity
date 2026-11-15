@@ -38,7 +38,6 @@ PAUSE = {
 'pz.pos.ph':('מה עזר? (לא חובה)', 'What helped? (optional)', 'Qu\'est-ce qui a aidé ? (facultatif)', 'Что помогло? (необязательно)', 'ما الذي ساعد؟ (اختياري)'),
 'pz.pos.ok':('לשמור', 'Save', 'Enregistrer', 'Сохранить', 'احفظ'),
 'pz.pos.done':('רגע טוב נחשב 🌟', 'A good moment counts 🌟', 'Un bon moment compte 🌟', 'Хороший момент тоже считается 🌟', 'اللحظة الجميلة تُحسب 🌟'),
-'pz.n':     ('נשימה {n} מתוך 3', 'Breath {n} of 3', 'Respiration {n} sur 3', 'Вдох {n} из 3', 'النَّفَس {n} من 3'),
 'pz.next':  ('המשך', 'Next', 'Suivant', 'Дальше', 'التالي'),
 'pz.2':     ('מה {אתה מרגיש|את מרגישה} עכשיו?', 'What are you feeling right now?', 'Qu\'est-ce que tu ressens maintenant ?', 'Что ты сейчас чувствуешь?', 'بماذا {تشعر|تشعرين} الآن؟'),
 'pz.2.s':   ('כשנותנים שם למה שמרגישים, זה נרגע קצת.', 'Naming what you feel calms it a little.', 'Mettre un nom sur ce qu\'on ressent l\'apaise un peu.',
@@ -85,8 +84,6 @@ PAUSE = {
              'Au début de chaque journée : « Un instant de pause », trois respirations lentes. Après les tâches : « Comment je me sens maintenant ? » Choisis une émotion et, si elle est difficile, ce qui dépend de toi. « Progrès » montre ce que tu as ressenti et choisi.',
              'В начале каждого дня: «Минутка остановиться», три медленных вдоха. После дел: «Как я себя сейчас чувствую?» Выбери чувство, а если оно трудное — то, что в твоих руках. В «Прогрессе» видно, что ты чувствовал{|а} и как выбирал{|а}.',
              'في بداية كل يوم: «لحظة توقّف»، ثلاثة أنفاس بطيئة. بعد المهام: «كيف أشعر الآن؟» اختر شعوراً، وإن كان صعباً اختر ما بيدك. في «التقدّم» ترى بماذا شعرت وكيف اخترت.'),
-'help.s':   ('כמה דקות ביום, בשמונה צעדים פשוטים.', 'A few minutes a day, in eight simple steps.', 'Quelques minutes par jour, en huit étapes simples.',
-             'Несколько минут в день — восемь простых шагов.', 'دقائق قليلة في اليوم، في ثماني خطوات بسيطة.'),
 }
 
 # ---------- the calm game: a strong feeling -> what helps most now ----------

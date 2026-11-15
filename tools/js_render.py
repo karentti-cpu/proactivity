@@ -1777,7 +1777,7 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
 /* One <nav> serves as top tabs on a wide screen and as the bottom bar on a
    phone, so there is a single set of buttons and a single source of truth. */
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
-var UNDER_MORE=['help','tasks','learn','body','circle','games'];
+var UNDER_MORE=['help','well','tasks','learn','body','circle','games'];
 function goPage(name){
   var tabName = UNDER_MORE.indexOf(name)>=0 ? 'more' : name;
   document.querySelectorAll('.tab').forEach(function(x){
@@ -1793,6 +1793,7 @@ function goPage(name){
   if(name==='goals') renderGoals();
   if(name==='progress'){ renderMyWeek(); renderLearned(); renderProfile('profBody'); renderAchievements(); renderSettings(); renderTrend(); renderBackupLast(); }
   if(name==='circle') renderCircle();
+  if(name==='well') renderWell();
   if(name==='sheet') renderTrackers();
   if(name==='games'){ gmRun=null; renderGames(); }
   if(name==='body') renderBodyGate();

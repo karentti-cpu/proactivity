@@ -882,6 +882,29 @@ body.no-scroll{overflow:hidden;}
 .ln-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;}
 .ln-list li{display:flex;gap:10px;align-items:flex-start;line-height:1.5;}
 .ln-list svg{flex:none;width:18px;height:18px;color:var(--acc);margin-top:3px;}
+.pz-types{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--s4);}
+.pz-type{display:grid;gap:2px;padding:10px;border-radius:var(--r-ctl);border:1.5px solid var(--ink-3);background:var(--ink-0);font:inherit;color:var(--fg);text-align:start;cursor:pointer;}
+.pz-type small{font-size:var(--t-xs);color:var(--fg-2);}
+.pz-type.on{border-color:#3B7F8C;background:#E6F1F3;}
+.pz-circle.hold2{transform:scale(1);}
+.sc-step{text-align:center;min-height:200px;display:grid;align-content:center;gap:6px;margin-bottom:var(--s4);}
+.sc-heart{font-size:44px;text-align:center;margin-bottom:6px;}
+.modal .sc-say,.sc-say{font-size:21px;font-weight:800;line-height:1.45;color:#8A5A12;margin:0;}
+.wl-card .boxh{display:flex;align-items:center;gap:8px;}
+.gr-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+.gr-n{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:rgba(217,154,38,.15);color:#B57A10;font-weight:800;margin-top:8px;}
+.gr-in{flex:1;display:grid;gap:4px;}
+.gr-in input{width:100%;}
+.gr-in .gr-why{font-size:var(--t-sm);padding-block:6px;}
+.wl-done{align-self:center;font-size:var(--t-sm);color:var(--acc);font-weight:700;}
+.gr-hist{margin-top:var(--s3);}
+.gr-hist summary{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:700;color:var(--acc);}
+.gr-hist summary svg{width:18px;height:18px;}
+.gr-day{margin-top:10px;}
+.gr-day ul{margin:4px 0 0;padding-inline-start:20px;}
+.gr-day small{color:var(--fg-2);}
+.wl-pick{font-weight:800;font-size:16px;margin:0 0 6px;}
+.wl-idea{margin:0 0 var(--s3);color:var(--fg-2);}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}

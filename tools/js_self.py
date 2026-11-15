@@ -917,14 +917,22 @@ var PZ_FEELS=[{k:'joy',e:'😄',l:'fe.joy',pos:1},{k:'calm',e:'😌',l:'fe.calm'
 var PZ_SHOWN=['joy','calm','pride','excite','grat','tired','stress','angry','frust','worry','hurt','sad'];
 function pzF(k){ return PZ_FEELS.filter(function(x){ return x.k===k; })[0]; }
 function pzLabel(k){ var f=pzF(k); return f ? t(f.l) : k; }
-/* the breath: four seconds in, four held, seven out */
-var PZ_PH=[['in',4],['hold',4],['out',7]];
+/* kinds of breath, four rounds each: slow (4 in, 4 held, 7 out), the calming
+   4-7-8, box breathing, and affectionate breathing with a hand on the heart
+   (Neff and Germer), whose phases carry a gentle phrase */
+var PZ_TYPES={slow:[['in',4],['hold',4],['out',7]], '478':[['in',4],['hold',7],['out',8]],
+              box:[['in',4],['hold',4],['out',4],['hold2',4]], comp:[['cin',5],['cout',7]]};
+var PZ_ROUNDS=4;
+var PZ_PH=PZ_TYPES.slow;
+function pzType(){ var k=(S.pref&&S.pref.breath)||'slow'; return PZ_TYPES[k] ? k : 'slow'; }
+function pzPhLabel(ph){ return t(ph==='cin'?'pz.c.in':ph==='cout'?'pz.c.out':ph==='hold2'?'pz.hold':'pz.'+ph); }
+function pzCircleCls(ph){ return ph==='cin'?'in':ph==='cout'?'out':ph; }
 var pz=null, pzTimer=null;
 function pzStop(){ if(pzTimer){ clearTimeout(pzTimer); pzTimer=null; } }
 function pzOpen(mode){
   pzStop();
-  pz = mode==='feel' ? {mode:'feel', step:'feel'} : {mode:'day', step:'intro'};
-  document.getElementById('pzTitle').querySelector('span').textContent=t(mode==='feel'?'pz.ck.t':'pz.btn');
+  pz = mode==='feel' ? {mode:'feel', step:'feel'} : mode==='sc' ? {mode:'sc', step:'sc0'} : {mode:'day', step:'intro'};
+  document.getElementById('pzTitle').querySelector('span').textContent=t(mode==='feel'?'pz.ck.t':mode==='sc'?'sc.t':'pz.btn');
   pzRender(); document.getElementById('pauseModal').classList.add('on');
 }
 function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); }
@@ -942,18 +950,37 @@ function renderPauseBtn(){
 }
 function pzBreathHtml(){
   var ph=PZ_PH[pz.ph][0];
-  return '<p class="pz-sub pz-how">'+esc(t('pz.how'))+'</p>'+
-    '<div class="pz-breath"><div class="pz-circle '+ph+'"></div><div class="pz-in"><b id="pzPhase">'+esc(t('pz.'+ph))+'</b><span class="numf" id="pzSec">'+pz.sec+'</span></div></div>'+
-    '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(3,pz.br+1)}))+'</p>'+
+  return '<p class="pz-sub pz-how">'+esc(t(pzType()==='comp'?'br.comp.how':'pz.how'))+'</p>'+
+    '<div class="pz-breath"><div class="pz-circle '+pzCircleCls(ph)+'" style="transition-duration:'+PZ_PH[pz.ph][1]+'s"></div><div class="pz-in"><b id="pzPhase">'+esc(pzPhLabel(ph))+'</b><span class="numf" id="pzSec">'+pz.sec+'</span></div></div>'+
+    '<p class="pz-sub" id="pzN">'+esc(t('pz.n',{n:Math.min(PZ_ROUNDS,pz.br+1), t:PZ_ROUNDS}))+'</p>'+
     '<button class="btn btn-ghost btn-block" id="pzNext">'+esc(t('pz.next'))+'</button>';
 }
-function pzStartBreath(after){ pz.after=after; pz.step='breath'; pz.br=0; pz.ph=0; pz.sec=PZ_PH[0][1]; pzRender(); pzTick(); }
+function pzStartBreath(after){ PZ_PH=PZ_TYPES[pzType()]; pz.after=after; pz.step='breath'; pz.br=0; pz.ph=0; pz.sec=PZ_PH[0][1]; pzRender(); pzTick(); }
 function pzRender(){
   var box=document.getElementById('pzBody'); if(!box||!pz) return;
   if(pz.step==='intro'){
+    var cur=pzType();
     box.innerHTML='<p class="pz-big">'+esc(t('pz.d.1'))+'</p><p class="pz-sub">'+esc(t('pz.1.s'))+'</p>'+
+      '<div class="mg-lab">'+esc(t('br.type'))+'</div><div class="pz-types">'+['slow','478','box','comp'].map(function(k){
+        return '<button type="button" class="pz-type'+(k===cur?' on':'')+'" data-brt="'+k+'"><b>'+esc(t('br.'+k))+'</b><small>'+esc(t('br.'+k+'.s'))+'</small></button>'; }).join('')+'</div>'+
       '<button class="btn btn-primary btn-block" id="pzGo">'+ic('wind')+'<span>'+esc(t('pz.go'))+'</span></button>';
+    box.querySelectorAll('[data-brt]').forEach(function(b){ b.addEventListener('click',function(){
+      if(!S.pref) S.pref={}; S.pref.breath=b.dataset.brt; save(); pzRender(); }); });
     box.querySelector('#pzGo').addEventListener('click',function(){ pzStartBreath('dayend'); });
+  } else if(/^sc[0-3]$/.test(pz.step)){
+    var n=+pz.step.slice(2);
+    box.innerHTML='<div class="sc-step"><div class="pz-dots">'+[0,1,2,3].map(function(k){ return '<i class="'+(k<n?'on':k===n?'cur':'')+'"></i>'; }).join('')+'</div>'+
+      (n===0 ? '<div class="sc-heart">💛</div><p class="pz-big">'+esc(t('sc.0'))+'</p>'
+             : '<p class="sc-say">'+esc(t('sc.'+n))+'</p><p class="pz-sub">'+esc(t('sc.'+n+'.s'))+'</p>')+'</div>'+
+      '<button class="btn btn-primary btn-block" id="scNext">'+esc(t(n===0?'sc.go':'sc.next'))+'</button>';
+    box.querySelector('#scNext').addEventListener('click',function(){
+      if(n<3){ pz.step='sc'+(n+1); pzRender(); return; }
+      var L=pzLog(); L.sc=(L.sc||0)+1; if(L.sc===1) addPts(5); markActiveToday(); save(); pz.step='scend'; pzRender();
+    });
+  } else if(pz.step==='scend'){
+    box.innerHTML='<div class="pz-end"><div class="sc-heart">💛</div><p class="pz-big">'+esc(t('sc.end'))+'</p></div>'+
+      '<div class="row-btns"><button class="btn btn-primary" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+    box.querySelector('#pzEnd').addEventListener('click',pzClose);
   } else if(pz.step==='breath'){
     box.innerHTML=pzBreathHtml();
     box.querySelector('#pzNext').addEventListener('click',function(){ pzStop(); pzAfterBreath(); });
@@ -1029,12 +1056,12 @@ function pzTick(){
     if(pz.sec<=0){
       pz.ph++;
       if(pz.ph>=PZ_PH.length){ pz.ph=0; pz.br++; }
-      if(pz.br>=3){ pzAfterBreath(); return; }
+      if(pz.br>=PZ_ROUNDS){ pzAfterBreath(); return; }
       pz.sec=PZ_PH[pz.ph][1];
       var ph=PZ_PH[pz.ph][0], c=document.querySelector('.pz-circle'), el=document.getElementById('pzPhase'), nn=document.getElementById('pzN');
-      if(c) c.className='pz-circle '+ph;
-      if(el) el.textContent=t('pz.'+ph);
-      if(nn) nn.textContent=t('pz.n',{n:Math.min(3,pz.br+1)});
+      if(c){ c.style.transitionDuration=PZ_PH[pz.ph][1]+'s'; c.className='pz-circle '+pzCircleCls(ph); }
+      if(el) el.textContent=pzPhLabel(ph);
+      if(nn) nn.textContent=t('pz.n',{n:Math.min(PZ_ROUNDS,pz.br+1), t:PZ_ROUNDS});
     }
     var sc=document.getElementById('pzSec'); if(sc) sc.textContent=pz.sec;
     pzTick();
@@ -1057,6 +1084,7 @@ var DIM_GAME={choice:'react', init:'step', goal:'step', time:'speed', solve:'fli
 function gmName(id){ return t('gm.'+id); }
 function tlCandidates(){
   var log=S.log||{}, wk=tlDays(7), out=[], st=gmState();
+  var active=wk.filter(function(d){ return log[d]; }).length;
   function go(id){ return function(){ goPage('games'); gmStart(id); }; }
   /* pauses with a hard feeling */
   var pz=0, pf={};
@@ -1096,9 +1124,14 @@ function tlCandidates(){
   var top=rows[rows.length-1];
   if(top && top.r>=.9 && (st.lvl[top.id]||0)<3) out.push({id:'up_'+top.id, s:5, t:t('tl.up.t',{g:gmName(top.id)}), w:t('tl.up.w'), icon:'trending',
     act:function(){ st.lvl[top.id]=Math.min(3,(st.lvl[top.id]||0)+1); save(); goPage('games'); gmStart(top.id); }});
+  /* hard, hurting feelings this week: a self-compassion break */
+  var hurtF=null; wk.forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ if(['hurt','sad','disap','shame','lonely'].indexOf(z.f)>=0) hurtF=z.f; }); });
+  if(hurtF) out.push({id:'sc', s:7, t:t('tl.sc.t'), w:t('tl.sc.w',{f:pzLabel(hurtF)}), icon:'face', act:function(){ pzOpen('sc'); }});
+  /* no gratitude written in the last three days, in the evening */
+  var gr=S.grat||{}, recent=tlDays(3).some(function(d){ return gr[d]; });
+  if(!recent && new Date().getHours()>=17 && active>=1) out.push({id:'grat', s:6.5, t:t('tl.grat.t'), w:t('tl.grat.w'), icon:'book', act:function(){ goPage('well'); }});
   /* the pause, never tried */
   var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length || log[d].breath; });
-  var active=wk.filter(function(d){ return log[d]; }).length;
   if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen('day'); }});
   /* the check-in's area to grow */
   if(hasProfile()){
@@ -1161,5 +1194,58 @@ function renderLearned(){
   box.innerHTML='<h3 class="boxh">'+ic('sparkles')+'<span>'+esc(t('ln.t'))+'</span></h3><p class="psub">'+esc(t('ln.s'))+'</p>'+
     (lines.length ? '<ul class="ln-list">'+lines.slice(0,5).map(function(l){ return '<li>'+ic(l[0])+'<span>'+esc(l[1])+'</span></li>'; }).join('')+'</ul>'
                   : '<p class="hint">'+esc(t('ln.none'))+'</p>');
+}
+
+/* ================= positive psychology =================
+   A gratitude journal (three good things and why they happened), a
+   self-compassion break, a strength to use in a new way this week, and a
+   kind act a day. */
+var VS_KEYS=['curious','brave','kind','humor','persist','create','grat','fair','hope','learn','lead','self'];
+var KD_N=10, wlKd=null, wlStrPick=false;
+function renderWell(){
+  var box=document.getElementById('wellBox'); if(!box) return;
+  if(!S.grat) S.grat={};
+  var today=dayKey(), g=S.grat[today]||[], days=Object.keys(S.grat).filter(function(d){ return d!==today && S.grat[d].length; }).sort().reverse();
+  var rows=[0,1,2].map(function(i){ var x=g[i]||{};
+    return '<div class="gr-row"><span class="gr-n numf">'+(i+1)+'</span><div class="gr-in">'+
+      '<input type="text" maxlength="140" data-gr="'+i+'" value="'+esc(x.t||'')+'" placeholder="'+esc(t('gr.ph'))+'">'+
+      '<input type="text" class="gr-why" maxlength="140" data-grw="'+i+'" value="'+esc(x.w||'')+'" placeholder="'+esc(t('gr.why'))+'"></div></div>'; }).join('');
+  var hist=days.length ? '<details class="gr-hist"><summary>'+ic('book')+'<span>'+esc(t('gr.hist',{n:days.length}))+'</span></summary>'+
+    days.slice(0,30).map(function(d){ return '<div class="gr-day"><b>'+esc(fmtDay(d))+'</b><ul>'+S.grat[d].map(function(x){
+      return '<li>'+esc(x.t)+(x.w?' <small>· '+esc(x.w)+'</small>':'')+'</li>'; }).join('')+'</ul></div>'; }).join('')+'</details>' : '';
+  /* strength of the week */
+  var wk=weekKey(), sw=(S.well&&S.well.str&&S.well.str.week===wk) ? S.well.str.k : null;
+  var str = (sw && !wlStrPick)
+    ? '<p class="wl-pick">'+esc(t('st.week',{s:t('vs.'+sw)}))+'</p><p class="wl-idea"><b>'+esc(t('st.idea'))+'</b> '+esc(t('vs.'+sw+'.i'))+'</p>'+
+      '<div class="row-btns"><button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('vs.'+sw+'.i'))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
+      '<button class="btn btn-quiet btn-sm" id="stChange">'+esc(t('st.change'))+'</button></div>'
+    : '<div class="mg-picks">'+VS_KEYS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+esc(t('vs.'+k))+'</span></button>'; }).join('')+'</div>';
+  if(wlKd===null){ var n=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5); wlKd=n%KD_N+1; }
+  box.innerHTML=
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('book')+'<span>'+esc(t('gr.t'))+'</span></h3><p class="psub">'+esc(t('gr.s'))+'</p>'+
+      rows+'<div class="row-btns"><button class="btn btn-primary btn-sm" id="grSave">'+esc(t('gr.save'))+'</button>'+
+      (g.length?'<span class="wl-done">'+esc(t('gr.done'))+'</span>':'')+'</div>'+hist+'</section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">💛<span>'+esc(t('sc.t'))+'</span></h3><p class="psub">'+esc(t('sc.s'))+'</p>'+
+      '<button class="btn btn-primary btn-sm" id="scOpen">'+esc(t('sc.go'))+'</button></section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gem')+'<span>'+esc(t('st.t'))+'</span></h3><p class="psub">'+esc(t('st.s'))+'</p>'+str+'</section>'+
+    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gift')+'<span>'+esc(t('kd.t'))+'</span></h3><p class="psub">'+esc(t('kd.s'))+'</p>'+
+      '<p class="wl-pick">'+esc(t('kd.'+wlKd))+'</p><div class="row-btns">'+
+      '<button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('kd.'+wlKd))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
+      '<button class="btn btn-quiet btn-sm" id="kdMore">'+esc(t('kd.more'))+'</button></div></section>';
+  box.querySelector('#grSave').addEventListener('click',function(){
+    var list=[0,1,2].map(function(i){ return {t:box.querySelector('[data-gr="'+i+'"]').value.trim(), w:box.querySelector('[data-grw="'+i+'"]').value.trim()}; })
+                    .filter(function(x){ return x.t; });
+    if(!list.length){ box.querySelector('[data-gr="0"]').focus(); return; }
+    var first=!(S.grat[today]||[]).length;
+    S.grat[today]=list; if(first){ addPts(10); markActiveToday(); }
+    save(); toast(t('gr.saved')); if(first) celebrate(); renderWell();
+  });
+  box.querySelector('#scOpen').addEventListener('click',function(){ pzOpen('sc'); });
+  box.querySelectorAll('[data-vs]').forEach(function(b){ b.addEventListener('click',function(){
+    if(!S.well) S.well={}; S.well.str={week:wk, k:b.dataset.vs}; wlStrPick=false; save(); renderWell(); }); });
+  var sc=box.querySelector('#stChange'); if(sc) sc.addEventListener('click',function(){ wlStrPick=true; renderWell(); });
+  box.querySelector('#kdMore').addEventListener('click',function(){ wlKd=wlKd%KD_N+1; renderWell(); });
+  box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
+    if(addDayItem(b.dataset.wladd)){ markActiveToday(); save(); toast(t('pz.added')); } }); });
 }
 """
