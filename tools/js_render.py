@@ -1083,7 +1083,7 @@ function renderMyWeek(){
     bindWeek(); return;
   }
   /* the week in numbers - only the ones that are there */
-  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[(S.full?days.filter(function(d){ return S.full[d]; }).length:0),'wk.full'],[days.reduce(function(n,d){ return n+initCount(log[d]); },0),'wk.init'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
+  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[(S.full?days.filter(function(d){ return S.full[d]; }).length:0),'wk.full'],[days.reduce(function(n,d){ return n+initCount(log[d],d); },0),'wk.init'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
   var tilesHtml=tiles.length ? '<div class="wk-tiles">'+tiles.map(function(c){
     return '<div class="wk-tile"><b class="numf">'+c[0]+'</b><span>'+esc(t(c[1]))+'</span></div>'; }).join('')+'</div>' : '';
   /* the feelings named in this week's pauses, the most frequent first */

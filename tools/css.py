@@ -945,6 +945,7 @@ body.no-scroll{overflow:hidden;}
 .t3tag{display:grid;place-items:center;flex:none;width:28px;color:#B57A10;}
 .t3tag svg{width:16px;height:16px;}
 .t3tag.rt{color:#3B7F8C;}
+.trk-init{margin-top:-6px;color:#B57A10;font-weight:600;}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}

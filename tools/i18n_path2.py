@@ -52,6 +52,10 @@ PATH2 = {
              'Ajouté à « Ma journée » comme initiative. Quand tu le coches ✓, ça compte.', 'Добавлено в «Мой день» как инициатива. Отметишь ✓ — засчитается.',
              'أُضيف إلى «يومي» كمبادرة. عندما {تضع|تضعين} ✓ ستُحسب.'),
 
+'it.trk':   ('מהטבלאות שלי. גם זו יוזמה:', 'From my tables. This is initiative too:', 'Depuis mes tableaux. C\'est aussi de l\'initiative :', 'Из моих таблиц. Это тоже инициатива:', 'من جداولي. هذه مبادرة أيضاً:'),
+'trk.init': ('🚀 כל סימון בטבלה נספר כיוזמה במסלול היומי.', '🚀 Every tick in a table counts as an initiative on your daily path.',
+             '🚀 Chaque case cochée compte comme une initiative dans ton parcours du jour.', '🚀 Каждая отметка в таблице засчитывается как инициатива в пути дня.',
+             '🚀 كل علامة في الجدول تُحسب مبادرة في مسارك اليومي.'),
 'ah.t':      ('מבט קדימה', 'Looking ahead', 'Regarder devant', 'Взгляд вперёд', 'نظرة إلى الأمام'),
 'ah.good':   ('היום יזמת:', 'Today you initiated:', 'Aujourd\'hui tu as initié :', 'Сегодня ты начал{|а}:', 'اليوم {بادرت|بادرتِ} بـ:'),
 'ah.q1':     ('מה עלול להפריע מחר?', 'What might get in the way tomorrow?', 'Qu\'est-ce qui pourrait gêner demain ?', 'Что может помешать завтра?', 'ما الذي قد يعيقك غداً؟'),

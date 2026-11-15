@@ -456,7 +456,7 @@ function trkTick(type, cfg, row, di){
     if([3,7,14,21,30].indexOf(s)>=0){ toast(t('trk.streak',{n:s, g:row.t})); celebrate(); }
     else toast(praise());
   }
-  save(); renderTrackers();
+  save(); renderTrackers(); if(typeof renderPath==='function') renderPath();
 }
 
 /* ---- the page ---- */
@@ -997,12 +997,17 @@ function pzRender(){
     box.querySelector('#pzOk').addEventListener('click',function(){ var v=oi.value.trim(); if(v) setI(v); else oi.focus(); });
     oi.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); setI(oi.value.trim()); } });
   } else if(pz.step==='init'){
+    var trows=trkTodayRows().filter(function(r){ return !r.done; });
     box.innerHTML='<p class="pz-big">'+esc(t('it.q'))+'</p><p class="pz-sub">'+esc(t('it.s'))+'</p>'+
+      (trows.length ? '<p class="pz-sub pz-rt">'+esc(t('it.trk'))+'</p><div class="pz-acts">'+trows.map(function(r,i){
+        return '<div class="it-row"><span>'+esc(r.row.t)+'</span><button type="button" class="btn btn-primary btn-sm" data-ittrk="'+i+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>' : '')+
       '<div class="pz-acts">'+gmShuffle([1,2,3,4,5,6,7,8]).slice(0,4).map(function(n){
         return '<div class="it-row"><span>'+esc(t('it.'+n))+'</span><button type="button" class="btn btn-ghost btn-sm" data-itplan="'+n+'">'+esc(t('it.plan'))+'</button>'+
           '<button type="button" class="btn btn-primary btn-sm" data-itdid="'+n+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'">'+
       '<button class="btn btn-primary" id="pzOk">'+esc(t('it.did'))+'</button></div>';
+    box.querySelectorAll('[data-ittrk]').forEach(function(b){ b.addEventListener('click',function(){
+      var r=trows[+b.dataset.ittrk]; trkTick(r.type, r.cfg, r.row, r.di); celebrate(); toast(t('it.done')); pzClose(); }); });
     var did=function(x){ if(!x) return; var L=pzLog(); L.inits.push({t:x, h:new Date().getHours()}); addPts(15); markActiveToday(); save(); celebrate(); toast(t('it.done')); pzClose(); };
     var plan=function(x){ var td=today3(); if(addDayItem(x)){ var it=td.items.filter(function(y){ return normLine(y.t)===normLine(x); })[0]; if(it) it.init=true; logDay(); save(); toast(t('it.planned')); } pzClose(); renderToday3(); };
     box.querySelectorAll('[data-itdid]').forEach(function(b){ b.addEventListener('click',function(){ did(t('it.'+b.dataset.itdid)); }); });
@@ -1255,7 +1260,7 @@ function renderLearned(){
   if(topf && pf[topf]>=2){ var fe=pzF(topf); lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+pzLabel(topf)})]); }
   var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
   if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
-  var ini=two.reduce(function(n,d){ return n+initCount(log[d]); },0); if(ini>=2) lines.unshift(['rocket', t('ln.init',{n:ini})]);
+  var ini=two.reduce(function(n,d){ return n+initCount(log[d],d); },0); if(ini>=2) lines.unshift(['rocket', t('ln.init',{n:ini})]);
   if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
   var act=two.filter(function(d){ return log[d]; }).length;
   if(act>=3) lines.push(['calendar', t('ln.days',{n:act})]);
@@ -1332,13 +1337,39 @@ function renderWell(){
    own initiative), and look ahead (what might get in the way tomorrow, and
    an if-then plan). Feeling and playing stay as tools and a bonus. */
 var PATH_STEPS=[{k:'pause',icon:'wind'},{k:'choose',icon:'compass'},{k:'init',icon:'rocket'},{k:'ahead',icon:'flag'}];
-function initCount(L){ if(!L) return 0; return (L.inits||[]).length + (L.items||[]).filter(function(x){ return x.init && x.done; }).length; }
+/* rows ticked in the tracking tables on a given day: the habits one chose
+   to track are initiative too */
+function trkTicksOn(d){
+  var n=0, st=S.trk; if(!st || !st.list) return 0;
+  st.list.forEach(function(r){
+    var m=/^(week|month|c30):(\d{4}-\d{2}-\d{2})$/.exec(r.key||''); if(!m) return;
+    var i=daysBetween(m[2], d); if(i<0) return;
+    Object.keys(r.ticks||{}).forEach(function(k){ if(r.ticks[k][i]) n++; });
+  });
+  return n;
+}
+/* today's rows in the tables, with where to tick them */
+function trkTodayRows(){
+  var out=[], today=dayKey();
+  ['week','month','c30'].forEach(function(type){
+    var st=trkState(); if(!st.cfg[type]) return;
+    var cfg=st.cfg[type]; if(cfg.next) return;
+    var days=trkDays(type,cfg), di=-1;
+    days.forEach(function(x,i){ if(dayKey(x)===today) di=i; });
+    if(di<0) return;
+    var rec=trkRec(type,cfg,false);
+    cfg.rows.forEach(function(r){ if(!r.t) return; var tk=rec && rec.ticks[normLine(r.t)];
+      out.push({type:type, cfg:cfg, row:r, di:di, done:!!(tk && tk[di])}); });
+  });
+  return out;
+}
+function initCount(L,d){ return (L ? (L.inits||[]).length + (L.items||[]).filter(function(x){ return x.init && x.done; }).length : 0) + (d ? trkTicksOn(d) : 0); }
 function pathDone(){
   var today=dayKey(), L=(S.log||{})[today]||{}, td=today3();
   return {
     pause: !!L.breath,
     choose: !!L.intent,
-    init: (L.inits||[]).length>0 || td.items.some(function(x){ return x.init && x.done; }),
+    init: (L.inits||[]).length>0 || td.items.some(function(x){ return x.init && x.done; }) || trkTicksOn(today)>0,
     ahead: !!L.ahead,
     feel: (L.pauses||[]).length>0,
     game: gmState().lastDay===today || gmState().daily===today
