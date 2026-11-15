@@ -951,6 +951,8 @@ body.no-scroll{overflow:hidden;}
 .it-selrow>svg{flex:none;width:16px;height:16px;color:#B57A10;}
 .it-selrow input{flex:1;min-width:0;}
 .it-btns{justify-content:center;}
+.it-room{color:#B57A10;font-weight:700;}
+.pz-chips .t3chip:disabled{opacity:.4;cursor:default;}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}

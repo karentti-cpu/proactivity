@@ -1004,14 +1004,16 @@ function pzRender(){
     var eve=new Date().getHours()>=17;
     var trows=trkTodayRows().filter(function(r){ return !r.done; });
     var picked=function(n){ return pz.sel.some(function(x){ return x.n===n; }); };
+    /* in the day, no more than My day has room for; in the evening it is a record, so no limit */
+    var room=eve ? 99 : Math.max(0, T3_MAX-today3().items.length), atMax=pz.sel.length>=room;
     box.innerHTML='<p class="pz-big">'+esc(t(eve?'it.q':'it.q.m'))+'</p><p class="pz-sub">'+esc(t('it.s'))+'</p>'+
       (trows.length ? '<p class="pz-sub pz-rt">'+esc(t('it.trk'))+'</p><div class="pz-acts">'+trows.map(function(r,i){
         return '<div class="it-row"><span>'+esc(r.row.t)+'</span><button type="button" class="btn btn-ghost btn-sm" data-ittrk="'+i+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>' : '')+
-      '<p class="pz-sub pz-rt">'+esc(t('it.pick'))+'</p>'+
+      '<p class="pz-sub pz-rt">'+esc(t('it.pick'))+(eve ? '' : ' <b class="it-room">'+esc(room ? t('it.room',{n:room-pz.sel.length}) : t('it.full'))+'</b>')+'</p>'+
       '<div class="mg-picks pz-chips">'+[1,2,3,4,5,6,7,8].map(function(n){
-        return '<button type="button" class="t3idea t3chip'+(picked(n)?' on':'')+'" data-itpick="'+n+'">'+ic(picked(n)?'check':'plus')+'<span>'+esc(t('it.'+n))+'</span></button>'; }).join('')+'</div>'+
-      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'">'+
-      '<button class="btn btn-ghost" id="pzAddOwn">'+ic('plus')+'<span>'+esc(t('it.add'))+'</span></button></div>'+
+        return '<button type="button" class="t3idea t3chip'+(picked(n)?' on':'')+'" data-itpick="'+n+'"'+(!picked(n)&&atMax?' disabled':'')+'>'+ic(picked(n)?'check':'plus')+'<span>'+esc(t('it.'+n))+'</span></button>'; }).join('')+'</div>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'"'+(atMax?' disabled':'')+'>'+
+      '<button class="btn btn-ghost" id="pzAddOwn"'+(atMax?' disabled':'')+'>'+ic('plus')+'<span>'+esc(t('it.add'))+'</span></button></div>'+
       (pz.sel.length ? '<p class="pz-sub pz-rt">'+esc(t('it.words'))+'</p><div class="it-sel">'+pz.sel.map(function(x,i){
         return '<div class="it-selrow">'+ic('rocket')+'<input type="text" maxlength="100" data-itsel="'+i+'" value="'+esc(x.t)+'">'+
           '<button type="button" class="t3act" data-itdel="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+'</div>' : '')+
@@ -1021,9 +1023,9 @@ function pzRender(){
     var keepEdits=function(){ box.querySelectorAll('[data-itsel]').forEach(function(inp){ var x=pz.sel[+inp.dataset.itsel]; if(x) x.t=inp.value; }); };
     box.querySelectorAll('[data-itpick]').forEach(function(b){ b.addEventListener('click',function(){
       keepEdits(); var n=+b.dataset.itpick, ix=-1; pz.sel.forEach(function(x,i){ if(x.n===n) ix=i; });
-      if(ix>=0) pz.sel.splice(ix,1); else pz.sel.push({n:n, t:t('it.'+n)}); pzRender(); }); });
+      if(ix>=0) pz.sel.splice(ix,1); else if(!atMax) pz.sel.push({n:n, t:t('it.'+n)}); pzRender(); }); });
     var own=box.querySelector('#pzOwn');
-    var addOwn=function(){ var v=own.value.trim(); if(!v){ own.focus(); return; } keepEdits(); pz.sel.push({n:0, t:v}); pzRender(); };
+    var addOwn=function(){ var v=own.value.trim(); if(atMax) return; if(!v){ own.focus(); return; } keepEdits(); pz.sel.push({n:0, t:v}); pzRender(); };
     box.querySelector('#pzAddOwn').addEventListener('click',addOwn);
     own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addOwn(); } });
     box.querySelectorAll('[data-itdel]').forEach(function(b){ b.addEventListener('click',function(){ keepEdits(); pz.sel.splice(+b.dataset.itdel,1); pzRender(); }); });
