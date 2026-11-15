@@ -74,7 +74,7 @@ MORE = [('help', 'book', 'help.t', 'more.help'),
         ('games', 'star', 'gm.t', 'more.games')]
 
 # How to use it: the same steps on the landing page and under More.
-HELP_STEPS = [('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sparkles', 9), ('sliders', 7)]
+HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sparkles', 9), ('sliders', 7)]
 def help_html():
     steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
                     for ic_, n in HELP_STEPS)

@@ -946,12 +946,13 @@ var pz=null, pzTimer=null;
 function pzStop(){ if(pzTimer){ clearTimeout(pzTimer); pzTimer=null; } }
 function pzOpen(mode){
   pzStop();
-  pz = mode==='feel' ? {mode:'feel', step:'feel'} : mode==='sc' ? {mode:'sc', step:'sc0'} : {mode:'day', step:'intro'};
-  document.getElementById('pzTitle').querySelector('span').textContent=t(mode==='feel'?'pz.ck.t':mode==='sc'?'sc.t':'pz.btn');
+  pz = mode==='feel' ? {mode:'feel', step:'feel'} : mode==='sc' ? {mode:'sc', step:'sc0'} :
+       ['intent','init','ahead'].indexOf(mode)>=0 ? {mode:mode, step:mode} : {mode:'day', step:'intro'};
+  document.getElementById('pzTitle').querySelector('span').textContent=t({feel:'pz.ck.t', sc:'sc.t', intent:'in.t', init:'it.t', ahead:'ah.t'}[mode]||'pz.btn');
   pzRender(); document.getElementById('pauseModal').classList.add('on');
 }
 function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); renderPath(); }
-function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; return L; }
+function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; if(!L.inits) L.inits=[]; return L; }
 function pzWeekCount(){
   var log=S.log||{}, n=0;
   weekOf(0).forEach(function(d){ ((log[d]||{}).pauses||[]).forEach(function(z){ if(z.a) n++; }); });
@@ -982,6 +983,57 @@ function pzRender(){
     box.querySelectorAll('[data-brt]').forEach(function(b){ b.addEventListener('click',function(){
       if(!S.pref) S.pref={}; S.pref.breath=b.dataset.brt; save(); pzRender(); }); });
     box.querySelector('#pzGo').addEventListener('click',function(){ pzStartBreath('dayend'); });
+  } else if(pz.step==='intent'){
+    var Li=pzLog();
+    box.innerHTML=(P.vision ? '<p class="pz-felt">'+esc(t('in.vis',{v:P.vision}))+'</p>' : '')+
+      '<p class="pz-big">'+esc(t('in.q'))+'</p>'+
+      '<div class="mg-picks pz-chips">'+['patience','courage','calm','generous','persist','listen','joy','resp','curious'].map(function(k){
+        return '<button type="button" class="t3idea t3chip'+(Li.intent===t('q.'+k)?' on':'')+'" data-inq="'+k+'"><span>'+esc(t('q.'+k))+'</span></button>'; }).join('')+'</div>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="60" placeholder="'+esc(t('in.own'))+'">'+
+      '<button class="btn btn-primary" id="pzOk">'+esc(t('in.ok'))+'</button></div>';
+    var setI=function(x){ if(!x) return; var L=pzLog(), first=!L.intent; L.intent=x; if(first){ addPts(5); markActiveToday(); } save(); toast(t('in.saved',{x:x})); pzClose(); };
+    box.querySelectorAll('[data-inq]').forEach(function(b){ b.addEventListener('click',function(){ setI(t('q.'+b.dataset.inq)); }); });
+    var oi=box.querySelector('#pzOwn');
+    box.querySelector('#pzOk').addEventListener('click',function(){ var v=oi.value.trim(); if(v) setI(v); else oi.focus(); });
+    oi.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); setI(oi.value.trim()); } });
+  } else if(pz.step==='init'){
+    box.innerHTML='<p class="pz-big">'+esc(t('it.q'))+'</p><p class="pz-sub">'+esc(t('it.s'))+'</p>'+
+      '<div class="pz-acts">'+gmShuffle([1,2,3,4,5,6,7,8]).slice(0,4).map(function(n){
+        return '<div class="it-row"><span>'+esc(t('it.'+n))+'</span><button type="button" class="btn btn-ghost btn-sm" data-itplan="'+n+'">'+esc(t('it.plan'))+'</button>'+
+          '<button type="button" class="btn btn-primary btn-sm" data-itdid="'+n+'">'+esc(t('it.did'))+'</button></div>'; }).join('')+'</div>'+
+      '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'">'+
+      '<button class="btn btn-primary" id="pzOk">'+esc(t('it.did'))+'</button></div>';
+    var did=function(x){ if(!x) return; var L=pzLog(); L.inits.push({t:x, h:new Date().getHours()}); addPts(15); markActiveToday(); save(); celebrate(); toast(t('it.done')); pzClose(); };
+    var plan=function(x){ var td=today3(); if(addDayItem(x)){ var it=td.items.filter(function(y){ return normLine(y.t)===normLine(x); })[0]; if(it) it.init=true; logDay(); save(); toast(t('it.planned')); } pzClose(); renderToday3(); };
+    box.querySelectorAll('[data-itdid]').forEach(function(b){ b.addEventListener('click',function(){ did(t('it.'+b.dataset.itdid)); }); });
+    box.querySelectorAll('[data-itplan]').forEach(function(b){ b.addEventListener('click',function(){ plan(t('it.'+b.dataset.itplan)); }); });
+    var on=box.querySelector('#pzOwn');
+    box.querySelector('#pzOk').addEventListener('click',function(){ var v=on.value.trim(); if(v) did(v); else on.focus(); });
+    on.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); did(on.value.trim()); } });
+  } else if(pz.step==='ahead'){
+    var La=pzLog(), td3=today3(), mine=(La.inits||[]).map(function(x){ return x.t; }).concat(td3.items.filter(function(x){ return x.init&&x.done; }).map(function(x){ return x.t; }));
+    var undone=td3.items.filter(function(x){ return !x.done; }), carry=S.carry||[];
+    var obs=['tired','time','mood','dist','people'];
+    box.innerHTML=(mine.length ? '<p class="pz-felt">'+esc(t('ah.good'))+' '+esc(mine.join(' · '))+'</p>' : '')+
+      '<p class="pz-big">'+esc(t('ah.q1'))+'</p>'+
+      '<div class="mg-picks pz-chips">'+obs.map(function(k){ return '<button type="button" class="t3idea t3chip" data-ob="'+k+'"><span>'+esc(t('ob.'+k))+'</span></button>'; }).join('')+'</div>'+
+      '<input type="text" id="ahO" class="pz-in1" maxlength="60" placeholder="'+esc(t('ah.obs.ph'))+'">'+
+      '<p class="pz-big pz-q2">'+esc(t('ah.q2'))+'</p>'+
+      '<input type="text" id="ahT" class="pz-in1" maxlength="80" placeholder="'+esc(t('ah.then.ph'))+'">'+
+      (undone.length ? '<p class="pz-sub pz-rt">'+esc(t('ah.retry'))+'</p><div class="pz-acts">'+undone.map(function(x){
+        var c=carry.indexOf(x.t)>=0;
+        return '<div class="it-row"><span>'+esc(x.t)+'</span><button type="button" class="btn btn-ghost btn-sm" data-carry="'+esc(x.t)+'"'+(c?' disabled':'')+'>'+esc(c?t('ah.retry.ok'):t('ah.retry.btn'))+'</button></div>'; }).join('')+'</div>' : '')+
+      '<button class="btn btn-primary btn-block" id="ahSave">'+esc(t('ah.save'))+'</button>';
+    box.querySelectorAll('[data-ob]').forEach(function(b){ b.addEventListener('click',function(){
+      box.querySelectorAll('[data-ob]').forEach(function(x){ x.classList.toggle('on',x===b); });
+      box.querySelector('#ahO').value=t('ob.'+b.dataset.ob); var tt=box.querySelector('#ahT'); if(!tt.value) tt.value=t('th.'+b.dataset.ob); }); });
+    box.querySelectorAll('[data-carry]').forEach(function(b){ b.addEventListener('click',function(){
+      if(!S.carry) S.carry=[]; if(S.carry.indexOf(b.dataset.carry)<0) S.carry.push(b.dataset.carry); save(); b.disabled=true; b.textContent=t('ah.retry.ok'); }); });
+    box.querySelector('#ahSave').addEventListener('click',function(){
+      var o=box.querySelector('#ahO').value.trim(), th=box.querySelector('#ahT').value.trim();
+      if(!o && !th){ box.querySelector('#ahO').focus(); return; }
+      var L=pzLog(), first=!L.ahead; L.ahead={o:o, t:th}; if(first){ addPts(10); markActiveToday(); } save(); toast(t('ah.saved')); pzClose();
+    });
   } else if(/^sc[0-3]$/.test(pz.step)){
     var n=+pz.step.slice(2);
     box.innerHTML='<div class="sc-step"><div class="pz-dots">'+[0,1,2,3].map(function(k){ return '<i class="'+(k<n?'on':k===n?'cur':'')+'"></i>'; }).join('')+'</div>'+
@@ -1203,6 +1255,7 @@ function renderLearned(){
   if(topf && pf[topf]>=2){ var fe=pzF(topf); lines.push(['wind', t('ln.feel',{f:(fe?fe.e+' ':'')+pzLabel(topf)})]); }
   var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
   if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
+  var ini=two.reduce(function(n,d){ return n+initCount(log[d]); },0); if(ini>=2) lines.unshift(['rocket', t('ln.init',{n:ini})]);
   if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
   var act=two.filter(function(d){ return log[d]; }).length;
   if(act>=3) lines.push(['calendar', t('ln.days',{n:act})]);
@@ -1274,12 +1327,19 @@ function renderWell(){
    play. Each one is ticked as it happens; all four make a full day - a
    bonus, a celebration, and a streak of full days. A tap on a step takes
    you straight to it. */
-var PATH_STEPS=[{k:'pause',icon:'wind'},{k:'today',icon:'sun'},{k:'feel',icon:'face'},{k:'game',icon:'star'}];
+/* The path is proactivity itself: pause (the space before responding),
+   choose (an intention, tied to who I want to be), initiate (one thing on my
+   own initiative), and look ahead (what might get in the way tomorrow, and
+   an if-then plan). Feeling and playing stay as tools and a bonus. */
+var PATH_STEPS=[{k:'pause',icon:'wind'},{k:'choose',icon:'compass'},{k:'init',icon:'rocket'},{k:'ahead',icon:'flag'}];
+function initCount(L){ if(!L) return 0; return (L.inits||[]).length + (L.items||[]).filter(function(x){ return x.init && x.done; }).length; }
 function pathDone(){
   var today=dayKey(), L=(S.log||{})[today]||{}, td=today3();
   return {
     pause: !!L.breath,
-    today: td.items.some(function(x){ return x.done; }) || (S.goals||[]).some(function(g){ return g.doneDay===today; }),
+    choose: !!L.intent,
+    init: (L.inits||[]).length>0 || td.items.some(function(x){ return x.init && x.done; }),
+    ahead: !!L.ahead,
     feel: (L.pauses||[]).length>0,
     game: gmState().lastDay===today || gmState().daily===today
   };
@@ -1297,6 +1357,8 @@ function renderPath(){
   var fresh=false;
   if(n===4 && !S.full[today]){ S.full[today]=1; fresh=true; addPts(20); save(); setTimeout(celebrate,300); toast(t('path.fullxp')); }
   var next=PATH_STEPS.filter(function(s){ return !done[s.k]; })[0], streak=fullStreak();
+  var Ltoday=(S.log||{})[today]||{}, yd=new Date(); yd.setDate(yd.getDate()-1);
+  var ya=((S.log||{})[dayKey(yd)]||{}).ahead, yPlan=(ya && ya.o && ya.t && new Date().getHours()<17) ? ya : null;
   box.className='path-box'+(n===4?' full':'');
   box.innerHTML='<div class="path-top"><b>'+esc(t('path.t'))+'</b><span>'+esc(t('path.n',{n:n}))+'</span></div>'+
     '<div class="path-steps">'+PATH_STEPS.map(function(s,i){
@@ -1304,12 +1366,20 @@ function renderPath(){
         '<button type="button" class="path-step'+(done[s.k]?' on':'')+(next&&next.k===s.k?' is-next':'')+'" data-path="'+s.k+'">'+
         '<span class="path-dot">'+ic(done[s.k]?'check':s.icon)+'</span><small>'+esc(t('path.'+s.k))+'</small></button>'; }).join('')+'</div>'+
     '<p class="path-msg">'+esc(n===4 ? t('path.full') : n===0 ? t('path.go') : t('path.next',{s:t('path.'+next.k)}))+
-      (streak>=2 ? ' <span class="path-streak">'+esc(t('path.streak',{n:streak}))+'</span>' : '')+'</p>';
+      (streak>=2 ? ' <span class="path-streak">'+esc(t('path.streak',{n:streak}))+'</span>' : '')+'</p>'+
+    (Ltoday.intent ? '<p class="path-note">'+ic('compass')+'<span>'+esc(t('in.line',{x:Ltoday.intent}))+'</span></p>' : '')+
+    (yPlan ? '<p class="path-note pn-plan">'+ic('flag')+'<span>'+esc(t('ah.plan',{o:yPlan.o, t:yPlan.t}))+'</span></p>' : '')+
+    '<div class="path-bonus"><span>'+esc(t('path.bonus'))+'</span>'+
+      '<button type="button" class="pb'+(done.feel?' on':'')+'" data-path="feel">'+ic(done.feel?'check':'face')+'<span>'+esc(t('path.feel'))+'</span></button>'+
+      '<button type="button" class="pb'+(done.game?' on':'')+'" data-path="game">'+ic(done.game?'check':'star')+'<span>'+esc(t('path.game'))+'</span></button></div>';
   if(fresh) box.classList.add('pop');
   box.querySelectorAll('[data-path]').forEach(function(b){ b.addEventListener('click',function(){
     var k=b.dataset.path;
     if(k==='pause') pzOpen('day');
     else if(k==='feel') pzOpen('feel');
+    else if(k==='choose') pzOpen('intent');
+    else if(k==='init') pzOpen('init');
+    else if(k==='ahead') pzOpen('ahead');
     else if(k==='game'){ goPage('games'); gmStart(gmDaily()); }
     else { var tb=document.getElementById('todayBox'); if(tb){ tb.scrollIntoView({behavior:'smooth',block:'start'}); var inp=tb.querySelector('[data-t3new]'); if(inp) setTimeout(function(){ inp.focus(); },400); } }
   }); });

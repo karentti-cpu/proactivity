@@ -125,6 +125,4 @@ WELL = {
               'Dans « Plus » : un journal de gratitude, une pause d\'autocompassion, tes forces et un geste bienveillant par jour. Dans « Un instant de pause », tu choisis le type de respiration.',
               'В «Ещё»: дневник благодарности, пауза самосострадания, сильные стороны и доброе дело в день. В «Минутке остановиться» можно выбрать вид дыхания.',
               'في «المزيد»: يوميات الامتنان، استراحة التعاطف مع الذات، نقاط قوّتك وعمل طيّب كل يوم. وفي «لحظة توقّف» يمكن اختيار نوع التنفّس.'),
-'help.s':    ('כמה דקות ביום, בתשעה צעדים פשוטים.', 'A few minutes a day, in nine simple steps.', 'Quelques minutes par jour, en neuf étapes simples.',
-              'Несколько минут в день — девять простых шагов.', 'دقائق قليلة في اليوم، في تسع خطوات بسيطة.'),
 }

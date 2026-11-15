@@ -13,8 +13,6 @@ PATH = {
 'path.feel': ('להרגיש', 'Feel', 'Ressentir', 'Чувства', 'اشعر'),
 'path.game': ('לשחק', 'Play', 'Jouer', 'Игра', 'العب'),
 'path.n':    ('{n} מתוך 4', '{n} of 4', '{n} sur 4', '{n} из 4', '{n} من 4'),
-'path.go':   ('4 צעדים קטנים, ויש יום מלא 🎉', '4 small steps, and it is a full day 🎉', '4 petits pas, et c\'est une journée complète 🎉',
-              '4 маленьких шага — и день полный 🎉', '4 خطوات صغيرة، ويكتمل يومك 🎉'),
 'path.next': ('הצעד הבא: {s}', 'Next step: {s}', 'Prochain pas : {s}', 'Следующий шаг: {s}', 'الخطوة التالية: {s}'),
 'path.full': ('יום מלא! 🎉', 'A full day! 🎉', 'Journée complète ! 🎉', 'Полный день! 🎉', 'يوم مكتمل! 🎉'),
 'path.fullxp':('יום מלא! 🎉 +20 XP', 'A full day! 🎉 +20 XP', 'Journée complète ! 🎉 +20 XP', 'Полный день! 🎉 +20 XP', 'يوم مكتمل! 🎉 +20 XP'),
