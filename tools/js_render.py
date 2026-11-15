@@ -1660,7 +1660,7 @@ function bindSettings(){
   });
 }
 function renderDash(){
-  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn(); renderPath(); renderGreet();
+  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn(); renderPath(); renderGreet(); renderFbAsk();
   renderAvatarCard(); renderInvite();
 }
 

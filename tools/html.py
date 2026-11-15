@@ -353,6 +353,7 @@ def build_body(logo):
   <button type="button" class="pause-btn feel-btn" id="feelBtn"><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
   <button type="button" class="home-game" id="gameRow" hidden></button>
   <section class="dash-box tl-box" id="toolBox" hidden></section>
+  <section class="dash-box fb-ask" id="fbAsk" hidden></section>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
   <div class="dstrip" id="dashStats"></div>
@@ -360,7 +361,7 @@ def build_body(logo):
 
  <div class="page" id="page-more" role="tabpanel">
   <h2 class="ptitle" data-i18n="n.tab.more"></h2>
-  <div class="more-list">{''.join(f'<button class="more-item" data-more="{p}">{i(ic_)}<span><b data-i18n="{k}"></b><small data-i18n="{d}"></small></span>{i("chevron")}</button>' for p, ic_, k, d in MORE)}</div>
+  <div class="more-list">{''.join(f'<button class="more-item" data-more="{p}">{i(ic_)}<span><b data-i18n="{k}"></b><small data-i18n="{d}"></small></span>{i("chevron")}</button>' for p, ic_, k, d in MORE)}<button class="more-item fb-item" id="fbOpen">{i("edit")}<span><b data-i18n="fb.t"></b><small data-i18n="fb.more"></small></span>{i("chevron")}</button></div>
  </div>
 
  <div class="page" id="page-help" role="tabpanel">
@@ -742,6 +743,12 @@ def build_body(logo):
  <div class="pz-top"><h3 id="pzTitle">{i("wind")}<span data-i18n="pz.btn"></span></h3>
   <button type="button" class="t3act" id="pzX" aria-label="close">{i("x")}</button></div>
  <div id="pzBody"></div>
+</div></div>
+
+<div class="modal-bg" id="fbModal"><div class="modal pz-modal" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+ <div class="pz-top"><h3 id="fbTitle">{i("edit")}<span data-i18n="fb.t"></span></h3>
+  <button type="button" class="t3act" id="fbX" aria-label="close">{i("x")}</button></div>
+ <div id="fbBody"></div>
 </div></div>
 
 <div class="modal-bg" id="shareModal"><div class="modal share-modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
