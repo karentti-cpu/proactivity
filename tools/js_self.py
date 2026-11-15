@@ -809,7 +809,9 @@ GAME_IDS=GAME_IDS.concat([{id:'opt',icon:'sun'},{id:'kind',icon:'seedling'},{id:
 /* games whose answers are a set of words: feelings, strengths */
 var GM_WORDS={feel:{keys:function(){ return FEELINGS.map(function(f){ return f.k; }); }, lab:function(k){ return t('fe.'+k); }, emo:function(k){ var f=feelOf(k); return f?f.e:''; }},
               str:{keys:function(){ return VS_KEYS; }, lab:function(k){ return t('vs.'+k); }, emo:function(){ return ''; }}};
-var GAME_NEW=['step','speed','calm','feel','opt','kind','str'], GAME_LEN=6, GAME_SECS=45;
+var GAME_VACT=[[1,1,'honest'],[2,1,'kind'],[3,1,'perse'],[4,2,'grat'],[5,2,'fair'],[6,2,'brave'],[7,3,'forg'],[8,3,'selfr'],[9,3,'lovea'],[10,4,'curio'],[11,4,'team'],[12,4,'hope']];
+GAME_IDS.push({id:'vact',icon:'compass'});
+var GAME_NEW=['step','speed','calm','feel','opt','kind','str','vact'], GAME_LEN=6, GAME_SECS=45;
 var gmRun=null, gmTick=null;
 /* who is playing: me, one of my children, or someone else (an age group,
    nothing saved). The cards follow the player's age: k up to 12, t up to
@@ -863,6 +865,7 @@ function gmPoolAll(id){
   else if(id==='feel') GAME_FEEL.forEach(function(c){ pool.push({key:'gm.fl.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='str') GAME_STR.forEach(function(c){ pool.push({key:'gm.str.'+c[0], lv:c[1], ans:c[2], near:c[3]}); });
   else if(id==='speed') GAME_SPEED.forEach(function(c){ pool.push({key:'gm.sp.'+c[0], lv:c[1], ans:c[2]}); });
+  else if(id==='vact') GAME_VACT.forEach(function(c){ pool.push({key:'gm.vact.'+c[0], lv:c[1], multi:true, val:c[2]}); });
   else ({flip:GAME_FLIP, step:GAME_STEP, calm:GAME_CALM, opt:GAME_OPT, kind:GAME_KIND}[id] || GAME_REACT[age]).forEach(function(c){
     pool.push({key:({flip:'gm.flip.', step:'gm.step.', calm:'gm.calm.', opt:'gm.opt.', kind:'gm.kind.'}[id] || 'gm.react.'+age)+c[0], lv:c[1], multi:true, feel:c[2]});
   });
@@ -874,16 +877,17 @@ function gmPoolAll(id){
 function gmPick(R){
   var st=gmState(), today=dayKey(), used={}, best=null, bs=-1e9;
   R.cards.forEach(function(c){ used[c.key]=1; });
-  function score(c){ var m=st.mem[c.key]; if(!m) return 3; if(m[2]===today) return .2; if(!m[3]) return 4; return 1+(1-m[1]/m[0]); }
+  var myVals=(S.values&&S.values.list)||[];
+  function score(c){ var b=(c.val && myVals.indexOf(c.val)>=0) ? 1.5 : 0, m=st.mem[c.key]; if(!m) return 3+b; if(m[2]===today) return .2; if(!m[3]) return 4+b; return 1+(1-m[1]/m[0])+b; }
   gmShuffle(R.pool).forEach(function(c){
     if(used[c.key]) return;
     var sc=score(c)-Math.abs(c.lv-R.lv)*10;
     if(sc>bs){ bs=sc; best=c; }
   });
   if(!best) return null;
-  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, back:!!(m && !m[3] && m[2]!==today)};
+  var m=st.mem[best.key], k=best.key, card={key:k, lv:best.lv, ans:best.ans, near:best.near, feel:best.feel, val:best.val, back:!!(m && !m[3] && m[2]!==today)};
   if(best.multi){
-    var ks=best.lv>=3 ? ['a','b','c','d'] : (['step','calm','opt','kind'].indexOf(R.id)>=0) ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
+    var ks=best.lv>=3 ? ['a','b','c','d'] : (['step','calm','opt','kind','vact'].indexOf(R.id)>=0) ? ['a'].concat(gmShuffle(['b','c','d']).slice(0,2)) : ['a','b','c'];
     card.q=t(k+'.q'); card.best=t(k+'.a'); card.ans='a';
     card.opts=gmShuffle(ks.map(function(x){ return {t:t(k+'.'+x), k:x}; }));
   } else card.q=t(k);
@@ -983,7 +987,7 @@ function renderGames(){
     else if(R.id==='feel') msg=good ? t('gm.fe.ok',{f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')}) : t((c.near||[]).indexOf(a)>=0 ? 'gm.fe.x' : 'gm.fe.x2',{p:t('fe.'+a), f:t('fe.'+c.ans), m:t('fe.'+c.ans+'.m')});
     else if(R.id==='circle') msg=t(good ? 'gm.c.'+c.ans : 'gm.c.'+c.ans+'.x');
     else if(R.id==='flip') msg=t(good?'gm.f.ok':'gm.f.x');
-    else msg=t(({step:'gm.s.', calm:'gm.k.', opt:'gm.o.', kind:'gm.y.'}[R.id]||'gm.r.')+a);
+    else msg=t(({step:'gm.s.', calm:'gm.k.', opt:'gm.o.', kind:'gm.y.', vact:'gm.va.'}[R.id]||'gm.r.')+a);
     if(!good && c.best) show=c.best;
     fb='<div class="gm-fb '+(good?'good':'soft')+'"><p>'+(good?'🎉 ':'💡 ')+esc(msg)+'</p>'+(show?'<p class="gm-best">'+esc(show)+'</p>':'')+
       '<button class="btn btn-primary btn-block" id="gmNext">'+esc(t('gm.next'))+'</button></div>';
@@ -995,7 +999,7 @@ function renderGames(){
   }
   var forWho=gmKidP() ? '<p class="gm-forwho">'+esc(t('gm.playing',{n:gmKidP().name}))+'</p>' : gmPlayer.k==='guest' ? '<p class="gm-forwho">'+esc(t('gm.playing',{n:t('gm.b.'+(gmPlayer.band||'a'))}))+'</p>' : '';
   box.innerHTML='<div class="gm-play">'+forWho+'<div class="gm-head"><b>'+esc(t('gm.'+R.id))+' <span class="gm-lv l'+c.lv+'">'+esc(t('gm.lv'+c.lv))+'</span></b>'+dots+'</div>'+note+
-    (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : '')+
+    (c.feel ? '<p class="gm-feel">'+gmFeel(c.feel)+'</p>' : c.val ? '<p class="gm-feel gm-val">'+vlEmo(c.val)+' '+esc(vlName(c.val))+'</p>' : '')+
     '<p class="gm-q">'+esc(c.q)+'</p><p class="gm-ask">'+esc(t('gm.q.'+R.id))+'</p>'+opts+fb+
     '<button class="btn btn-quiet btn-sm gm-quit" id="gmQuit">'+esc(t('gm.done'))+'</button>'+(R.id==='feel'?feelDict():'')+'</div>';
   box.querySelectorAll('[data-ans]').forEach(function(b){
@@ -1519,13 +1523,16 @@ function renderWell(){
   var hist=days.length ? '<details class="gr-hist"><summary>'+ic('book')+'<span>'+esc(t('gr.hist',{n:days.length}))+'</span></summary>'+
     days.slice(0,30).map(function(d){ return '<div class="gr-day"><b>'+esc(fmtDay(d))+'</b><ul>'+S.grat[d].map(function(x){
       return '<li>'+esc(x.t)+(x.w?' <small>· '+esc(x.w)+'</small>':'')+'</li>'; }).join('')+'</ul></div>'; }).join('')+'</details>' : '';
-  /* strength of the week */
-  var wk=weekKey(), sw=(S.well&&S.well.str&&S.well.str.week===wk) ? S.well.str.k : null;
-  var str = (sw && !wlStrPick)
-    ? '<p class="wl-pick">'+esc(t('st.week',{s:t('vs.'+sw)}))+'</p><p class="wl-idea"><b>'+esc(t('st.idea'))+'</b> '+esc(t('vs.'+sw+'.i'))+'</p>'+
-      '<div class="row-btns"><button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('vs.'+sw+'.i'))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
-      '<button class="btn btn-quiet btn-sm" id="stChange">'+esc(t('st.change'))+'</button></div>'
-    : '<div class="mg-picks">'+VS_KEYS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+esc(t('vs.'+k))+'</span></button>'; }).join('')+'</div>';
+  /* strength of the week: chosen from the strengths picked in My values */
+  var mineS=((S.values&&S.values.list)||[]).filter(function(k){ return VALUE_LIST.some(function(v){ return v[0]===k; }); });
+  var wk=weekKey(), sw=(S.well&&S.well.str&&S.well.str.week===wk && mineS.indexOf(S.well.str.k)>=0) ? S.well.str.k : null;
+  var str = !mineS.length
+    ? '<p class="wl-idea">'+esc(t('st.none'))+'</p><button class="btn btn-ghost btn-sm" id="stGo">'+ic('compass')+'<span>'+esc(t('st.go'))+'</span></button>'
+    : (sw && !wlStrPick)
+    ? '<p class="wl-pick">'+vlEmo(sw)+' '+esc(t('st.week',{s:vlName(sw)}))+'</p><p class="wl-idea"><b>'+esc(t('st.idea'))+'</b> '+esc(viaIdea(sw))+'</p>'+
+      '<div class="row-btns"><button class="btn btn-ghost btn-sm" data-wladd="'+esc(viaIdea(sw))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
+      (mineS.length>1 ? '<button class="btn btn-quiet btn-sm" id="stChange">'+esc(t('st.change'))+'</button>' : '')+'</div>'
+    : '<p class="wl-idea">'+esc(t('st.mine'))+'</p><div class="mg-picks">'+mineS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+vlEmo(k)+' '+esc(vlName(k))+'</span></button>'; }).join('')+'</div>';
   if(wlKd===null){ var n=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5); wlKd=n%KD_N+1; }
   box.innerHTML=
     '<section class="dash-box wl-card"><h3 class="boxh">'+ic('book')+'<span>'+esc(t('gr.t'))+'</span></h3><p class="psub">'+esc(t('gr.s'))+'</p>'+
@@ -1554,6 +1561,7 @@ function renderWell(){
   box.querySelectorAll('[data-vs]').forEach(function(b){ b.addEventListener('click',function(){
     if(!S.well) S.well={}; S.well.str={week:wk, k:b.dataset.vs}; wlStrPick=false; save(); renderWell(); }); });
   var sc=box.querySelector('#stChange'); if(sc) sc.addEventListener('click',function(){ wlStrPick=true; renderWell(); });
+  var sg=box.querySelector('#stGo'); if(sg) sg.addEventListener('click',function(){ goPage('values'); });
   box.querySelector('#kdMore').addEventListener('click',function(){ wlKd=wlKd%KD_N+1; renderWell(); });
   box.querySelectorAll('[data-wlgame]').forEach(function(b){ b.addEventListener('click',function(){ gmPlayer={k:'me'}; goPage('games'); gmStart(b.dataset.wlgame); }); });
   box.querySelectorAll('[data-wladd]').forEach(function(b){ b.addEventListener('click',function(){
@@ -1757,6 +1765,9 @@ var VALUE_LIST=[]; VIA_GROUPS.forEach(function(g){ VALUE_LIST=VALUE_LIST.concat(
 var OLD_VALUES=[['family','👨‍👩‍👧'],['health','💪'],['freedom','🕊️'],['learn','📚'],['love','❤️'],['giving','🎁'],['resp','✅'],['create','🎨'],['growth','🌱'],['faith','✨'],
   ['respect','🙏'],['justice','⚖️'],['courage','🦁'],['peace','🌿'],['adv','🧭'],['friend','🫶'],['commun','🏘️'],['excel','🏆'],['joy','😄'],['secure','🏠'],['indep','🚀'],['balance','🧘']];
 var VL_MAX=5;
+/* an idea for using each strength this week (the first twelve were written before) */
+var VIA_IDEA={curio:'curious', brave:'brave', kind:'kind', humor:'humor', perse:'persist', creat:'create', grat:'grat', fair:'fair', hope:'hope', lovel:'learn', lead:'lead', selfr:'self'};
+function viaIdea(k){ return VIA_IDEA[k] ? t('vs.'+VIA_IDEA[k]+'.i') : t('v.'+k+'.i'); }
 function vlState(){ if(!S.values) S.values={list:[], def:{}, step:{}, check:{}}; ['def','step','check'].forEach(function(k){ if(!S.values[k]) S.values[k]={}; }); if(!S.values.list) S.values.list=[]; return S.values; }
 function vlEmo(k){ var v=VALUE_LIST.concat(OLD_VALUES).filter(function(x){ return x[0]===k; })[0]; return v?v[1]:'✨'; }
 function vlName(k){ return t('v.'+k); }

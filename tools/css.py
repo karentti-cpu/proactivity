@@ -1071,6 +1071,7 @@ body.no-scroll{overflow:hidden;}
 .vis-vals{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:8px;padding:0;border:0;background:none;cursor:pointer;}
 .vis-vals span{padding:3px 10px;border-radius:var(--r-pill);background:rgba(255,255,255,.7);font-size:var(--t-xs);font-weight:700;color:var(--acc);}
 .vl-ichip{border-style:solid;}
+.gm-val{color:var(--acc);}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
