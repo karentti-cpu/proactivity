@@ -413,18 +413,19 @@ function trkSheetHtml(type, cfg){
     var minRows=type==='week'?4:3;
     while(rows.length<minRows) rows.push({t:''});
     var rowH = type==='week' ? Math.max(46, Math.min(84, Math.floor(400/rows.length))) : Math.max(40, Math.min(80, Math.floor(380/rows.length)));
-    body='<table class="sheet-grid '+type+'"><thead><tr><th class="sg-goal">'+esc(t('ps.col.goal'))+'</th>'+
+    body='<table class="sheet-grid '+type+'"><thead><tr><th class="sg-goal">'+esc(t(kid?'kid.col':'ps.col.goal'))+'</th>'+
       days.map(function(d){ return '<th><span>'+esc(type==='week'?trkLoc(d,{weekday:'short'}):trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
       '<th class="sg-sum">'+esc(t('ps.col.sum'))+'</th></tr></thead><tbody>'+
       rows.map(function(r,i){ return '<tr style="height:'+rowH+'px"><td class="sg-goal">'+(r.t && (fun||r.e) ? '<span class="sg-emo">'+trkEmo(r,i)+'</span>' : '')+esc(r.t)+'</td>'+days.map(function(){ return '<td>'+(r.t?faint:'')+'</td>'; }).join('')+'<td class="sg-sum"></td></tr>'; }).join('')+
       '</tbody></table>'+
-      '<div class="sheet-lines"><p>'+esc(t(type==='month'?'trk.q1m':'wr.q1'))+'</p><p>'+esc(t(type==='month'?'trk.q2m':'wr.q2'))+'</p></div>';
+      '<div class="sheet-lines"><p>'+esc(t(kid ? (type==='month'?'kid.q1m':'kid.q1w') : (type==='month'?'trk.q1m':'wr.q1')))+'</p>'+
+        '<p>'+esc(t(kid ? (type==='month'?'kid.q2m':'kid.q2w') : (type==='month'?'trk.q2m':'wr.q2')))+'</p></div>';
   } else if(type==='c30'){
     var g=cfg.rows[0];
     body='<p class="sheet-c30goal">'+(fun&&g ? '<span>'+trkEmo(g,0)+'</span>' : ic('flame'))+'<b>'+esc(g?g.t:'')+'</b></p>'+
       '<div class="sheet-c30">'+days.map(function(d,i){
         return '<div class="c30-box"><span class="c30-n">'+(i+1)+'</span><span class="c30-d">'+esc(trkLoc(d,{day:'numeric',month:'numeric'}))+'</span>'+faint+'</div>'; }).join('')+'</div>'+
-      '<div class="sheet-lines"><p>'+esc(t('trk.prize'))+'</p></div>';
+      (kid ? '' : '<div class="sheet-lines"><p>'+esc(t('trk.prize'))+'</p></div>');
   } else {
     var td=today3(), lines=[];
     pickedGoals().forEach(function(g){ lines.push(g.title+(dayStep(g)?' — '+dayStep(g):'')); });

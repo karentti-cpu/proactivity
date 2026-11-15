@@ -31,6 +31,11 @@ KIDS = {
 'trk.designb':('לעצב', 'Design', 'Personnaliser', 'Оформить', 'صمّم'),
 'trk.photob':('לצלם דף מסומן', 'Snap a ticked sheet', 'Photographier une feuille cochée', 'Сфотографировать лист', 'صوّر ورقة معلَّمة'),
 
+'kid.col':   ('המשימה שלי', 'My task', 'Ma mission', 'Моё дело', 'مهمّتي'),
+'kid.q1w':   ('במה הצלחתי השבוע? 🌟', 'What did I do well this week? 🌟', 'Qu\'est-ce que j\'ai bien réussi cette semaine ? 🌟', 'Что у меня получилось на этой неделе? 🌟', 'بماذا نجحت هذا الأسبوع؟ 🌟'),
+'kid.q2w':   ('מה אנסה בשבוע הבא? 🚀', 'What will I try next week? 🚀', 'Qu\'est-ce que j\'essaierai la semaine prochaine ? 🚀', 'Что попробую на следующей неделе? 🚀', 'ماذا سأجرّب الأسبوع القادم؟ 🚀'),
+'kid.q1m':   ('במה הצלחתי החודש? 🌟', 'What did I do well this month? 🌟', 'Qu\'est-ce que j\'ai bien réussi ce mois-ci ? 🌟', 'Что у меня получилось в этом месяце? 🌟', 'بماذا نجحت هذا الشهر؟ 🌟'),
+'kid.q2m':   ('מה אנסה בחודש הבא? 🚀', 'What will I try next month? 🚀', 'Qu\'est-ce que j\'essaierai le mois prochain ? 🚀', 'Что попробую в следующем месяце? 🚀', 'ماذا سأجرّب الشهر القادم؟ 🚀'),
 'kh.1':  ('לצחצח שיניים', 'Brush teeth', 'Se brosser les dents', 'Почистить зубы', 'تنظيف الأسنان'),
 'kh.2':  ('להתלבש לבד', 'Get dressed alone', 'S\'habiller tout seul', 'Одеться самому', 'ارتداء الملابس وحدي'),
 'kh.3':  ('לסדר את הצעצועים', 'Tidy the toys', 'Ranger les jouets', 'Убрать игрушки', 'ترتيب الألعاب'),
