@@ -103,6 +103,4 @@ PATH2 = {
               'Quatre pas par jour : la pause (respirer), choisir (une intention), initier (une chose de ta propre initiative), et le soir regarder devant : ce qui pourrait gêner demain, et ce que tu feras alors. Les quatre : une journée complète 🎉',
               'Четыре шага в день: пауза (дыхание), выбор (намерение на день), инициатива (одно дело по своей воле) и вечером взгляд вперёд: что может помешать завтра и что ты тогда сделаешь. Все четыре — полный день 🎉',
               'أربع خطوات يومياً: التوقّف (التنفّس)، الاختيار (نيّة لليوم)، المبادرة (شيء واحد بمبادرتك)، وفي المساء النظر إلى الأمام: ما قد يعيقك غداً وماذا {ستفعل|ستفعلين} حينها. الأربع معاً: يوم مكتمل 🎉'),
-'help.s':    ('כמה דקות ביום, בעשרה צעדים פשוטים.', 'A few minutes a day, in ten simple steps.', 'Quelques minutes par jour, en dix étapes simples.',
-              'Несколько минут в день — десять простых шагов.', 'دقائق قليلة في اليوم، في عشر خطوات بسيطة.'),
 }

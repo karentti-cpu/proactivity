@@ -34,10 +34,12 @@ function renderVision(){
     box.className='vision';
     box.innerHTML='<button type="button" class="vision-line" data-vis-edit aria-label="'+esc(t('ge.btn'))+'">'+ic('compass')+
       '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span>'+ic('edit','vis-edit')+'</button>'+
+      ((S.values&&S.values.list&&S.values.list.length) ? '<button type="button" class="vis-vals" data-vis-vals>'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</button>' : '')+
       (due ? '<div class="vis-chk"><p>'+esc(t('vis.chk'))+'</p><div class="row-btns">'+
         '<button class="btn btn-ghost btn-sm" data-vis-keep>'+ic('check')+'<span>'+esc(t('vis.keep'))+'</span></button>'+
         '<button class="btn btn-quiet btn-sm" data-vis-change>'+ic('edit')+'<span>'+esc(t('vis.change'))+'</span></button></div></div>' : '');
     box.querySelector('[data-vis-edit]').addEventListener('click',function(){ visEdit=true; renderVision(); });
+    var vv=box.querySelector('[data-vis-vals]'); if(vv) vv.addEventListener('click',function(){ goPage('values'); });
     var kp=box.querySelector('[data-vis-keep]');
     if(kp) kp.addEventListener('click',function(){ P.visionNext=inDays(30); save(); toast(t('vis.saved')); renderVision(); });
     var ch=box.querySelector('[data-vis-change]');
@@ -1179,14 +1181,18 @@ function pzRender(){
     box.querySelector('#pzGo').addEventListener('click',function(){ pzStartBreath('dayend'); });
   } else if(pz.step==='intent'){
     var Li=pzLog();
+    var myV=(S.values&&S.values.list)||[];
     box.innerHTML=(P.vision ? '<p class="pz-felt">'+esc(t('in.vis',{v:P.vision}))+'</p>' : '')+
       '<p class="pz-big">'+esc(t('in.q'))+'</p>'+
+      (myV.length ? '<p class="pz-sub pz-rt">'+esc(t('vl.mine'))+'</p><div class="mg-picks pz-chips">'+myV.map(function(k){
+        return '<button type="button" class="t3idea t3chip vl-ichip'+(Li.intent===vlName(k)?' on':'')+'" data-inv="'+k+'"><span>'+vlEmo(k)+' '+esc(vlName(k))+'</span></button>'; }).join('')+'</div>' : '')+
       '<div class="mg-picks pz-chips">'+['patience','courage','calm','generous','persist','listen','joy','resp','curious'].map(function(k){
         return '<button type="button" class="t3idea t3chip'+(Li.intent===t('q.'+k)?' on':'')+'" data-inq="'+k+'"><span>'+esc(t('q.'+k))+'</span></button>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="60" placeholder="'+esc(t('in.own'))+'">'+
       '<button class="btn btn-primary" id="pzOk">'+esc(t('in.ok'))+'</button></div>';
     var setI=function(x){ if(!x) return; var L=pzLog(), first=!L.intent; L.intent=x; if(first){ addPts(5); markActiveToday(); } save(); toast(t('in.saved',{x:x})); pzClose(); };
     box.querySelectorAll('[data-inq]').forEach(function(b){ b.addEventListener('click',function(){ setI(t('q.'+b.dataset.inq)); }); });
+    box.querySelectorAll('[data-inv]').forEach(function(b){ b.addEventListener('click',function(){ setI(vlName(b.dataset.inv)); }); });
     var oi=box.querySelector('#pzOwn');
     box.querySelector('#pzOk').addEventListener('click',function(){ var v=oi.value.trim(); if(v) setI(v); else oi.focus(); });
     oi.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); setI(oi.value.trim()); } });
@@ -1425,6 +1431,8 @@ function tlCandidates(){
   /* no gratitude written in the last three days, in the evening */
   var gr=S.grat||{}, recent=tlDays(3).some(function(d){ return gr[d]; });
   if(!recent && new Date().getHours()>=17 && active>=1) out.push({id:'grat', s:6.5, t:t('tl.grat.t'), w:t('tl.grat.w'), icon:'book', act:function(){ goPage('well'); }});
+  /* no values yet, after a few active days */
+  if(!(S.values && S.values.list && S.values.list.length) && active>=3) out.push({id:'values', s:6, t:t('tl.vl.t'), w:t('tl.vl.w'), icon:'compass', act:function(){ goPage('values'); }});
   /* the pause, never tried */
   var anyPause=Object.keys(log).some(function(d){ return (log[d].pauses||[]).length || log[d].breath; });
   if(!anyPause && active>=2) out.push({id:'pause', s:4.5, t:t('tl.pause.t'), w:t('tl.pause.w'), icon:'wind', act:function(){ pzOpen('day'); }});
@@ -1484,6 +1492,8 @@ function renderLearned(){
   var rows=GAME_IDS.map(function(g){ var a=st.acc[g.id]; return a && a[0]>=6 ? {id:g.id, r:a[1]/a[0]} : null; }).filter(Boolean).sort(function(x,y){ return y.r-x.r; });
   if(rows.length) lines.push(['star', t('ln.game',{g:gmName(rows[0].id)})]);
   var ini=two.reduce(function(n,d){ return n+initCount(log[d],d); },0); if(ini>=2) lines.unshift(['rocket', t('ln.init',{n:ini})]);
+  var vck=(S.values&&S.values.check&&S.values.check[weekKey()])||{}, vbest=Object.keys(vck).sort(function(a,b){ return vck[b]-vck[a]; })[0];
+  if(vbest && vck[vbest]>=3) lines.push(['compass', t('ln.val',{v:vlEmo(vbest)+' '+vlName(vbest)})]);
   if(hasProfile()) lines.push(['gauge', t('ln.dim',{d:t('dim.'+strongDim())})]);
   var act=two.filter(function(d){ return log[d]; }).length;
   if(act>=3) lines.push(['calendar', t('ln.days',{n:act})]);
@@ -1730,4 +1740,53 @@ function renderFbAsk(){
 document.getElementById('fbOpen').addEventListener('click',fbOpen);
 document.getElementById('fbX').addEventListener('click',fbClose);
 document.getElementById('fbModal').addEventListener('click',function(e){ if(e.target.id==='fbModal') fbClose(); });
+
+/* ================= my values =================
+   Up to five values, each with what it means to me and a small step for the
+   week; a weekly check of how much I lived by them. They feed the "choose"
+   step of the daily path, the vision card, a tool and an insight. */
+var VALUE_LIST=[['family','👨‍👩‍👧'],['health','💪'],['honest','🤝'],['freedom','🕊️'],['learn','📚'],['love','❤️'],['giving','🎁'],['resp','✅'],
+  ['create','🎨'],['growth','🌱'],['faith','✨'],['respect','🙏'],['justice','⚖️'],['courage','🦁'],['peace','🌿'],['adv','🧭'],
+  ['friend','🫶'],['commun','🏘️'],['excel','🏆'],['joy','😄'],['secure','🏠'],['indep','🚀'],['kind','💛'],['balance','🧘']];
+var VL_MAX=5;
+function vlState(){ if(!S.values) S.values={list:[], def:{}, step:{}, check:{}}; ['def','step','check'].forEach(function(k){ if(!S.values[k]) S.values[k]={}; }); if(!S.values.list) S.values.list=[]; return S.values; }
+function vlEmo(k){ var v=VALUE_LIST.filter(function(x){ return x[0]===k; })[0]; return v?v[1]:'✨'; }
+function vlName(k){ return t('v.'+k); }
+function renderValues(){
+  var box=document.getElementById('valuesBox'); if(!box) return;
+  var st=vlState(), list=st.list, full=list.length>=VL_MAX, wk=weekKey();
+  var prevWk=(function(){ var d=new Date(wk+'T00:00:00'); d.setDate(d.getDate()-7); return dayKey(d); })();
+  var chk=st.check[wk]||{}, prev=st.check[prevWk]||{};
+  box.innerHTML=
+    '<section class="dash-box"><div class="boxh-row"><h3 class="boxh">'+ic('compass')+'<span>'+esc(t('vl.pick'))+'</span></h3>'+
+      '<span class="boxh-n">'+esc(t('vl.n',{n:list.length}))+'</span></div>'+
+      '<div class="vl-grid">'+VALUE_LIST.map(function(v){ var on=list.indexOf(v[0])>=0;
+        return '<button type="button" class="vl-chip'+(on?' on':'')+'" data-vl="'+v[0]+'"'+(!on&&full?' disabled':'')+'><span>'+v[1]+'</span>'+esc(vlName(v[0]))+'</button>'; }).join('')+'</div></section>'+
+    (list.length ? list.map(function(k){
+      return '<section class="dash-box vl-card"><h3 class="vl-name"><span>'+vlEmo(k)+'</span>'+esc(vlName(k))+'</h3>'+
+        '<label class="mg-lab" for="vlDef_'+k+'">'+esc(t('vl.def'))+'</label>'+
+        '<input type="text" id="vlDef_'+k+'" data-vldef="'+k+'" maxlength="100" value="'+esc(st.def[k]||'')+'" placeholder="'+esc(t('vl.def.ph'))+'">'+
+        '<label class="mg-lab" for="vlStep_'+k+'">'+esc(t('vl.step'))+'</label>'+
+        '<div class="addrow"><input type="text" id="vlStep_'+k+'" data-vlstep="'+k+'" maxlength="80" value="'+esc(st.step[k]||'')+'" placeholder="'+esc(t('vl.step.ph'))+'">'+
+        '<button class="btn btn-ghost" data-vladd="'+k+'" title="'+esc(t('wl.add'))+'">'+ic('plus')+'<span>'+esc(t('t3.tab.today'))+'</span></button></div></section>'; }).join('')+
+      '<section class="dash-box"><h3 class="boxh">'+ic('check')+'<span>'+esc(t('vl.check'))+'</span></h3>'+
+        list.map(function(k){ var n=chk[k]||0;
+          return '<div class="vl-row"><span class="vl-rn">'+vlEmo(k)+' '+esc(vlName(k))+'</span><div class="vl-dots"><small>'+esc(t('vl.lo'))+'</small>'+
+            [1,2,3,4,5].map(function(i){ return '<button type="button" class="vl-dot'+(i<=n?' on':'')+'" data-vlc="'+k+'" data-n="'+i+'" aria-label="'+i+'"></button>'; }).join('')+
+            '<small>'+esc(t('vl.hi'))+'</small></div>'+(prev[k]?'<small class="vl-last">'+esc(t('vl.last',{n:prev[k]}))+'</small>':'')+'</div>'; }).join('')+
+      '</section>'
+    : '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('vl.empty'))+'</span></p>');
+  box.querySelectorAll('[data-vl]').forEach(function(b){ b.addEventListener('click',function(){
+    var k=b.dataset.vl, i=list.indexOf(k);
+    if(i>=0) list.splice(i,1); else if(list.length<VL_MAX){ list.push(k); if(list.length===1){ addPts(10); markActiveToday(); } }
+    save(); renderValues(); if(typeof renderVision==='function') renderVision(); }); });
+  box.querySelectorAll('[data-vldef]').forEach(function(inp){ inp.addEventListener('change',function(){ st.def[inp.dataset.vldef]=inp.value.trim(); save(); toast(t('vl.saved')); }); });
+  box.querySelectorAll('[data-vlstep]').forEach(function(inp){ inp.addEventListener('change',function(){ st.step[inp.dataset.vlstep]=inp.value.trim(); save(); }); });
+  box.querySelectorAll('[data-vladd]').forEach(function(b){ b.addEventListener('click',function(){
+    var k=b.dataset.vladd, inp=box.querySelector('[data-vlstep="'+k+'"]'), v=inp.value.trim(); if(!v){ inp.focus(); return; }
+    st.step[k]=v; if(addDayItem(v)){ var it=today3().items.filter(function(y){ return normLine(y.t)===normLine(v); })[0]; if(it) it.init=true; logDay(); markActiveToday(); save(); toast(t('pz.added')); } }); });
+  box.querySelectorAll('[data-vlc]').forEach(function(b){ b.addEventListener('click',function(){
+    if(!st.check[wk]) st.check[wk]={}; var first=!Object.keys(st.check[wk]).length;
+    st.check[wk][b.dataset.vlc]=Number(b.dataset.n); if(first){ addPts(5); markActiveToday(); } save(); renderValues(); }); });
+}
 """

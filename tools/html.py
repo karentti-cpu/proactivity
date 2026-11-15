@@ -66,6 +66,7 @@ TABS = [('home', 'home', 'n.tab.home'),
         ('progress', 'trending', 'n.tab.prog'),
         ('more', 'sliders', 'n.tab.more')]
 MORE = [('help', 'book', 'help.t', 'more.help'),
+        ('values', 'compass', 'vl.t', 'more.values'),
         ('well', 'sparkles', 'wl.t', 'more.well'),
         ('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
         ('learn', 'brain', 'n.tab.learn', 'more.learn'),
@@ -74,7 +75,7 @@ MORE = [('help', 'book', 'help.t', 'more.help'),
         ('games', 'star', 'gm.t', 'more.games')]
 
 # How to use it: the same steps on the landing page and under More.
-HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sparkles', 9), ('sliders', 7)]
+HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('compass', 10), ('sparkles', 9), ('sliders', 7)]
 def help_html():
     steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
                     for ic_, n in HELP_STEPS)
@@ -367,6 +368,11 @@ def build_body(logo):
  <div class="page" id="page-help" role="tabpanel">
   <h2 class="ptitle" data-i18n="help.t"></h2><p class="psub" data-i18n="help.s"></p>
   <section class="dash-box">{help_html()}</section>
+ </div>
+
+ <div class="page" id="page-values" role="tabpanel">
+  <h2 class="ptitle" data-i18n="vl.t"></h2><p class="psub" data-i18n="vl.s"></p>
+  <div id="valuesBox"></div>
  </div>
 
  <div class="page" id="page-well" role="tabpanel">
