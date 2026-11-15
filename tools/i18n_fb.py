@@ -1,0 +1,43 @@
+# -*- coding: utf-8 -*-
+"""Feedback from testers, with optional anonymous usage numbers, and the
+app's address on printed sheets. Order of tuple values: he, en, fr, ru, ar
+"""
+
+FB = {
+'fb.t':      ('יש לי הערה', 'I have feedback', 'J\'ai un retour', 'У меня есть отзыв', 'لديّ ملاحظة'),
+'fb.more':   ('מה עבד, מה לא ברור, מה חסר', 'What worked, what was unclear, what is missing', 'Ce qui marche, ce qui n\'est pas clair, ce qui manque',
+              'Что работает, что непонятно, чего не хватает', 'ما الذي نجح، وما غير الواضح، وما الناقص'),
+'fb.q':      ('איך האפליקציה בשבילך?', 'How is the app for you?', 'Comment trouves-tu l\'app ?', 'Как тебе приложение?', 'كيف التطبيق بالنسبة لك؟'),
+'fb.r1':     ('😍 {אוהב|אוהבת}', '😍 Love it', '😍 J\'adore', '😍 Нравится', '😍 أحبّه'),
+'fb.r2':     ('🙂 בסדר', '🙂 It is fine', '🙂 Ça va', '🙂 Нормально', '🙂 جيد'),
+'fb.r3':     ('😕 לא ברור לי', '😕 Not clear to me', '😕 Pas clair', '😕 Непонятно', '😕 غير واضح لي'),
+'fb.ph':     ('מה עבד? מה לא ברור? מה חסר?', 'What worked? What was unclear? What is missing?', 'Qu\'est-ce qui marche ? Qu\'est-ce qui n\'est pas clair ? Qu\'est-ce qui manque ?',
+              'Что работает? Что непонятно? Чего не хватает?', 'ما الذي نجح؟ ما غير الواضح؟ ما الناقص؟'),
+'fb.stats':  ('לצרף נתוני שימוש אנונימיים (רק מספרים, בלי שמות ובלי תוכן)', 'Attach anonymous usage numbers (numbers only, no names or content)',
+              'Joindre des chiffres d\'utilisation anonymes (seulement des chiffres, sans noms ni contenu)', 'Приложить анонимную статистику (только цифры, без имён и текстов)',
+              'إرفاق أرقام استخدام مجهولة (أرقام فقط، بلا أسماء ولا محتوى)'),
+'fb.stats.h':('מה יצורף:', 'What will be attached:', 'Ce qui sera joint :', 'Что будет приложено:', 'ما سيُرفق:'),
+'fb.send':   ('לשלוח במייל', 'Send by email', 'Envoyer par e-mail', 'Отправить по почте', 'أرسل بالبريد'),
+'fb.copy':   ('להעתיק', 'Copy', 'Copier', 'Копировать', 'انسخ'),
+'fb.copied': ('הועתק ✓ אפשר להדביק בוואטסאפ או במייל', 'Copied ✓ Paste it in WhatsApp or an email', 'Copié ✓ Colle-le dans WhatsApp ou un e-mail',
+              'Скопировано ✓ Можно вставить в WhatsApp или письмо', 'نُسخ ✓ الصقه في واتساب أو بريد'),
+'fb.thanks': ('תודה! כל הערה עוזרת 🙏', 'Thank you! Every note helps 🙏', 'Merci ! Chaque retour aide 🙏', 'Спасибо! Каждый отзыв помогает 🙏', 'شكراً! كل ملاحظة تساعد 🙏'),
+'fb.subj':   ('Proacty: הערה', 'Proacty: feedback', 'Proacty : retour', 'Proacty: отзыв', 'Proacty: ملاحظة'),
+'fb.page':   ('נכתב מהעמוד', 'Written from the page', 'Écrit depuis la page', 'Написано со страницы', 'كُتب من صفحة'),
+'fb.ask.t':  ('איך האפליקציה עד עכשיו?', 'How has the app been so far?', 'Comment se passe l\'app jusqu\'ici ?', 'Как тебе приложение до сих пор?', 'كيف كان التطبيق حتى الآن؟'),
+'fb.ask.s':  ('האפליקציה בשלב בדיקה. דקה של משוב תעזור מאוד.', 'The app is being tested. A minute of feedback helps a lot.', 'L\'app est en test. Une minute de retour aide beaucoup.',
+              'Приложение в тестировании. Минута отзыва очень поможет.', 'التطبيق في مرحلة التجربة. دقيقة من الملاحظات تساعد كثيراً.'),
+'fb.ask.go': ('לכתוב הערה', 'Write feedback', 'Écrire un retour', 'Написать отзыв', 'اكتب ملاحظة'),
+'st.days':   ('ימים מאז ההתחלה', 'Days since starting', 'Jours depuis le début', 'Дней с начала', 'أيام منذ البداية'),
+'st.a7':     ('ימים פעילים ב־7 האחרונים', 'Active days in the last 7', 'Jours actifs sur les 7 derniers', 'Активных дней из последних 7', 'أيام نشطة من آخر 7'),
+'st.a30':    ('ימים פעילים ב־30 האחרונים', 'Active days in the last 30', 'Jours actifs sur les 30 derniers', 'Активных дней из последних 30', 'أيام نشطة من آخر 30'),
+'st.full':   ('ימים מלאים', 'Full days', 'Journées complètes', 'Полных дней', 'أيام مكتملة'),
+'st.streak': ('רצף נוכחי', 'Current streak', 'Série actuelle', 'Текущая серия', 'السلسلة الحالية'),
+'st.init':   ('יוזמות (30 יום)', 'Initiatives (30 days)', 'Initiatives (30 jours)', 'Инициатив (30 дней)', 'مبادرات (30 يوماً)'),
+'st.games':  ('סבבי משחק', 'Game rounds', 'Parties jouées', 'Игровых раундов', 'جولات لعب'),
+'st.pz':     ('עצירות ובדיקות רגש', 'Pauses and feeling checks', 'Pauses et points émotion', 'Остановок и проверок чувств', 'توقّفات وتسجيلات مشاعر'),
+'st.goals':  ('מטרות פעילות', 'Active goals', 'Objectifs actifs', 'Активных целей', 'أهداف نشطة'),
+'st.kids':   ('ילדים בטבלאות', 'Children in tables', 'Enfants dans les tableaux', 'Детей в таблицах', 'أطفال في الجداول'),
+'st.lang':   ('שפה', 'Language', 'Langue', 'Язык', 'اللغة'),
+'print.url': ('האפליקציה: {u}', 'The app: {u}', 'L\'app : {u}', 'Приложение: {u}', 'التطبيق: {u}'),
+}

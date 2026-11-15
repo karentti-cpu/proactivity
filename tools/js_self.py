@@ -440,7 +440,7 @@ function trkSheetHtml(type, cfg){
     (vis && !kid ? '<p class="sheet-vis">'+esc(t('vis.lab'))+': <b>'+esc(vis)+'</b></p>' : '')+
     (kid ? '<p class="sheet-vis sheet-prize">'+esc(t('kid.prize'))+' <b>'+esc(cfg.prize||'')+'</b>'+(cfg.prize?'':' ______________')+'</p>' : '')+
     (type!=='day' ? '<p class="sheet-vis">'+esc(t('trk.markwith',{m:TRK_MARKS[mk]}))+'</p>' : '');
-  var foot='<div class="sheet-foot">'+esc(t('sp.line'))+'</div>';
+  var foot='<div class="sheet-foot">'+esc(t('sp.line'))+' · '+esc(t('print.url',{u:appUrl()}))+'</div>';
   var body='';
   if(type==='week' || type==='month'){
     var rows=cfg.rows.length ? cfg.rows.slice() : [];
@@ -1642,4 +1642,92 @@ function renderPath(){
     else { var tb=document.getElementById('todayBox'); if(tb){ tb.scrollIntoView({behavior:'smooth',block:'start'}); var inp=tb.querySelector('[data-t3new]'); if(inp) setTimeout(function(){ inp.focus(); },400); } }
   }); });
 }
+
+/* ================= feedback =================
+   While the app is being tested: "I have feedback" opens a short form that
+   goes out by email (or is copied). With the person's consent it carries a
+   few anonymous numbers - how many days, how many full days and so on -
+   computed here, never names or what was written. After 7 and 30 days of
+   use a small card on the home page asks once. */
+var FEEDBACK_EMAIL='karentti@gmail.com';
+function appUrl(){ try{ return (location.host+location.pathname).replace(/index\.html$/,'').replace(/\/$/,''); }catch(e){ return ''; } }
+function startDay(){
+  if(!S.startDay){ var ks=Object.keys(S.log||{}).sort(); S.startDay=ks[0]||dayKey(); }
+  return S.startDay;
+}
+function usageStats(){
+  var log=S.log||{}, d7=tlDays(7), d30=tlDays(30), st=gmMine(), games=0, pz=0;
+  Object.keys(st.played||{}).forEach(function(k){ games+=st.played[k]||0; });
+  Object.keys(log).forEach(function(d){ pz+=(log[d].pauses||[]).length; });
+  return [
+    ['st.days', daysBetween(startDay(), dayKey())+1],
+    ['st.a7', d7.filter(function(d){ return log[d]; }).length],
+    ['st.a30', d30.filter(function(d){ return log[d]; }).length],
+    ['st.full', Object.keys(S.full||{}).length],
+    ['st.streak', fullStreak()],
+    ['st.init', d30.reduce(function(n,d){ return n+initCount(log[d],d); },0)],
+    ['st.games', games],
+    ['st.pz', pz],
+    ['st.goals', liveGoals().length],
+    ['st.kids', (S.kids||[]).length],
+    ['st.lang', cur]
+  ];
+}
+var fbRate='';
+function fbOpen(){
+  fbRate='';
+  var page=(document.querySelector('.page.on')||{}).id||'';
+  var stats=usageStats();
+  var box=document.getElementById('fbBody');
+  box.innerHTML='<p class="pz-felt">'+esc(t('fb.q'))+'</p>'+
+    '<div class="mg-picks pz-chips">'+['r1','r2','r3'].map(function(k){ return '<button type="button" class="t3idea t3chip" data-fbr="'+k+'"><span>'+esc(t('fb.'+k))+'</span></button>'; }).join('')+'</div>'+
+    '<textarea id="fbText" rows="5" maxlength="2000" placeholder="'+esc(t('fb.ph'))+'"></textarea>'+
+    '<label class="fb-consent"><input type="checkbox" id="fbStats"><span>'+esc(t('fb.stats'))+'</span></label>'+
+    '<div class="fb-statlist" id="fbStatList" hidden><b>'+esc(t('fb.stats.h'))+'</b><ul>'+stats.map(function(x){ return '<li>'+esc(t(x[0]))+': <b>'+esc(String(x[1]))+'</b></li>'; }).join('')+'</ul></div>'+
+    '<div class="row-btns"><button class="btn btn-primary" id="fbSend">'+ic('share')+'<span>'+esc(t('fb.send'))+'</span></button>'+
+    '<button class="btn btn-ghost" id="fbCopy">'+ic('copy')+'<span>'+esc(t('fb.copy'))+'</span></button></div>';
+  box.querySelectorAll('[data-fbr]').forEach(function(b){ b.addEventListener('click',function(){
+    fbRate=t('fb.'+b.dataset.fbr); box.querySelectorAll('[data-fbr]').forEach(function(x){ x.classList.toggle('on',x===b); }); }); });
+  var cb=box.querySelector('#fbStats');
+  cb.addEventListener('change',function(){ box.querySelector('#fbStatList').hidden=!cb.checked; });
+  function text(){
+    var lines=[];
+    if(fbRate) lines.push(fbRate);
+    var tx=box.querySelector('#fbText').value.trim(); if(tx) lines.push(tx);
+    lines.push(''); lines.push(t('fb.page')+': '+page.replace('page-',''));
+    if(cb.checked){ lines.push(''); stats.forEach(function(x){ lines.push(t(x[0])+': '+x[1]); }); }
+    lines.push(''); lines.push(appUrl());
+    return lines.join('\n');
+  }
+  function done(){ if(!S.fb) S.fb={}; S.fb.sent=dayKey(); save(); }
+  box.querySelector('#fbSend').addEventListener('click',function(){
+    var url='mailto:'+FEEDBACK_EMAIL+'?subject='+encodeURIComponent(t('fb.subj'))+'&body='+encodeURIComponent(text());
+    done(); window.location.href=url; toast(t('fb.thanks')); fbClose();
+  });
+  box.querySelector('#fbCopy').addEventListener('click',function(){
+    var v=text();
+    var ok=function(){ done(); toast(t('fb.copied')); };
+    try{ navigator.clipboard.writeText(v).then(ok,function(){ fbFallbackCopy(v); ok(); }); }catch(e){ fbFallbackCopy(v); ok(); }
+  });
+  document.getElementById('fbModal').classList.add('on');
+}
+function fbFallbackCopy(v){ var ta=document.createElement('textarea'); ta.value=v; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(e){} ta.remove(); }
+function fbClose(){ document.getElementById('fbModal').classList.remove('on'); renderFbAsk(); }
+/* the home card: once after a week of use, once after a month */
+function renderFbAsk(){
+  var box=document.getElementById('fbAsk'); if(!box) return;
+  if(!S.fb) S.fb={};
+  var n=daysBetween(startDay(), dayKey()), due = n>=30 && !S.fb.a30 ? 'a30' : n>=7 && !S.fb.a7 ? 'a7' : null;
+  if(!due || S.fb.sent===dayKey()){ box.hidden=true; return; }
+  box.hidden=false;
+  box.innerHTML='<div class="fb-ask-in"><span class="pz-ic">'+ic('edit')+'</span><div><b>'+esc(t('fb.ask.t'))+'</b><p>'+esc(t('fb.ask.s'))+'</p>'+
+    '<div class="row-btns"><button class="btn btn-primary btn-sm" id="fbAskGo">'+esc(t('fb.ask.go'))+'</button>'+
+    '<button class="btn btn-quiet btn-sm" id="fbAskNo">'+esc(t('tl.not'))+'</button></div></div></div>';
+  var mark=function(){ S.fb[due]=dayKey(); if(due==='a30') S.fb.a7=S.fb.a7||dayKey(); save(); };
+  box.querySelector('#fbAskGo').addEventListener('click',function(){ mark(); fbOpen(); });
+  box.querySelector('#fbAskNo').addEventListener('click',function(){ mark(); box.hidden=true; });
+}
+document.getElementById('fbOpen').addEventListener('click',fbOpen);
+document.getElementById('fbX').addEventListener('click',fbClose);
+document.getElementById('fbModal').addEventListener('click',function(e){ if(e.target.id==='fbModal') fbClose(); });
 """
