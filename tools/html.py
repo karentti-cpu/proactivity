@@ -74,7 +74,7 @@ MORE = [('help', 'book', 'help.t', 'more.help'),
         ('games', 'star', 'gm.t', 'more.games')]
 
 # How to use it: the same steps on the landing page and under More.
-HELP_STEPS = [('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sparkles', 9), ('sliders', 7)]
+HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('sparkles', 9), ('sliders', 7)]
 def help_html():
     steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
                     for ic_, n in HELP_STEPS)
@@ -347,11 +347,12 @@ def build_body(logo):
    <p class="psub" data-i18n="gnd.s"></p>
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
+  <section class="path-box" id="pathBox"></section>
   <button type="button" class="pause-btn" id="pauseBtn"></button>
   <section class="dash-box today3" id="todayBox"></section>
   <button type="button" class="pause-btn feel-btn" id="feelBtn"><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
-  <section class="dash-box tl-box" id="toolBox" hidden></section>
   <button type="button" class="home-game" id="gameRow" hidden></button>
+  <section class="dash-box tl-box" id="toolBox" hidden></section>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
   <div class="dstrip" id="dashStats"></div>
@@ -378,7 +379,7 @@ def build_body(logo):
  </div>
 
  <div class="page" id="page-sheet" role="tabpanel">
-  <h2 class="ptitle" data-i18n="trk.t"></h2><p class="psub" data-i18n="trk.s"></p>
+  <h2 class="ptitle" data-i18n="trk.t"></h2><p class="psub" data-i18n="trk.s"></p><p class="psub trk-init" data-i18n="trk.init"></p>
   <section class="dash-box" id="trkBox"></section>
  </div>
 

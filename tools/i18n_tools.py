@@ -29,7 +29,7 @@ TOOLS = {
                'У этой цели не было шага {n} дней. Совсем маленький шаг вернёт её к жизни — и отдых тоже можно.',
                'هذا الهدف لم يحصل على خطوة منذ {n} أيام. خطوة صغيرة جداً تعيده للحياة، والراحة مسموحة أيضاً.'),
 'tl.stuck.ok':('נוסף ל„היום שלי” ✓', 'Added to “My day” ✓', 'Ajouté à « Ma journée » ✓', 'Добавлено в «Мой день» ✓', 'أُضيف إلى «يومي» ✓'),
-'tl.tired.t': ('שלוש נשימות, דקה אחת', 'Three breaths, one minute', 'Trois respirations, une minute', 'Три вдоха, одна минута', 'ثلاثة أنفاس، دقيقة واحدة'),
+'tl.tired.t': ('ארבע נשימות, דקה אחת', 'Four breaths, one minute', 'Quatre respirations, une minute', 'Четыре вдоха, одна минута', 'أربعة أنفاس، دقيقة واحدة'),
 'tl.tired.w': ('בערבים האחרונים בחרת „עייפות” כמה פעמים. רגע קצר של נשימה עוזר לגוף, ומותר לבחור היום צעדים קטנים יותר.',
                'In recent evenings you chose “tired” several times. A short breathing moment helps the body, and it is fine to choose smaller steps today.',
                'Ces derniers soirs, tu as choisi « fatigué » plusieurs fois. Un petit moment de respiration aide le corps, et tu peux choisir des pas plus petits aujourd\'hui.',

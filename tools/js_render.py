@@ -684,7 +684,11 @@ function renderGenderAsk(){
 var T3_MAX=5;
 function today3(){
   var d=dayKey();
-  if(!S.today3 || S.today3.day!==d) S.today3={day:d, items:[], picked:[]};
+  if(!S.today3 || S.today3.day!==d){
+    S.today3={day:d, items:[], picked:[]};
+    /* what was set to try again comes back on the next day */
+    if(S.carry && S.carry.length){ S.carry.forEach(function(x){ S.today3.items.push({t:x, done:false, paid:false, gid:null, retry:true}); }); S.carry=[]; }
+  }
   var td=S.today3;
   td.items=td.items.filter(function(x){ return x.t && x.t.trim(); });
   if(!td.picked) td.picked=[];
@@ -736,8 +740,9 @@ function logDay(){
   var prev=S.log[td.day]||{};
   S.log[td.day]={
     note: prev.note||'', feel: prev.feel||'', choice: prev.choice||'', pauses: prev.pauses||[], breath: !!prev.breath,
+    intent: prev.intent||'', inits: prev.inits||[], ahead: prev.ahead||null,
     items: td.items.filter(function(x){ return x.t.trim(); })
-             .map(function(x){ return {t:x.t.trim(), done:!!x.done, gid:x.gid||null, url:x.url||null}; }),
+             .map(function(x){ return {t:x.t.trim(), done:!!x.done, gid:x.gid||null, url:x.url||null, init:!!x.init, retry:!!x.retry}; }),
     steps: (S.goals||[]).filter(function(g){ return g.doneDay===td.day; }).map(function(g){ return g.id; }),
     st: {},   // the text of each step that was done, so My week can show it
     rest: (S.goals||[]).filter(function(g){ return g.restDay===td.day; }).map(function(g){ return g.id; })
@@ -747,7 +752,11 @@ function logDay(){
   while(days.length>LOG_DAYS) delete S.log[days.shift()];
 }
 var t3Open=false, t3IdeasMore=false;
+/* someone who has kept a list on three days knows what My day is: the
+   explanation steps aside */
+function t3Seasoned(){ var L=S.log||{}; return Object.keys(L).filter(function(d){ return (L[d].items||[]).length; }).length>=3; }
 function renderToday3(){
+  if(typeof renderPath==='function') setTimeout(renderPath,0);   // the daily path follows My day
   var box=document.getElementById('todayBox'); if(!box) return;
   var td=today3(), all=liveGoals(), goals=pickedGoals(), today=dayKey(), running=!!fiveTimer;
   var total=goals.length+td.items.length;
@@ -798,9 +807,10 @@ function renderToday3(){
       '</div>';
   }).join('');
   var iRows=td.items.map(function(it,i){
-    return '<div class="t3row'+(it.done?' done':'')+'">'+
+    return '<div class="t3row'+(it.done?' done':'')+(it.init?' init':'')+'">'+
       '<button type="button" class="t3chk" data-t3="'+i+'" aria-pressed="'+(it.done?'true':'false')+'" aria-label="'+esc(t('t3.mark'))+'">'+ic('check')+'</button>'+
       '<input type="text" maxlength="80" data-t3in="'+i+'" value="'+esc(it.t)+'" aria-label="'+esc(it.t)+'">'+
+      (it.init ? '<span class="t3tag" title="'+esc(t('it.t'))+'">'+ic('rocket')+'</span>' : it.retry ? '<span class="t3tag rt" title="'+esc(t('rt.tag'))+'">'+ic('refresh')+'</span>' : '')+
       (it.url ? '<a class="t3act" href="'+esc(it.url)+'" target="_blank" rel="noopener" aria-label="'+esc(t('srch.open'))+'" title="'+esc(t('srch.open'))+'">'+ic('link')+'</a>' : '')+
       (it.done ? '' : '<button type="button" class="t3act" data-srch-i="'+i+'" aria-label="'+esc(t('srch.t'))+'" title="'+esc(t('srch.t'))+'">'+ic('globe')+'</button>'+
         '<button type="button" class="t3act" data-t3del="'+i+'" aria-label="'+esc(t('c.delete'))+'" title="'+esc(t('c.delete'))+'">'+ic('x')+'</button>')+
@@ -821,7 +831,7 @@ function renderToday3(){
   var chosen=total>0;
   box.innerHTML='<div class="boxh-row"><h2 class="boxh">'+ic('sun')+'<span>'+esc(t('t3.t'))+'</span></h2>'+
       (chosen ? '<span class="boxh-n numf">'+nDone+'/'+total+'</span>' : '')+'</div>'+
-    '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>'+
+    (t3Seasoned() ? '' : '<p class="t3help">'+esc(t('t3.todo.h'))+'</p>')+
     gRows+iRows+blankRows+
     '<button type="button" class="t3open'+(t3Open?' on':'')+'" data-t3open aria-expanded="'+t3Open+'">'+ic('target')+
       '<span>'+esc(t('t3.addgoals'))+'</span>'+ic('chevron','t3open-c')+'</button>'+
@@ -882,7 +892,7 @@ function renderToday3(){
       it.done=!it.done;
       if(it.done){
         markActiveToday();
-        if(!it.paid){ it.paid=true; addPts(10); }
+        if(!it.paid){ it.paid=true; addPts(10); if(it.retry){ addPts(5); setTimeout(function(){ toast(t('rt.ok')); },1600); } }
         cheerIfAll(t('t.pts',{n:10}));
       }
       logDay(); save(); renderToday3(); renderEvening(); renderDashStats(); checkAchievements();
@@ -1073,7 +1083,7 @@ function renderMyWeek(){
     bindWeek(); return;
   }
   /* the week in numbers - only the ones that are there */
-  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
+  var tiles=[[steps,'sh.steps'],[things,'sh.done'],[(S.full?days.filter(function(d){ return S.full[d]; }).length:0),'wk.full'],[days.reduce(function(n,d){ return n+initCount(log[d],d); },0),'wk.init'],[choices,'wk.choices'],[pauses,'wk.pauses'],[used.length,'wk.active']].filter(function(c){ return c[0]>0; });
   var tilesHtml=tiles.length ? '<div class="wk-tiles">'+tiles.map(function(c){
     return '<div class="wk-tile"><b class="numf">'+c[0]+'</b><span>'+esc(t(c[1]))+'</span></div>'; }).join('')+'</div>' : '';
   /* the feelings named in this week's pauses, the most frequent first */
@@ -1650,7 +1660,7 @@ function bindSettings(){
   });
 }
 function renderDash(){
-  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn();
+  renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn(); renderPath(); renderGreet();
   renderAvatarCard(); renderInvite();
 }
 
@@ -1827,11 +1837,16 @@ function showSplash(){
   sp.addEventListener('click',hide);
   setTimeout(hide,1600);
 }
+function renderGreet(){
+  var el=document.getElementById('greetName'); if(!el) return;
+  var h=new Date().getHours(), k=h>=5&&h<12 ? 'a.greet.m' : h>=12&&h<17 ? 'a.greet.n' : 'a.greet.e';
+  el.textContent=t(P.name ? k : 'a.greet',{name:P.name || t('a.greet.anon')});
+}
 function startApp(){
   handleShare();
   showSplash();
   var name=P.name || t('a.greet.anon');
-  document.getElementById('greetName').textContent=t('a.greet',{name:name});
+  renderGreet();
   var tag=document.getElementById('appTag'), tk=(P.gender==='m'||P.gender==='f') ? 'b.tag' : 'b.tag.n';
   if(tag){ tag.setAttribute('data-i18n',tk); tag.textContent=t(tk); }
 
