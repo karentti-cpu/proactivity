@@ -350,14 +350,20 @@ function trkEmo(r,i){
   var g=r.gid && goalById(r.gid), c=g && goalCat(g);
   return (c && TRK_CAT_EMO[c]) || TRK_EMO[i%TRK_EMO.length];
 }
+/* whose tables: mine, or one of my children's - each child has tables,
+   a look and a prize of their own */
+function trkKid(){ var w=S.trkWho||'me'; if(w==='me') return null; return (S.kids||[]).filter(function(k){ return k.id===w; })[0]||null; }
 function trkState(){
+  var k=trkKid();
+  if(k){ if(!k.trk) k.trk={cfg:{}, list:[], style:{color:'orange', look:'fun', mark:'star'}}; return k.trk; }
   if(!S.trk) S.trk={cfg:{}, list:[]};
   return S.trk;
 }
+var KID_HABITS={s:[1,2,3,4,5,6,12,13], m:[1,7,8,9,10,4,5,12,13,14], l:[15,16,10,11,13,14,5,12], t:[15,16,17,18,10,11,14,13]};
 function trkCfg(type){
   var st=trkState();
   if(!st.cfg[type]){
-    var gs=liveGoals().map(function(g){ return {t:g.title, gid:g.id}; });
+    var gs=trkKid() ? [] : liveGoals().map(function(g){ return {t:g.title, gid:g.id}; });
     var max=TRK_TYPES.filter(function(x){ return x.id===type; })[0].max;
     st.cfg[type]={rows:gs.slice(0,max), next:false, start:dayKey()};
   }
@@ -392,10 +398,13 @@ function trkSheetHtml(type, cfg){
   var days=trkDays(type,cfg), vis=(P.vision||'').trim(), sty=trkStyle(), fun=sty.look==='fun';
   var mk=trkMark(), faint = mk==='check' ? '' : '<span class="sg-faint">'+TRK_MARKS[mk]+'</span>';
   var col=TRK_COLORS[sty.color]||TRK_COLORS.green;
-  var title=(cfg.title||'').trim() || t('trk.sheet.'+type);
-  var head='<div class="sheet-top"><div><h3>'+esc(title)+'</h3><p>'+esc(trkTitle(type,days))+(P.name?' · '+esc(P.name):'')+'</p></div>'+
+  var kid=trkKid();
+  var title=(cfg.title||'').trim() || (kid ? t('kid.title',{n:kid.name}) : t('trk.sheet.'+type));
+  var who=kid ? kid.name : P.name;
+  var head='<div class="sheet-top"><div><h3>'+esc(title)+'</h3><p>'+esc(trkTitle(type,days))+(who?' · '+esc(who):'')+'</p></div>'+
       '<div class="sheet-brand">Proacty</div></div>'+
-    (vis ? '<p class="sheet-vis">'+esc(t('vis.lab'))+': <b>'+esc(vis)+'</b></p>' : '')+
+    (vis && !kid ? '<p class="sheet-vis">'+esc(t('vis.lab'))+': <b>'+esc(vis)+'</b></p>' : '')+
+    (kid ? '<p class="sheet-vis sheet-prize">'+esc(t('kid.prize'))+' <b>'+esc(cfg.prize||'')+'</b>'+(cfg.prize?'':' ______________')+'</p>' : '')+
     (type!=='day' ? '<p class="sheet-vis">'+esc(t('trk.markwith',{m:TRK_MARKS[mk]}))+'</p>' : '');
   var foot='<div class="sheet-foot">'+esc(t('sp.line'))+'</div>';
   var body='';
@@ -437,6 +446,13 @@ function trkTick(type, cfg, row, di){
   var rec=trkRec(type,cfg,true), key=normLine(row.t);
   if(!rec.ticks[key]) rec.ticks[key]=days.map(function(){ return false; });
   var on=!rec.ticks[key][di]; rec.ticks[key][di]=on;
+  var kid=trkKid();
+  if(kid){
+    /* a child's ticks are the child's: a cheer, and a party at a streak */
+    if(on){ var ks=trkStreak(rec.ticks[key], di);
+      if([3,7,14,21,30].indexOf(ks)>=0){ toast(t('trk.streak',{n:ks, g:row.t})); celebrate(); } else toast(t('kid.cheer',{n:kid.name})); }
+    save(); renderTrackers(); return;
+  }
   var g=row.gid ? goalById(row.gid) : null;
   if(g){
     if(!S.log) S.log={};
@@ -459,66 +475,90 @@ function trkTick(type, cfg, row, di){
   save(); renderTrackers(); if(typeof renderPath==='function') renderPath();
 }
 
-/* ---- the page ---- */
-var trkDesignOpen=false;
+/* ---- the page ----
+   Built around the table itself: whose (me or a child), which kind (small
+   tabs), then the table - rows edited in place, ticked with a tap - and
+   under it print, design and a photo of a ticked sheet. */
+var trkDesignOpen=false, trkEditRow=-1, trkKidForm=false, trkKidEdit=false;
+function trkCands(cfg){
+  var have={}; cfg.rows.forEach(function(r){ have[normLine(r.t)]=1; });
+  var kid=trkKid(), list;
+  if(kid) list=(KID_HABITS[kid.age]||KID_HABITS.m).map(function(n){ return {t:t('kh.'+n)}; });
+  else list=liveGoals().map(function(g){ return {t:g.title, gid:g.id}; }).concat((S.missions||[]).map(function(m){ return {t:label(m)}; }));
+  return list.filter(function(c,i,a){ return !have[normLine(c.t)] && a.findIndex(function(x){ return normLine(x.t)===normLine(c.t); })===i; });
+}
 function renderTrackers(){
   var box=document.getElementById('trkBox'); if(!box) return;
+  var kid=trkKid(); if(!kid && S.trkWho && S.trkWho!=='me') S.trkWho='me';
+  if(kid && trkType==='day') trkType='week';
   var type=trkType, cfg=trkCfg(type), tdef=TRK_TYPES.filter(function(x){ return x.id===type; })[0];
   var days=trkDays(type,cfg), rec=trkRec(type,cfg,false), today=dayKey();
-  var tabs='<div class="trk-types">'+TRK_TYPES.map(function(x){
-    return '<button type="button" class="trk-type'+(x.id===type?' on':'')+'" data-trk="'+x.id+'">'+ic(x.icon)+'<b>'+esc(t('trk.'+x.id))+'</b><small>'+esc(t('trk.'+x.id+'.s'))+'</small></button>'; }).join('')+'</div>';
-  /* what goes in it */
-  var build='';
-  if(tdef.max){
-    var have={}; cfg.rows.forEach(function(r){ have[normLine(r.t)]=1; });
-    var cands=liveGoals().map(function(g){ return {t:g.title, gid:g.id}; })
-      .concat((S.missions||[]).map(function(m){ return {t:label(m)}; }))
-      .filter(function(c,i,a){ return !have[normLine(c.t)] && a.findIndex(function(x){ return normLine(x.t)===normLine(c.t); })===i; });
-    var period = type==='c30'
-      ? '<div class="trk-period">'+esc(t('trk.c30.from',{d:fmtDay(cfg.start)}))+' <button class="btn btn-quiet btn-sm" data-trk-restart>'+ic('refresh')+'<span>'+esc(t('trk.c30.new'))+'</span></button></div>'
-      : '<div class="t3seg ps-week"><button type="button" data-trk-next="0" class="'+(cfg.next?'':'on')+'">'+esc(t(type==='week'?'wk.this':'trk.thism'))+'</button>'+
-          '<button type="button" data-trk-next="1" class="'+(cfg.next?'on':'')+'">'+esc(t(type==='week'?'wk.next':'trk.nextm'))+'</button></div>';
-    build='<div class="mg-lab">'+esc(t(type==='c30'?'trk.c30.goal':type==='month'?'trk.rows.m':'ps.rows'))+(tdef.max>1?' <span class="numf">'+cfg.rows.length+'/'+tdef.max+'</span>':'')+'</div>'+
-      '<div class="ps-rows">'+cfg.rows.map(function(r,i){
-        return '<div class="ps-row"><button type="button" class="trk-emo" data-trk-emo="'+i+'" aria-label="'+esc(t('trk.emo'))+'" title="'+esc(t('trk.emo'))+'">'+trkEmo(r,i)+'</button><span class="ps-row-t">'+esc(r.t)+'</span>'+
-          '<button class="icon-btn" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+'</div>'+
-      (cfg.rows.length<tdef.max ?
-        (cands.length ? '<div class="mg-picks">'+cands.slice(0,8).map(function(c){
-            return '<button type="button" class="t3idea" data-trk-add="'+esc(c.t)+'"'+(c.gid?' data-gid="'+c.gid+'"':'')+'>'+ic('plus')+'<span>'+esc(c.t)+'</span></button>'; }).join('')+'</div>' : '')+
-        '<div class="addrow"><input type="text" id="trkOwn" maxlength="40" placeholder="'+esc(t('ps.own'))+'">'+
-          '<button class="btn btn-ghost" id="trkOwnAdd" aria-label="'+esc(t('c.add'))+'">'+ic('plus')+'</button></div>' : '')+
-      period;
-  } else build='<p class="hint">'+ic('sun')+'<span>'+esc(t('trk.day.h'))+'</span></p>';
-  /* ticking on screen */
-  var digital='';
-  if(type!=='day' && cfg.rows.length){
-    var cell=function(r,di,d){
-      var arr=rec && rec.ticks[normLine(r.t)], on=!!(arr && arr[di]), fut=dayKey(d)>today, isT=dayKey(d)===today;
-      return '<button type="button" class="trk-c'+(on?' on':'')+(fut?' fut':'')+(isT?' today':'')+'" data-trk-r="'+cfg.rows.indexOf(r)+'" data-trk-d="'+di+'"'+
-        ' aria-pressed="'+on+'" aria-label="'+esc(r.t+' · '+trkLoc(d,{weekday:'long',day:'numeric',month:'numeric'}))+'">'+
-        (type==='c30' ? '<span class="c30-n">'+(di+1)+'</span>' : '')+trkMarkHtml()+'</button>';
-    };
-    if(type==='c30'){
-      var r0=cfg.rows[0], arr0=rec && rec.ticks[normLine(r0.t)], n0=arr0 ? arr0.filter(Boolean).length : 0;
-      digital='<div class="trk-c30">'+days.map(function(d,di){ return cell(r0,di,d); }).join('')+'</div>'+
-        (n0 ? '<p class="trk-count">'+esc(t('trk.c30.count',{n:n0}))+'</p>' : '');
-    } else {
-      digital='<div class="scroller"><table class="trk-grid '+type+'"><thead><tr><th class="mcol"></th>'+
-        days.map(function(d){ return '<th class="'+(dayKey(d)===today?'today':'')+'"><span>'+esc(trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
-        '</tr></thead><tbody>'+cfg.rows.map(function(r){
-          var arr=rec && rec.ticks[normLine(r.t)], n=arr ? arr.filter(Boolean).length : 0;
-          return '<tr><th class="mcol"><span>'+esc(r.t)+'</span>'+(n?'<b class="numf">✓'+n+'</b>':'')+'</th>'+
-            days.map(function(d,di){ return '<td>'+cell(r,di,d)+'</td>'; }).join('')+'</tr>'; }).join('')+
-        '</tbody></table></div>';
-    }
-    digital='<div class="trk-sec'+(trkMark()==='check'?'':' trk-emomark')+'"><h3 class="boxh">'+ic('check')+'<span>'+esc(t('trk.dig'))+'</span></h3><p class="psub">'+esc(t('trk.dig.s'))+'</p>'+digital+
-      '<label class="btn btn-ghost btn-block ps-cam">'+ic('camera')+'<span>'+esc(t(rec&&rec.photo?'trk.photo.again':'trk.photo'))+'</span>'+
-        '<input type="file" accept="image/*" capture="environment" id="trkFile" class="hidden-file"></label>'+
-      (rec&&rec.photo ? '<img class="ps-photo" src="'+rec.photo+'" alt="">' : '')+
-      '<div id="trkReward"></div></div>';
+  /* whose */
+  var who='<div class="trk-who"><span class="trk-who-l">'+esc(t('who.t'))+'</span>'+
+    '<button type="button" class="trk-wb'+(!kid?' on':'')+'" data-who="me">'+ic('user')+'<span>'+esc(t('who.me'))+'</span></button>'+
+    (S.kids||[]).map(function(k){ return '<button type="button" class="trk-wb kid'+(kid&&kid.id===k.id?' on':'')+'" data-who="'+k.id+'">⭐<span>'+esc(k.name)+'</span></button>'; }).join('')+
+    '<button type="button" class="trk-wb add" data-kid-add>'+ic('plus')+'<span>'+esc(t('who.add'))+'</span></button>'+
+    (kid ? '<button type="button" class="t3act" data-kid-edit aria-label="'+esc(t('kid.edit'))+'" title="'+esc(t('kid.edit'))+'">'+ic('edit')+'</button>' : '')+'</div>';
+  var kf=(trkKidForm || (trkKidEdit && kid)) ? '<div class="trk-kidform"><input type="text" id="kidName" maxlength="20" placeholder="'+esc(t('kid.name'))+'" value="'+esc(trkKidEdit&&kid?kid.name:'')+'">'+
+      '<div class="t3seg trk-ages">'+['s','m','l','t'].map(function(a){ var on=(trkKidEdit&&kid?kid.age:'m')===a;
+        return '<button type="button" data-kid-age="'+a+'" class="'+(on?'on':'')+'">'+esc(t('kid.a.'+a))+'</button>'; }).join('')+'</div>'+
+      '<div class="row-btns"><button class="btn btn-primary btn-sm" id="kidSave">'+esc(trkKidEdit?t('c.save'):t('kid.save'))+'</button>'+
+      (trkKidEdit&&kid ? '<button class="btn btn-quiet btn-sm" id="kidDel">'+esc(t('kid.del',{n:kid.name}))+'</button>' : '')+'</div></div>' : '';
+  /* which kind */
+  var tabs='<div class="t3seg trk-tabs'+(kid?' three':'')+'">'+TRK_TYPES.filter(function(x){ return !(kid && x.id==='day'); }).map(function(x){
+    return '<button type="button" data-trk="'+x.id+'" class="'+(x.id===type?'on':'')+'">'+esc(t('trk.'+x.id))+'</button>'; }).join('')+'</div>';
+  /* the table */
+  var title=(cfg.title||'').trim() || (kid ? t('kid.title',{n:kid.name}) : t('trk.sheet.'+type));
+  var period = type==='c30'
+    ? '<div class="trk-period">'+esc(t('trk.c30.from',{d:fmtDay(cfg.start)}))+' <button class="btn btn-quiet btn-sm" data-trk-restart>'+ic('refresh')+'<span>'+esc(t('trk.c30.new'))+'</span></button></div>'
+    : type==='day' ? '' : '<div class="t3seg ps-week"><button type="button" data-trk-next="0" class="'+(cfg.next?'':'on')+'">'+esc(t(type==='week'?'wk.this':'trk.thism'))+'</button>'+
+        '<button type="button" data-trk-next="1" class="'+(cfg.next?'on':'')+'">'+esc(t(type==='week'?'wk.next':'trk.nextm'))+'</button></div>';
+  var nameCell=function(r,i){
+    return trkEditRow===i
+      ? '<input type="text" class="trk-rin" data-trk-rin="'+i+'" maxlength="40" value="'+esc(r.t)+'">'
+      : '<button type="button" class="trk-rname" data-trk-rname="'+i+'"><span class="trk-remo">'+trkEmo(r,i)+'</span><span>'+esc(r.t)+'</span></button>';
+  };
+  var cell=function(r,di,d){
+    var arr=rec && rec.ticks[normLine(r.t)], on=!!(arr && arr[di]), fut=dayKey(d)>today, isT=dayKey(d)===today;
+    return '<button type="button" class="trk-c'+(on?' on':'')+(fut?' fut':'')+(isT?' today':'')+'" data-trk-r="'+cfg.rows.indexOf(r)+'" data-trk-d="'+di+'"'+
+      ' aria-pressed="'+on+'" aria-label="'+esc(r.t+' · '+trkLoc(d,{weekday:'long',day:'numeric',month:'numeric'}))+'">'+
+      (type==='c30' ? '<span class="c30-n">'+(di+1)+'</span>' : '')+trkMarkHtml()+'</button>';
+  };
+  var grid='';
+  if(type==='day') grid='<p class="hint">'+ic('sun')+'<span>'+esc(t('trk.day.h'))+'</span></p>';
+  else if(!cfg.rows.length) grid='<p class="trk-emptymsg">'+esc(t('trk.empty'))+'</p>';
+  else if(type==='c30'){
+    var r0=cfg.rows[0], arr0=rec && rec.ticks[normLine(r0.t)], n0=arr0 ? arr0.filter(Boolean).length : 0;
+    grid='<div class="trk-c30goal">'+nameCell(r0,0)+'<button class="icon-btn" data-trk-del="0" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'+
+      '<div class="trk-c30">'+days.map(function(d,di){ return cell(r0,di,d); }).join('')+'</div>'+
+      (n0 ? '<p class="trk-count">'+esc(t('trk.c30.count',{n:n0}))+'</p>' : '');
+  } else {
+    grid='<div class="scroller"><table class="trk-grid '+type+'"><thead><tr><th class="mcol"></th>'+
+      days.map(function(d){ return '<th class="'+(dayKey(d)===today?'today':'')+'"><span>'+esc(trkLoc(d,{weekday:'narrow'}))+'</span><b>'+d.getDate()+'</b></th>'; }).join('')+
+      '</tr></thead><tbody>'+cfg.rows.map(function(r,i){
+        var arr=rec && rec.ticks[normLine(r.t)], n=arr ? arr.filter(Boolean).length : 0;
+        return '<tr><th class="mcol">'+nameCell(r,i)+(n?'<b class="numf">✓'+n+'</b>':'')+
+          '<button class="trk-rdel" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></th>'+
+          days.map(function(d,di){ return '<td>'+cell(r,di,d)+'</td>'; }).join('')+'</tr>'; }).join('')+
+      '</tbody></table></div><p class="trk-edith">'+esc(t('trk.edit.h'))+'</p>';
   }
+  var cands=tdef.max ? trkCands(cfg) : [];
+  var adder = (tdef.max && cfg.rows.length<tdef.max) ?
+    '<div class="addrow trk-addrow"><input type="text" id="trkOwn" maxlength="40" placeholder="'+esc(kid?t('trk.addrow'):t('ps.own'))+'">'+
+      '<button class="btn btn-ghost" id="trkOwnAdd">'+ic('plus')+'<span>'+esc(t('trk.addrow'))+'</span></button></div>'+
+    (cands.length ? '<div class="mg-picks trk-ideas"><span class="trk-ideas-l">'+esc(t('trk.ideas'))+'</span>'+cands.slice(0,8).map(function(c){
+        return '<button type="button" class="t3idea" data-trk-add="'+esc(c.t)+'"'+(c.gid?' data-gid="'+c.gid+'"':'')+'>'+ic('plus')+'<span>'+esc(c.t)+'</span></button>'; }).join('')+'</div>' : '') : '';
+  var prize = kid && type!=='day' ? '<div class="field trk-prize"><label for="kidPrize">'+esc(t('kid.prize'))+'</label>'+
+      '<input type="text" id="kidPrize" maxlength="60" value="'+esc(cfg.prize||'')+'" placeholder="'+esc(t('kid.prize.ph'))+'"></div>' : '';
   var sty=trkStyle();
-  var design='<details class="trk-design"'+(trkDesignOpen?' open':'')+'><summary>'+ic('palette')+'<span>'+esc(t('trk.design'))+'</span></summary>'+
+  var main='<section class="trk-main'+(kid?' kid':'')+(trkMark()==='check'?'':' trk-emomark')+'" style="--sc:'+(TRK_COLORS[sty.color]||TRK_COLORS.green)[0]+'">'+
+    '<div class="trk-head"><h3>'+esc(title)+'</h3><span>'+esc(trkTitle(type,days))+'</span></div>'+period+grid+adder+prize+
+    (kid ? '<p class="trk-kidnote">'+esc(t('kid.note',{n:kid.name}))+'</p>' : '')+
+    '<div class="trk-actions"><button class="btn btn-primary" id="trkPrint">'+ic('share')+'<span>'+esc(t('trk.printb'))+'</span></button>'+
+      '<button class="btn btn-ghost'+(trkDesignOpen?' on':'')+'" id="trkDesign">'+ic('palette')+'<span>'+esc(t('trk.designb'))+'</span></button>'+
+      (type!=='day' ? '<label class="btn btn-quiet trk-cam" title="'+esc(t('trk.photob'))+'">'+ic('camera')+'<input type="file" accept="image/*" capture="environment" id="trkFile" class="hidden-file"></label>' : '')+'</div>'+
+    (rec&&rec.photo ? '<img class="ps-photo" src="'+rec.photo+'" alt="">' : '')+'<div id="trkReward"></div></section>';
+  var design=trkDesignOpen ? '<section class="trk-sec trk-designp">'+
     '<div class="mg-lab">'+esc(t('trk.d.color'))+'</div><div class="trk-swatches">'+Object.keys(TRK_COLORS).map(function(k){
       return '<button type="button" class="trk-sw'+(k==='ink'?' ink':'')+(sty.color===k?' on':'')+'" data-trk-color="'+k+'"'+(k==='ink'?'':' style="background:'+TRK_COLORS[k][0]+'"')+
         ' aria-label="'+esc(t('trk.c.'+k))+'" title="'+esc(t('trk.c.'+k))+'"></button>'; }).join('')+'</div>'+
@@ -526,53 +566,83 @@ function renderTrackers(){
       return '<button type="button" class="trk-mk'+(trkMark()===k?' on':'')+'" data-trk-mark="'+k+'" aria-label="'+esc(t('trk.m.'+k))+'" title="'+esc(t('trk.m.'+k))+'">'+(k==='check'?ic('check'):TRK_MARKS[k])+'</button>'; }).join('')+'</div>'+
     '<div class="mg-lab">'+esc(t('trk.d.look'))+'</div><div class="t3seg trk-looks" style="grid-template-columns:repeat(3,1fr)">'+['clean','fun','mini'].map(function(k){
       return '<button type="button" data-trk-look="'+k+'" class="'+(sty.look===k?'on':'')+'">'+esc(t('trk.l.'+k))+'</button>'; }).join('')+'</div>'+
-    '<div class="field"><label for="trkTitle">'+esc(t('trk.d.title'))+'</label><input type="text" id="trkTitle" maxlength="40" value="'+esc(cfg.title||'')+'" placeholder="'+esc(t('trk.sheet.'+type))+'"></div>'+
-    '</details>';
-  var printSec='<div class="trk-sec"><h3 class="boxh">'+ic('share')+'<span>'+esc(t('trk.paper'))+'</span></h3>'+design+
-    '<div class="sheet-wrap">'+trkSheetHtml(type,cfg)+'</div>'+
-    '<button class="btn btn-primary btn-block" id="trkPrint">'+ic('share')+'<span>'+esc(t('ps.print'))+'</span></button>'+
-    '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('ps.print.h'))+'</span></p></div>';
-  /* earlier tables, with their photos */
+    '<div class="field"><label for="trkTitle">'+esc(t('trk.d.title'))+'</label><input type="text" id="trkTitle" maxlength="40" value="'+esc(cfg.title||'')+'" placeholder="'+esc(kid?t('kid.title',{n:kid.name}):t('trk.sheet.'+type))+'"></div>'+
+    '<div class="mg-lab">'+esc(t('trk.paper'))+'</div><div class="sheet-wrap">'+trkSheetHtml(type,cfg)+'</div>'+
+    '<p class="hint">'+ic('sparkles')+'<span>'+esc(t('ps.print.h'))+'</span></p></section>' : '';
   var past=trkState().list.filter(function(x){ return x.key!==trkKey(type,cfg) && x.type===type; }).slice(-6).reverse();
   var pastSec=past.length ? '<div class="trk-sec"><div class="mg-lab">'+esc(t('trk.past'))+'</div><div class="ps-past">'+past.map(function(x){
       var n=0; Object.keys(x.ticks).forEach(function(k){ x.ticks[k].forEach(function(v){ if(v) n++; }); });
       return '<div class="ps-pastc">'+(x.photo?'<img src="'+x.photo+'" alt="">':ic('calendar'))+'<span>'+esc(fmtDay(x.key.split(':')[1]))+'</span><b class="numf">✓ '+n+'</b></div>'; }).join('')+'</div></div>' : '';
-  box.innerHTML=tabs+'<div class="trk-sec">'+build+'</div>'+digital+printSec+pastSec;
+  box.innerHTML=who+kf+tabs+main+design+pastSec;
 
-  box.querySelectorAll('[data-trk]').forEach(function(b){ b.addEventListener('click',function(){ trkType=b.dataset.trk; renderTrackers(); }); });
+  /* whose */
+  box.querySelectorAll('[data-who]').forEach(function(b){ b.addEventListener('click',function(){
+    S.trkWho=b.dataset.who==='me'?'me':Number(b.dataset.who); trkKidForm=false; trkKidEdit=false; trkEditRow=-1; save(); renderTrackers(); }); });
+  box.querySelector('[data-kid-add]').addEventListener('click',function(){ trkKidForm=!trkKidForm; trkKidEdit=false; renderTrackers();
+    var n=document.getElementById('kidName'); if(n) n.focus(); });
+  var ke=box.querySelector('[data-kid-edit]'); if(ke) ke.addEventListener('click',function(){ trkKidEdit=!trkKidEdit; trkKidForm=false; renderTrackers(); });
+  var kAge=trkKidEdit&&kid ? kid.age : 'm';
+  box.querySelectorAll('[data-kid-age]').forEach(function(b){ b.addEventListener('click',function(){
+    kAge=b.dataset.kidAge; box.querySelectorAll('[data-kid-age]').forEach(function(x){ x.classList.toggle('on',x===b); }); }); });
+  var ks=box.querySelector('#kidSave');
+  if(ks) ks.addEventListener('click',function(){
+    var nm=document.getElementById('kidName').value.trim(); if(!nm){ document.getElementById('kidName').focus(); return; }
+    if(trkKidEdit && kid){ kid.name=nm; kid.age=kAge; }
+    else { if(!S.kids) S.kids=[]; var id=uid++; S.kids.push({id:id, name:nm, age:kAge}); S.trkWho=id; }
+    trkKidForm=false; trkKidEdit=false; save(); renderTrackers();
+  });
+  var kd=box.querySelector('#kidDel');
+  if(kd) kd.addEventListener('click',function(){
+    if(!confirm(t('kid.del',{n:kid.name})+'?')) return;
+    S.kids=S.kids.filter(function(k){ return k!==kid; }); S.trkWho='me'; trkKidEdit=false; save(); renderTrackers(); });
+  /* the table */
+  box.querySelectorAll('[data-trk]').forEach(function(b){ b.addEventListener('click',function(){ trkType=b.dataset.trk; trkEditRow=-1; renderTrackers(); }); });
   box.querySelectorAll('[data-trk-next]').forEach(function(b){ b.addEventListener('click',function(){ cfg.next=b.dataset.trkNext==='1'; save(); renderTrackers(); }); });
-  box.querySelectorAll('[data-trk-del]').forEach(function(b){ b.addEventListener('click',function(){ cfg.rows.splice(Number(b.dataset.trkDel),1); save(); renderTrackers(); }); });
+  box.querySelectorAll('[data-trk-del]').forEach(function(b){ b.addEventListener('click',function(){ cfg.rows.splice(Number(b.dataset.trkDel),1); trkEditRow=-1; save(); renderTrackers(); }); });
   box.querySelectorAll('[data-trk-add]').forEach(function(b){ b.addEventListener('click',function(){
     cfg.rows.push({t:b.dataset.trkAdd, gid:b.dataset.gid?Number(b.dataset.gid):null}); save(); renderTrackers(); }); });
-  var dz=box.querySelector('.trk-design');
-  if(dz) dz.addEventListener('toggle',function(){ trkDesignOpen=dz.open; });
-  box.querySelectorAll('[data-trk-color]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().color=b.dataset.trkColor; save(); renderTrackers(); }); });
-  box.querySelectorAll('[data-trk-mark]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().mark=b.dataset.trkMark; save(); renderTrackers(); }); });
-  box.querySelectorAll('[data-trk-look]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().look=b.dataset.trkLook; save(); renderTrackers(); }); });
-  var ti=box.querySelector('#trkTitle');
-  if(ti) ti.addEventListener('change',function(){ cfg.title=ti.value.trim(); save(); renderTrackers(); });
-  box.querySelectorAll('[data-trk-emo]').forEach(function(b){
-    b.addEventListener('click',function(){
-      var i=Number(b.dataset.trkEmo), r=cfg.rows[i], k=TRK_EMO.indexOf(trkEmo(r,i));
-      r.e=TRK_EMO[(k+1)%TRK_EMO.length]; save(); renderTrackers();
-    });
+  box.querySelectorAll('[data-trk-rname]').forEach(function(b){ b.addEventListener('click',function(){
+    trkEditRow=Number(b.dataset.trkRname); renderTrackers(); var inp=box.querySelector('[data-trk-rin]'); if(inp){ inp.focus(); inp.select(); } }); });
+  box.querySelectorAll('[data-trk-rin]').forEach(function(inp){
+    var done=function(){
+      var i=Number(inp.dataset.trkRin), r=cfg.rows[i], v=inp.value.trim(); trkEditRow=-1;
+      if(r && v && v!==r.t){
+        /* the ticks follow the row to its new name */
+        trkState().list.forEach(function(x){ var o=normLine(r.t); if(x.ticks[o]){ x.ticks[normLine(v)]=x.ticks[o]; delete x.ticks[o]; } });
+        r.t=v; save();
+      }
+      renderTrackers();
+    };
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); done(); } if(e.key==='Escape'){ trkEditRow=-1; renderTrackers(); } });
+    inp.addEventListener('blur',done);
   });
+  var pz2=box.querySelector('#kidPrize');
+  if(pz2) pz2.addEventListener('change',function(){ cfg.prize=pz2.value.trim(); save(); });
   var rs=box.querySelector('[data-trk-restart]');
   if(rs) rs.addEventListener('click',function(){ cfg.start=dayKey(); save(); renderTrackers(); });
   var own=box.querySelector('#trkOwn');
-  if(own){ var add=function(){ var v=own.value.trim(); if(!v){ own.focus(); return; } cfg.rows.push({t:v}); save(); renderTrackers(); };
+  if(own){ var add=function(){ var v=own.value.trim(); if(!v){ own.focus(); return; } cfg.rows.push({t:v}); save(); renderTrackers();
+      var o2=document.getElementById('trkOwn'); if(o2) o2.focus(); };
     box.querySelector('#trkOwnAdd').addEventListener('click',add);
     own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); add(); } }); }
   box.querySelectorAll('[data-trk-r]').forEach(function(b){
     b.addEventListener('click',function(){ trkTick(type,cfg,cfg.rows[Number(b.dataset.trkR)],Number(b.dataset.trkD)); });
   });
+  /* design, print, photo */
+  box.querySelector('#trkDesign').addEventListener('click',function(){ trkDesignOpen=!trkDesignOpen; renderTrackers();
+    if(trkDesignOpen){ var d=box.querySelector('.trk-designp'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}); } });
+  box.querySelectorAll('[data-trk-color]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().color=b.dataset.trkColor; save(); renderTrackers(); }); });
+  box.querySelectorAll('[data-trk-mark]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().mark=b.dataset.trkMark; save(); renderTrackers(); }); });
+  box.querySelectorAll('[data-trk-look]').forEach(function(b){ b.addEventListener('click',function(){ trkStyle().look=b.dataset.trkLook; save(); renderTrackers(); }); });
+  var ti=box.querySelector('#trkTitle');
+  if(ti) ti.addEventListener('change',function(){ cfg.title=ti.value.trim(); save(); renderTrackers(); });
   box.querySelector('#trkPrint').addEventListener('click',function(){
     if(tdef.max && !cfg.rows.length){ toast(t('ps.need')); return; }
     var root=document.getElementById('printRoot');
     if(!root){ root=document.createElement('div'); root.id='printRoot'; document.body.appendChild(root); }
     root.innerHTML=trkSheetHtml(type,cfg);
     document.body.classList.add('printing-sheet'); document.body.classList.toggle('print-portrait',type==='day');
-    markActiveToday();
+    if(!kid) markActiveToday();
     setTimeout(function(){ window.print(); },50);
   });
   var f=box.querySelector('#trkFile');
@@ -581,12 +651,11 @@ function renderTrackers(){
     psShrink(file,function(photo){
       var r=trkRec(type,cfg,true); r.photo=photo;
       var first=!r.bonus; r.bonus=true;
-      var before=levelInfo(); if(first) addPts(20);
-      markActiveToday(); save();
-      /* keep photos for the last six tables only */
+      var before=levelInfo(); if(first && !kid) addPts(20);
+      if(!kid) markActiveToday(); save();
       var withPhoto=trkState().list.filter(function(x){ return x.photo; });
       withPhoto.slice(0,Math.max(0,withPhoto.length-6)).forEach(function(x){ x.photo=null; });
-      save(); renderTrackers(); trkReward(first?20:0, before);
+      save(); renderTrackers(); trkReward(first&&!kid?20:0, before);
     });
   });
 }
@@ -1379,6 +1448,10 @@ function trkTicksOn(d){
 }
 /* today's rows in the tables, with where to tick them */
 function trkTodayRows(){
+  var keep=S.trkWho; S.trkWho='me';
+  try{ return trkTodayRowsMine(); } finally { S.trkWho=keep; }
+}
+function trkTodayRowsMine(){
   var out=[], today=dayKey();
   ['week','month','c30'].forEach(function(type){
     var st=trkState(); if(!st.cfg[type]) return;

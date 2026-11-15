@@ -379,7 +379,7 @@ def build_body(logo):
  </div>
 
  <div class="page" id="page-sheet" role="tabpanel">
-  <h2 class="ptitle" data-i18n="trk.t"></h2><p class="psub" data-i18n="trk.s"></p><p class="psub trk-init" data-i18n="trk.init"></p>
+  <h2 class="ptitle" data-i18n="trk.t"></h2><p class="psub trk-init" data-i18n="trk.init"></p>
   <section class="dash-box" id="trkBox"></section>
  </div>
 
