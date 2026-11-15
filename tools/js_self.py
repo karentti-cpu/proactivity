@@ -576,9 +576,19 @@ function renderTrackers(){
         if(r.h){
           var subAt=trkSubFor===i ? '<tr class="trk-subrow"><td colspan="'+(days.length+1)+'"><div class="addrow"><input type="text" id="trkSubIn" maxlength="60" placeholder="'+esc(t('trk.sub.ph'))+'">'+
               '<button class="btn btn-primary btn-sm" id="trkSubAdd">'+ic('plus')+'</button></div></td></tr>' : '';
+          /* the main goal's progress: ticks of its concrete goals out of the days so far */
+          var kids_=[], j=i+1; while(j<cfg.rows.length && !cfg.rows[j].h){ kids_.push(cfg.rows[j]); j++; }
+          /* counted from the day the table began, so days before it do not weigh it down */
+          var from=(type!=='c30' && cfg.start) ? cfg.start : '', idx=[];
+          days.forEach(function(d,q){ var k=dayKey(d); if(k<=today && k>=from) idx.push(q); });
+          var tot=kids_.length*idx.length, got=0;
+          kids_.forEach(function(x){ var a=rec && rec.ticks[normLine(x.t)]; if(a) idx.forEach(function(q){ if(a[q]) got++; }); });
+          var pc=tot ? Math.round(got/tot*100) : 0;
+          var prog=tot ? '<div class="trk-hp'+(pc>=100?' full':'')+'"><span class="trk-hpbar"><i style="width:'+pc+'%"></i></span>'+
+            '<b>'+esc(pc>=100 ? t('trk.hp.full') : kid && kid.age!=='t' ? t('trk.hp.k',{n:got, t:tot}) : t('trk.hp',{p:pc}))+'</b></div>' : '';
           return '<tr class="trk-hrow"><th colspan="'+(days.length+1)+'">'+nameCell(r,i)+
             (trkRowsUsed(cfg)<tdef.max ? '<button type="button" class="trk-subbtn" data-trk-sub="'+i+'">'+ic('plus')+'<span>'+esc(t('trk.sub'))+'</span></button>' : '')+
-            '<button class="trk-rdel" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></th></tr>'+subAt;
+            '<button class="trk-rdel" data-trk-del="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button>'+prog+'</th></tr>'+subAt;
         }
         var arr=rec && rec.ticks[normLine(r.t)], n=arr ? arr.filter(Boolean).length : 0;
         return '<tr'+(trkUnder(cfg.rows,i)?' class="trk-sub"':'')+'><th class="mcol">'+nameCell(r,i)+(n?'<b class="numf">✓'+n+'</b>':'')+
