@@ -359,26 +359,38 @@ function trkState(){
   if(!S.trk) S.trk={cfg:{}, list:[]};
   return S.trk;
 }
-/* the age row shown right under a child's name, and a short add-a-child form;
-   used on the tables page and on the games page alike */
+/* a child's age: asked as a number, and turned into the group the
+   questions and the habit ideas are written for */
+function kidBandOf(n){ n=Number(n); return !n ? 'm' : n<=6 ? 's' : n<=9 ? 'm' : n<=12 ? 'l' : 't'; }
+function kidSetAge(kid, n){ n=Math.max(2, Math.min(18, Math.round(Number(n)||0))); if(!n) return; kid.n=n; kid.age=kidBandOf(n); }
+function kidAgeInput(id, val){
+  return '<div class="kid-ageset"><button type="button" class="t3act" data-agestep="-1" aria-label="-">−</button>'+
+    '<input type="number" id="'+id+'" min="2" max="18" inputmode="numeric" value="'+(val||'')+'" placeholder="?">'+
+    '<button type="button" class="t3act" data-agestep="1" aria-label="+">+</button></div>';
+}
 function kidAgeRow(kid){
-  return '<div class="kid-agerow"><span>'+esc(t('kid.agefor',{n:kid.name}))+'</span><div class="t3seg trk-ages">'+['s','m','l','t'].map(function(a){
-    return '<button type="button" data-kidage-set="'+a+'" class="'+(kid.age===a?'on':'')+'">'+esc(t('kid.a.'+a))+'</button>'; }).join('')+'</div></div>';
+  return '<div class="kid-agerow"><label for="kidAgeIn">'+esc(t('kid.agefor',{n:kid.name}))+'</label>'+kidAgeInput('kidAgeIn', kid.n)+'</div>';
 }
 function kidAddForm(){
   return '<div class="trk-kidform"><input type="text" id="kidName" maxlength="20" placeholder="'+esc(t('kid.name'))+'">'+
-    '<div class="t3seg trk-ages">'+['s','m','l','t'].map(function(a){ return '<button type="button" data-kid-age="'+a+'" class="'+(a==='m'?'on':'')+'">'+esc(t('kid.a.'+a))+'</button>'; }).join('')+'</div>'+
+    '<div class="kid-agerow plain"><label for="kidAgeNew">'+esc(t('kid.age'))+'</label>'+kidAgeInput('kidAgeNew','')+'</div>'+
     '<div class="row-btns"><button class="btn btn-primary btn-sm" id="kidSave">'+esc(t('kid.save'))+'</button></div></div>';
 }
+/* the − / + buttons next to an age field */
+function kidStepBind(box){
+  box.querySelectorAll('[data-agestep]').forEach(function(b){ b.addEventListener('click',function(){
+    var inp=b.parentNode.querySelector('input'), v=Number(inp.value)||8; inp.value=Math.max(2,Math.min(18,v+Number(b.dataset.agestep)));
+    inp.dispatchEvent(new Event('change')); }); });
+}
 function kidBind(box, kid, onDone){
-  box.querySelectorAll('[data-kidage-set]').forEach(function(b){ b.addEventListener('click',function(){ kid.age=b.dataset.kidageSet; save(); onDone(kid); }); });
-  var age='m';
-  box.querySelectorAll('[data-kid-age]').forEach(function(b){ b.addEventListener('click',function(){
-    age=b.dataset.kidAge; box.querySelectorAll('[data-kid-age]').forEach(function(x){ x.classList.toggle('on',x===b); }); }); });
+  kidStepBind(box);
+  var ai=box.querySelector('#kidAgeIn');
+  if(ai && kid) ai.addEventListener('change',function(){ if(!ai.value) return; kidSetAge(kid, ai.value); save(); onDone(kid); });
   var sv=box.querySelector('#kidSave');
   if(sv) sv.addEventListener('click',function(){
-    var inp=box.querySelector('#kidName'), nm=inp.value.trim(); if(!nm){ inp.focus(); return; }
-    if(!S.kids) S.kids=[]; var k={id:uid++, name:nm, age:age}; S.kids.push(k); save(); onDone(k, true);
+    var inp=box.querySelector('#kidName'), nm=inp.value.trim(), ag=box.querySelector('#kidAgeNew');
+    if(!nm){ inp.focus(); return; } if(!ag.value){ ag.focus(); return; }
+    if(!S.kids) S.kids=[]; var k={id:uid++, name:nm}; kidSetAge(k, ag.value); S.kids.push(k); save(); onDone(k, true);
   });
 }
 var KID_HABITS={s:[1,2,3,4,5,6,12,13], m:[1,7,8,9,10,4,5,12,13,14], l:[15,16,10,11,13,14,5,12], t:[15,16,17,18,10,11,14,13]};
@@ -522,11 +534,9 @@ function renderTrackers(){
     (S.kids||[]).map(function(k){ return '<button type="button" class="trk-wb kid'+(kid&&kid.id===k.id?' on':'')+'" data-who="'+k.id+'">⭐<span>'+esc(k.name)+'</span></button>'; }).join('')+
     '<button type="button" class="trk-wb add" data-kid-add>'+ic('plus')+'<span>'+esc(t('who.add'))+'</span></button>'+
     (kid ? '<button type="button" class="t3act" data-kid-edit aria-label="'+esc(t('kid.edit'))+'" title="'+esc(t('kid.edit'))+'">'+ic('edit')+'</button>' : '')+'</div>';
-  var kf=(trkKidForm || (trkKidEdit && kid)) ? '<div class="trk-kidform"><input type="text" id="kidName" maxlength="20" placeholder="'+esc(t('kid.name'))+'" value="'+esc(trkKidEdit&&kid?kid.name:'')+'">'+
-      '<div class="t3seg trk-ages">'+['s','m','l','t'].map(function(a){ var on=(trkKidEdit&&kid?kid.age:'m')===a;
-        return '<button type="button" data-kid-age="'+a+'" class="'+(on?'on':'')+'">'+esc(t('kid.a.'+a))+'</button>'; }).join('')+'</div>'+
-      '<div class="row-btns"><button class="btn btn-primary btn-sm" id="kidSave">'+esc(trkKidEdit?t('c.save'):t('kid.save'))+'</button>'+
-      (trkKidEdit&&kid ? '<button class="btn btn-quiet btn-sm" id="kidDel">'+esc(t('kid.del',{n:kid.name}))+'</button>' : '')+'</div></div>' : '';
+  var kf=trkKidForm ? kidAddForm() : (trkKidEdit && kid) ? '<div class="trk-kidform"><input type="text" id="kidName" maxlength="20" value="'+esc(kid.name)+'">'+
+      '<div class="row-btns"><button class="btn btn-primary btn-sm" id="kidRename">'+esc(t('c.save'))+'</button>'+
+      '<button class="btn btn-quiet btn-sm" id="kidDel">'+esc(t('kid.del',{n:kid.name}))+'</button></div></div>' : '';
   /* which kind */
   var tabs='<div class="t3seg trk-tabs'+(kid?' three':'')+'">'+TRK_TYPES.filter(function(x){ return !(kid && x.id==='day'); }).map(function(x){
     return '<button type="button" data-trk="'+x.id+'" class="'+(x.id===type?'on':'')+'">'+esc(t('trk.'+x.id))+'</button>'; }).join('')+'</div>';
@@ -597,8 +607,7 @@ function renderTrackers(){
       var n=0; Object.keys(x.ticks).forEach(function(k){ x.ticks[k].forEach(function(v){ if(v) n++; }); });
       return '<div class="ps-pastc">'+(x.photo?'<img src="'+x.photo+'" alt="">':ic('calendar'))+'<span>'+esc(fmtDay(x.key.split(':')[1]))+'</span><b class="numf">✓ '+n+'</b></div>'; }).join('')+'</div></div>' : '';
   box.innerHTML=who+kf+(kid && !trkKidEdit ? kidAgeRow(kid) : '')+tabs+main+design+pastSec;
-  /* only the age row here: the tables page has its own add form */
-  if(kid && !trkKidEdit) box.querySelectorAll('[data-kidage-set]').forEach(function(b){ b.addEventListener('click',function(){ kid.age=b.dataset.kidageSet; save(); renderTrackers(); }); });
+  if(kid && !trkKidEdit && !trkKidForm) kidBind(box, kid, function(){ renderTrackers(); });
 
   /* whose */
   box.querySelectorAll('[data-who]').forEach(function(b){ b.addEventListener('click',function(){
@@ -606,16 +615,9 @@ function renderTrackers(){
   box.querySelector('[data-kid-add]').addEventListener('click',function(){ trkKidForm=!trkKidForm; trkKidEdit=false; renderTrackers();
     var n=document.getElementById('kidName'); if(n) n.focus(); });
   var ke=box.querySelector('[data-kid-edit]'); if(ke) ke.addEventListener('click',function(){ trkKidEdit=!trkKidEdit; trkKidForm=false; renderTrackers(); });
-  var kAge=trkKidEdit&&kid ? kid.age : 'm';
-  box.querySelectorAll('[data-kid-age]').forEach(function(b){ b.addEventListener('click',function(){
-    kAge=b.dataset.kidAge; box.querySelectorAll('[data-kid-age]').forEach(function(x){ x.classList.toggle('on',x===b); }); }); });
-  var ks=box.querySelector('#kidSave');
-  if(ks) ks.addEventListener('click',function(){
-    var nm=document.getElementById('kidName').value.trim(); if(!nm){ document.getElementById('kidName').focus(); return; }
-    if(trkKidEdit && kid){ kid.name=nm; kid.age=kAge; }
-    else { if(!S.kids) S.kids=[]; var id=uid++; S.kids.push({id:id, name:nm, age:kAge}); S.trkWho=id; }
-    trkKidForm=false; trkKidEdit=false; save(); renderTrackers();
-  });
+  if(trkKidForm) kidBind(box, null, function(k){ S.trkWho=k.id; trkKidForm=false; save(); renderTrackers(); });
+  var kr=box.querySelector('#kidRename');
+  if(kr) kr.addEventListener('click',function(){ var nm=document.getElementById('kidName').value.trim(); if(!nm) return; kid.name=nm; trkKidEdit=false; save(); renderTrackers(); });
   var kd=box.querySelector('#kidDel');
   if(kd) kd.addEventListener('click',function(){
     if(!confirm(t('kid.del',{n:kid.name})+'?')) return;

@@ -1000,6 +1000,12 @@ body.no-scroll{overflow:hidden;}
 .kid-agerow{display:grid;gap:6px;padding:10px 12px;margin:0 0 var(--s3);border-radius:var(--r-ctl);background:#FDF3EA;}
 .kid-agerow>span{font-weight:700;color:#B5651D;font-size:var(--t-sm);}
 .gm-forwho{display:inline-block;margin:0 0 8px;padding:3px 12px;border-radius:var(--r-pill);background:#FDF3EA;color:#B5651D;font-weight:700;font-size:var(--t-sm);}
+.kid-agerow{display:flex !important;align-items:center;justify-content:space-between;gap:10px;}
+.kid-agerow label{font-weight:700;color:#B5651D;font-size:var(--t-sm);}
+.kid-agerow.plain{padding:0;background:none;margin:0;}
+.kid-ageset{display:flex;align-items:center;gap:6px;}
+.kid-ageset input{width:64px;text-align:center;font-size:18px;font-weight:800;padding:6px;}
+.kid-ageset .t3act{font-size:20px;font-weight:800;}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
