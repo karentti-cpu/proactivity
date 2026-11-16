@@ -411,7 +411,7 @@ function goOnboarding(){
   document.getElementById('stickyCta').style.display='none';
   document.getElementById('onboarding').style.display='block';
   window.scrollTo(0,0);
-  showStep(1);
+  showStep(ONB_FLOW[0]);
 }
 ['ctaTop','ctaBottom','ctaSticky'].forEach(function(id){
   document.getElementById(id).addEventListener('click',goOnboarding);
@@ -431,7 +431,8 @@ if('IntersectionObserver' in window){
    app instead of standing between a new user and the first screen; 3 and 7
    are no longer on the path. Step 8 is the plans screen: deliberately not
    part of the count, reached only from the trial strip. */
-var ONB_FLOW=[1,2,6];
+/* one screen: name, gender (it sets the form of address) and age; the rest is asked in the app when it is needed */
+var ONB_FLOW=[2];
 var os=1, ONB_TOTAL=ONB_FLOW.length;
 /* True only while the user is walking the setup flow. The plans screen reuses
    the same overlay from inside the app, and without this flag paying from
@@ -450,7 +451,9 @@ function showStep(n){
   } else {
     var at=ONB_FLOW.indexOf(n)+1;
     if(bar) bar.style.width=Math.round((at||ONB_TOTAL)/ONB_TOTAL*100)+'%';
-    if(count) count.textContent = at ? t('o.step',{n:at,t:ONB_TOTAL}) : '';
+    if(count) count.textContent = (at && ONB_TOTAL>1) ? t('o.step',{n:at,t:ONB_TOTAL}) : '';
+    /* one screen needs no progress bar */
+    if(bar && bar.parentNode) bar.parentNode.style.visibility = (ONB_TOTAL>1 || !at) ? '' : 'hidden';
   }
   if(n===5) renderProfile('rsBody');
   if(n===6) renderChain('onbChain');
@@ -575,6 +578,7 @@ document.querySelectorAll('[data-next]').forEach(function(b){
       return;
     }
     var k=ONB_FLOW.indexOf(os);
+    if(onbActive && k===ONB_FLOW.length-1){ finishOnboarding(); return; }
     showStep(k>=0 && k<ONB_FLOW.length-1 ? ONB_FLOW[k+1] : os+1);
   });
 });
