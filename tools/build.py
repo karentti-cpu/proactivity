@@ -190,7 +190,7 @@ def gender_report(table):
     return counts, missing_ar
 
 
-SITE = 'https://karentti-cpu.github.io/proactivity/'
+SITE = 'https://karenmor.com/proacty/'
 
 # Static <head> metadata. The page is a single document with a JS language
 # switcher, so the markup carries the Hebrew default and applyLang() rewrites
