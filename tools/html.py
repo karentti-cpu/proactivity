@@ -110,11 +110,11 @@ def build_body(logo):
    <p class="hero-sub" data-i18n="n.hero.sub2"></p>
    <p class="hero-who" data-i18n="n.hero.who"></p>
    <ol class="hero-steps">
-    <li>{i("gauge")}<span data-i18n="n.hero.s1"></span></li>
-    <li>{i("target")}<span data-i18n="n.hero.s2"></span></li>
-    <li>{i("rocket")}<span data-i18n="n.hero.s3"></span></li>
+    <li>{i("user")}<span data-i18n="q.s1"></span></li>
+    <li>{i("compass")}<span data-i18n="q.s2"></span></li>
+    <li>{i("rocket")}<span data-i18n="q.s3"></span></li>
    </ol>
-   <button class="btn btn-primary btn-lg" id="ctaTop"><span data-i18n="n.hero.go"></span>{i("arrow")}</button>
+   <button class="btn btn-primary btn-lg" id="ctaTop"><span data-i18n="q.hgo"></span>{i("arrow")}</button>
    <p class="fineprint">{i("shield")}<span data-privacy="n.hero.note" data-privacy-on="pay.note"></span></p>
   </section>
 
@@ -141,7 +141,7 @@ def build_body(logo):
 
   <section class="finale">
    <h2 data-i18n="n.fin.t"></h2>
-   <p data-i18n="n.fin.sub"></p>
+   <p data-i18n="q.fin"></p>
    <button class="btn btn-primary btn-lg" id="ctaBottom"><span data-i18n="n.hero.cta"></span>{i("arrow")}</button>
    <p class="fineprint">{i("shield")}<span data-privacy="n.hero.note" data-privacy-on="pay.note"></span></p>
   </section>
@@ -180,21 +180,17 @@ def build_body(logo):
  </section>
 
  <section class="step" data-step="2">
-  <h2 data-i18n="n.o.2.t"></h2><p class="sub" data-i18n="n.o.2.s"></p>
+  <h2 data-i18n="q.t"></h2><p class="sub" data-i18n="q.s"></p>
+  <div class="field"><label for="oName" data-i18n="n.o.2.name"></label>
+   <input type="text" id="oName" autocomplete="nickname" data-i18n-ph="n.o.2.nameph"></div>
   <div class="qlabel" data-i18n="n.o.2.gender"></div>
   <div class="opts" id="oGender">
    {opt("gnd","m","user","o.iam.boy")}{opt("gnd","f","user","o.iam.girl")}{opt("gnd","n","compass","o.iam.na")}
   </div>
-  <p class="hint">{i("sparkles")}<span data-i18n="n.o.2.gendern"></span></p>
-  <div class="field"><label for="oName" data-i18n="n.o.2.name"></label>
-   <input type="text" id="oName" autocomplete="nickname" data-i18n-ph="n.o.2.nameph"></div>
   <div class="field"><label for="oAge" data-i18n="n.o.2.age"></label>
    <input type="number" id="oAge" min="6" max="99" step="1" inputmode="numeric" data-i18n-ph="o.age.ph"></div>
-  <div class="qlabel" data-i18n="n.o.2.color"></div>
-  <div class="opts" id="oAcc">{colours}</div>
-  <p class="hint">{i("palette")}<span data-i18n="n.o.2.colorn"></span></p>
   <div class="note">{i("lock")}<span data-privacy="n.o.2.privacy" data-privacy-on="pay.privacy"></span></div>
-  {nav()}
+  {nav(back=False, next_key="q.go")}
  </section>
 
  <section class="step" data-step="3">
