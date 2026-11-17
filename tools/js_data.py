@@ -119,6 +119,20 @@ function goalICS(g, hour, minute){
     'END:VEVENT','END:VCALENDAR'
   ].join('\r\n');
 }
+/* one line of My day, at its time, into the phone's calendar with a reminder 15 minutes before */
+function itemToCalendar(title, day, time){
+  var hm=String(time).split(':'), start=new Date(day+'T00:00:00'); start.setHours(Number(hm[0])||9, Number(hm[1])||0, 0, 0);
+  var end=new Date(start.getTime()+30*60000);
+  var text=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Proacty//HE','CALSCALE:GREGORIAN','BEGIN:VEVENT',
+    'UID:proacty-'+Date.now()+'@proactivity','DTSTAMP:'+icsStamp(new Date()),'DTSTART:'+icsStamp(start),'DTEND:'+icsStamp(end),
+    'SUMMARY:'+icsEscape(title),
+    'BEGIN:VALARM','TRIGGER:-PT15M','ACTION:DISPLAY','DESCRIPTION:'+icsEscape(title),'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  var blob=new Blob([text],{type:'text/calendar;charset=utf-8'});
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download='proacty.ics'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },0);
+  if(typeof toast==='function') toast(t('tm.cal.ok'));
+}
 function downloadICS(g){
   var parts=String(P.remind||'17:00').split(':');
   var text=goalICS(g, Number(parts[0])||17, Number(parts[1])||0);

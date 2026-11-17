@@ -1262,15 +1262,26 @@ function pzRender(){
       (undone.length ? '<p class="pz-sub pz-rt">'+esc(t('ah.retry'))+'</p><div class="pz-acts">'+undone.map(function(x){
         var c=carry.indexOf(x.t)>=0;
         return '<div class="it-row"><span>'+esc(x.t)+'</span><button type="button" class="btn btn-ghost btn-sm" data-carry="'+esc(x.t)+'"'+(c?' disabled':'')+'>'+esc(c?t('ah.retry.ok'):t('ah.retry.btn'))+'</button></div>'; }).join('')+'</div>' : '')+
+      '<div class="tm-tom"><p class="pz-big pz-q2">'+esc(t('tm.tom'))+'</p><p class="pz-sub">'+esc(t('tm.tom.s'))+'</p>'+
+        '<div class="pz-acts" id="tmTomList">'+tmTomRows()+'</div>'+
+        '<div class="tm-addrow"><input type="text" id="tmTomT" maxlength="80" placeholder="'+esc(t('tm.tom.ph'))+'">'+
+          '<input type="time" id="tmTomH" aria-label="'+esc(t('tm.time'))+'">'+
+          '<button type="button" class="t3o" id="tmTomImp" aria-pressed="false">⭐</button>'+
+          '<button class="btn btn-ghost" id="tmTomAdd">'+ic('plus')+'</button></div>'+
+        '<label class="mg-lab" for="tmPrep">'+esc(t('tm.prep'))+'</label>'+
+        '<div class="addrow"><input type="text" id="tmPrep" maxlength="80" placeholder="'+esc(t('tm.prep.ph'))+'">'+
+          '<button class="btn btn-ghost" id="tmPrepAdd">'+ic('plus')+'</button></div></div>'+
       '<button class="btn btn-primary btn-block" id="ahSave">'+esc(t('ah.save'))+'</button>';
     box.querySelectorAll('[data-ob]').forEach(function(b){ b.addEventListener('click',function(){
       box.querySelectorAll('[data-ob]').forEach(function(x){ x.classList.toggle('on',x===b); });
       box.querySelector('#ahO').value=t('ob.'+b.dataset.ob); var tt=box.querySelector('#ahT'); if(!tt.value) tt.value=t('th.'+b.dataset.ob); }); });
     box.querySelectorAll('[data-carry]').forEach(function(b){ b.addEventListener('click',function(){
       if(!S.carry) S.carry=[]; if(S.carry.indexOf(b.dataset.carry)<0) S.carry.push(b.dataset.carry); save(); b.disabled=true; b.textContent=t('ah.retry.ok'); }); });
+    tmTomBind(box);
     box.querySelector('#ahSave').addEventListener('click',function(){
       var o=box.querySelector('#ahO').value.trim(), th=box.querySelector('#ahT').value.trim();
-      if(!o && !th){ box.querySelector('#ahO').focus(); return; }
+      var hasTom=S.tomorrow && S.tomorrow.items && S.tomorrow.items.length;
+      if(!o && !th && !hasTom){ box.querySelector('#ahO').focus(); return; }
       var L=pzLog(), first=!L.ahead; L.ahead={o:o, t:th}; if(first){ addPts(10); markActiveToday(); } save(); toast(t('ah.saved')); pzClose();
     });
   } else if(/^sc[0-3]$/.test(pz.step)){
@@ -1852,5 +1863,35 @@ function meaningBind(box){
     m.log[wk]={q:mnWeekQ(), a:v}; if(first){ addPts(10); markActiveToday(); } save(); toast(t('mn.saved')); renderValues(); };
   box.querySelector('#mnSave').addEventListener('click',sv);
   a.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); sv(); } });
+}
+
+/* ================= tomorrow, written tonight ================= */
+function tmTomDay(){ var d=new Date(); d.setDate(d.getDate()+1); return dayKey(d); }
+function tmTom(){ var d=tmTomDay(); if(!S.tomorrow || S.tomorrow.day!==d) S.tomorrow={day:d, items:[]}; return S.tomorrow; }
+function tmTomRows(){
+  var tm=(S.tomorrow && S.tomorrow.day===tmTomDay()) ? S.tomorrow.items : [];
+  return tm.slice().sort(function(a,b){ return (a.time||'99')<(b.time||'99') ? -1 : 1; }).map(function(x){
+    var i=tm.indexOf(x);
+    return '<div class="it-row"><span>'+(x.time?'<b class="numf">'+esc(x.time)+'</b> ':'')+esc(x.t)+(x.imp?' ⭐':'')+'</span>'+
+      '<button type="button" class="t3act" data-tomdel="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('');
+}
+function tmTomBind(box){
+  var imp=false, ib=box.querySelector('#tmTomImp');
+  if(!ib) return;
+  ib.addEventListener('click',function(){ imp=!imp; ib.classList.toggle('on',imp); ib.setAttribute('aria-pressed',imp); });
+  var redraw=function(){ box.querySelector('#tmTomList').innerHTML=tmTomRows(); bindDel(); };
+  var bindDel=function(){ box.querySelectorAll('[data-tomdel]').forEach(function(b){ b.addEventListener('click',function(){ tmTom().items.splice(Number(b.dataset.tomdel),1); save(); redraw(); }); }); };
+  bindDel();
+  var tIn=box.querySelector('#tmTomT'), hIn=box.querySelector('#tmTomH');
+  var add=function(){ var v=tIn.value.trim(); if(!v){ tIn.focus(); return; }
+    var tm=tmTom(); if(tm.items.length>=T3_MAX){ toast(t('t3.full')); return; }
+    tm.items.push({t:v, time:hIn.value||'', imp:imp}); save(); tIn.value=''; hIn.value=''; imp=false; ib.classList.remove('on'); redraw(); tIn.focus(); };
+  box.querySelector('#tmTomAdd').addEventListener('click',add);
+  tIn.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); add(); } });
+  var pIn=box.querySelector('#tmPrep');
+  var prep=function(){ var v=pIn.value.trim(); if(!v){ pIn.focus(); return; }
+    if(addDayItem(v)){ logDay(); save(); toast(t('tm.prep.ok')); pIn.value=''; if(typeof renderToday3==='function') renderToday3(); } };
+  box.querySelector('#tmPrepAdd').addEventListener('click',prep);
+  pIn.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); prep(); } });
 }
 """
