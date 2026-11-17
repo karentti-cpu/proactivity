@@ -681,13 +681,15 @@ function renderGenderAsk(){
    that already has today's step or was done today counts as chosen, which
    also carries over a day started before this existed. Empty lines from the
    old three fixed slots are dropped. */
-var T3_MAX=5;
+var T3_MAX=8;
 function today3(){
   var d=dayKey();
   if(!S.today3 || S.today3.day!==d){
     S.today3={day:d, items:[], picked:[]};
     /* what was set to try again comes back on the next day */
     if(S.carry && S.carry.length){ S.carry.forEach(function(x){ S.today3.items.push({t:x, done:false, paid:false, gid:null, retry:true}); }); S.carry=[]; }
+    /* what was written last night for this day */
+    if(S.tomorrow && S.tomorrow.day===d){ S.tomorrow.items.forEach(function(x){ S.today3.items.push({t:x.t, done:false, paid:false, gid:null, time:x.time||'', imp:!!x.imp, urg:!!x.urg}); }); S.tomorrow=null; }
   }
   var td=S.today3;
   td.items=td.items.filter(function(x){ return x.t && x.t.trim(); });
@@ -742,7 +744,7 @@ function logDay(){
     note: prev.note||'', feel: prev.feel||'', choice: prev.choice||'', pauses: prev.pauses||[], breath: !!prev.breath,
     intent: prev.intent||'', inits: prev.inits||[], ahead: prev.ahead||null,
     items: td.items.filter(function(x){ return x.t.trim(); })
-             .map(function(x){ return {t:x.t.trim(), done:!!x.done, gid:x.gid||null, url:x.url||null, init:!!x.init, retry:!!x.retry}; }),
+             .map(function(x){ return {t:x.t.trim(), done:!!x.done, gid:x.gid||null, url:x.url||null, init:!!x.init, retry:!!x.retry, time:x.time||'', imp:!!x.imp, urg:!!x.urg}; }),
     steps: (S.goals||[]).filter(function(g){ return g.doneDay===td.day; }).map(function(g){ return g.id; }),
     st: {},   // the text of each step that was done, so My week can show it
     rest: (S.goals||[]).filter(function(g){ return g.restDay===td.day; }).map(function(g){ return g.id; })
@@ -751,7 +753,7 @@ function logDay(){
   var days=Object.keys(S.log).sort();
   while(days.length>LOG_DAYS) delete S.log[days.shift()];
 }
-var t3Open=false, t3IdeasMore=false;
+var t3Open=false, t3IdeasMore=false, t3MoreFor=-1;
 /* someone who has kept a list on three days knows what My day is: the
    explanation steps aside */
 function t3Seasoned(){ var L=S.log||{}; return Object.keys(L).filter(function(d){ return (L[d].items||[]).length; }).length>=3; }
@@ -806,16 +808,46 @@ function renderToday3(){
         '<button type="button" class="t3act" data-srch-g="'+g.id+'" aria-label="'+esc(t('srch.t'))+'" title="'+esc(t('srch.t'))+'">'+ic('globe')+'</button>')+
       '</div>';
   }).join('');
-  var iRows=td.items.map(function(it,i){
-    return '<div class="t3row'+(it.done?' done':'')+(it.init?' init':'')+'">'+
+  /* lines with a time first, in time order; then the rest, important and
+     urgent first. Each keeps its index in the list. */
+  var rank=function(x){ return x.imp&&x.urg ? 0 : x.imp ? 1 : x.urg ? 2 : 3; };
+  var order=td.items.map(function(_,i){ return i; }).sort(function(a,b){
+    var A=td.items[a], B=td.items[b];
+    if(!!A.time!==!!B.time) return A.time ? -1 : 1;
+    if(A.time && B.time && A.time!==B.time) return A.time<B.time ? -1 : 1;
+    return rank(A)-rank(B) || a-b;
+  });
+  var nTimed=td.items.filter(function(x){ return x.time; }).length;
+  var rowOf=function(i){ var it=td.items[i], open=t3MoreFor===i;
+    return '<div class="t3row'+(it.done?' done':'')+(it.init?' init':'')+(it.imp?' imp':'')+'">'+
       '<button type="button" class="t3chk" data-t3="'+i+'" aria-pressed="'+(it.done?'true':'false')+'" aria-label="'+esc(t('t3.mark'))+'">'+ic('check')+'</button>'+
+      (it.time ? '<span class="t3time numf">'+esc(it.time)+'</span>' : '')+
       '<input type="text" maxlength="80" data-t3in="'+i+'" value="'+esc(it.t)+'" aria-label="'+esc(it.t)+'">'+
+      (it.imp ? '<span class="t3flag" title="'+esc(t('tm.imp'))+'">⭐</span>' : '')+(it.urg ? '<span class="t3flag" title="'+esc(t('tm.urg'))+'">⏰</span>' : '')+
       (it.init ? '<span class="t3tag" title="'+esc(t('it.t'))+'">'+ic('rocket')+'</span>' : it.retry ? '<span class="t3tag rt" title="'+esc(t('rt.tag'))+'">'+ic('refresh')+'</span>' : '')+
       (it.url ? '<a class="t3act" href="'+esc(it.url)+'" target="_blank" rel="noopener" aria-label="'+esc(t('srch.open'))+'" title="'+esc(t('srch.open'))+'">'+ic('link')+'</a>' : '')+
-      (it.done ? '' : '<button type="button" class="t3act" data-srch-i="'+i+'" aria-label="'+esc(t('srch.t'))+'" title="'+esc(t('srch.t'))+'">'+ic('globe')+'</button>'+
-        '<button type="button" class="t3act" data-t3del="'+i+'" aria-label="'+esc(t('c.delete'))+'" title="'+esc(t('c.delete'))+'">'+ic('x')+'</button>')+
-      '</div>';
-  }).join('');
+      (it.done ? '' : '<button type="button" class="t3act t3more'+(open?' on':'')+'" data-t3more-i="'+i+'" aria-expanded="'+open+'" aria-label="'+esc(t('tm.more'))+'" title="'+esc(t('tm.more'))+'">⋯</button>')+
+      '</div>'+
+      (open && !it.done ? '<div class="t3opts">'+
+        '<button type="button" class="t3o'+(it.imp?' on':'')+'" data-t3imp="'+i+'">⭐ '+esc(t('tm.imp'))+'</button>'+
+        '<button type="button" class="t3o'+(it.urg?' on':'')+'" data-t3urg="'+i+'">⏰ '+esc(t('tm.urg'))+'</button>'+
+        '<label class="t3o t3otime"><input type="time" data-t3time="'+i+'" value="'+esc(it.time||'')+'" aria-label="'+esc(t('tm.time'))+'"></label>'+
+        '<button type="button" class="t3o" data-t3cal="'+i+'">'+ic('calendar')+'<span>'+esc(t('tm.cal'))+'</span></button>'+
+        '<button type="button" class="t3o" data-srch-i="'+i+'">'+ic('globe')+'<span>'+esc(t('srch.t'))+'</span></button>'+
+        '<button type="button" class="t3o del" data-t3del="'+i+'">'+ic('x')+'<span>'+esc(t('c.delete'))+'</span></button></div>' : '');
+  };
+  var iRows='';
+  order.forEach(function(i,k){
+    if(nTimed && nTimed<td.items.length){
+      if(k===0) iRows+='<div class="t3grp">'+ic('clock')+'<span>'+esc(t('tm.timed'))+'</span></div>';
+      if(k===nTimed) iRows+='<div class="t3grp">'+esc(t('tm.untimed'))+'</div>';
+    }
+    iRows+=rowOf(i);
+  });
+  /* first things first: something important that is not urgent yet */
+  var q2=td.items.filter(function(x){ return x.imp && !x.urg && !x.done; })[0];
+  if(q2) iRows+='<p class="t3q2">'+esc(t('tm.q2',{x:q2.t}))+'</p>';
+  else if(td.items.length>=3 && !td.items.some(function(x){ return x.imp; })) iRows+='<p class="t3q2 soft">'+esc(t('tm.first'))+'</p>';
   /* two panes: today's list and choosing. On a phone a switch shows one at
      a time (choosing first, until something is chosen); on a wide screen
      they stand side by side and the switch is hidden. */
@@ -884,8 +916,20 @@ function renderToday3(){
     });
   });
   box.querySelectorAll('[data-t3del]').forEach(function(b){
-    b.addEventListener('click',function(){ today3().items.splice(Number(b.dataset.t3del),1); logDay(); save(); renderToday3(); });
+    b.addEventListener('click',function(){ today3().items.splice(Number(b.dataset.t3del),1); t3MoreFor=-1; logDay(); save(); renderToday3(); });
   });
+  box.querySelectorAll('[data-t3more-i]').forEach(function(b){ b.addEventListener('click',function(){
+    var i=Number(b.dataset.t3moreI); t3MoreFor = t3MoreFor===i ? -1 : i; renderToday3(); }); });
+  box.querySelectorAll('[data-t3imp]').forEach(function(b){ b.addEventListener('click',function(){
+    var it=today3().items[Number(b.dataset.t3imp)]; it.imp=!it.imp; logDay(); save(); renderToday3(); }); });
+  box.querySelectorAll('[data-t3urg]').forEach(function(b){ b.addEventListener('click',function(){
+    var it=today3().items[Number(b.dataset.t3urg)]; it.urg=!it.urg; logDay(); save(); renderToday3(); }); });
+  box.querySelectorAll('[data-t3time]').forEach(function(inp){ inp.addEventListener('change',function(){
+    var it=today3().items[Number(inp.dataset.t3time)]; it.time=inp.value||''; logDay(); save(); renderToday3(); }); });
+  box.querySelectorAll('[data-t3cal]').forEach(function(b){ b.addEventListener('click',function(){
+    var it=today3().items[Number(b.dataset.t3cal)];
+    if(!it.time){ toast(t('tm.cal.need')); var ti=box.querySelector('[data-t3time="'+b.dataset.t3cal+'"]'); if(ti){ ti.focus(); try{ ti.showPicker(); }catch(e){} } return; }
+    itemToCalendar(it.t, dayKey(), it.time); }); });
   box.querySelectorAll('[data-t3]').forEach(function(b){
     b.addEventListener('click',function(){
       var it=today3().items[Number(b.dataset.t3)];
