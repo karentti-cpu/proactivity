@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://benmor042012-maker.github.io/proactivity/sitemap.xml
+Sitemap: https://app.karenmor.com/sitemap.xml
