@@ -196,10 +196,10 @@ SITE = 'https://app.karenmor.com/'
 # Static <head> metadata. The page is a single document with a JS language
 # switcher, so the markup carries the Hebrew default and applyLang() rewrites
 # the title and description once a language is chosen.
-SEO_TITLE = 'Proacty — להפסיק לדחות ולהתחיל לעשות'
-SEO_DESC = ('מה זה פרואקטיביות ואיך נהיים פרואקטיביים? שאלון קצר שמראה איפה הדברים '
-            'עומדים ביוזמה, במטרות, בניהול זמן ובתכנון — ואז יעד שנבנה ממה שאמרת, '
-            'צעדים קטנים והרגלים שנבנים. בלי הרשמה.')
+SEO_TITLE = 'Proacty — כמה דקות ביום, צעד אחד קרוב יותר למי שרוצים להיות'
+SEO_DESC = ('אפליקציה קטנה לחיזוק פרואקטיביות: לעצור, לבחור וליזום במקום רק להגיב. '
+            'מסלול יומי, סדר ביום, מטרות וטבלאות מעקב גם לילדים, ויסות רגשי, ערכים ומשחקים של דקה. '
+            'בלי הרשמה ובלי מייל.')
 
 
 def structured_data(table):
