@@ -116,8 +116,8 @@ UI = {
 # ---------- landing: final ----------
 'b.tag':         ('{תהיה|תהיי} מי {שאתה|שאת} רוצה להיות.', 'Be who you want to be.', 'Sois qui tu veux être.',
                   'Будь {тем|той}, кем хочешь быть.', '{كن|كوني} من {تريد|تريدين} أن {تكون|تكوني}.'),
-'b.tag.n':       ('תהיה(י) מי שאת(ה) רוצה להיות.', 'Be who you want to be.', 'Sois qui tu veux être.',
-                  'Будь тем, кем хочешь быть.', 'كن(ي) من تريد(ين) أن تكون(ي).'),
+'b.tag.n':       ('כמה דקות ביום, בדרך למי שרוצים להיות.', 'A few minutes a day, on the way to who you want to be.', 'Quelques minutes par jour, vers qui l\'on veut être.',
+                  'Несколько минут в день — на пути к тому, кем хочется быть.', 'دقائق قليلة في اليوم، في الطريق إلى من نريد أن نكون.'),
 'sp.line':       ('פחות לחכות. יותר לעשות. צעד קטן בכל יום.', 'Less waiting. More doing. One small step a day.',
                   'Moins attendre. Plus agir. Un petit pas chaque jour.', 'Меньше ждать. Больше делать. Маленький шаг каждый день.',
                   'انتظار أقل. فعل أكثر. خطوة صغيرة كل يوم.'),
