@@ -1858,7 +1858,12 @@ document.querySelectorAll('.tab').forEach(function(tab){
   tab.addEventListener('click',function(){ goPage(tab.dataset.page); });
 });
 document.querySelectorAll('[data-more]').forEach(function(b){
-  b.addEventListener('click',function(){ goPage(b.dataset.more); });
+  b.addEventListener('click',function(){
+    /* "My details" is the settings card at the bottom of Progress */
+    if(b.dataset.more==='details'){ goPage('progress'); var sb=document.getElementById('settingsBox');
+      if(sb) setTimeout(function(){ sb.scrollIntoView({behavior:'smooth', block:'start'}); var n=document.getElementById('pfName'); if(n) n.focus({preventScroll:true}); },60); return; }
+    goPage(b.dataset.more);
+  });
 });
 /* the app always opens on Today, whatever page was open last */
 function lastTab(){ return 'home'; }
