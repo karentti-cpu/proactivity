@@ -492,7 +492,9 @@ td.scell.none{color:var(--fg-3);}
 .modal-bg{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(6px);
   display:none;align-items:center;justify-content:center;z-index:350;padding:var(--s4);}
 .modal-bg.on{display:flex;}
-.modal{background:var(--ink-1);border-radius:var(--r-card);padding:var(--s5);max-width:380px;width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;}
+.modal{background:var(--ink-1);border-radius:var(--r-card);padding:var(--s5);max-width:380px;width:100%;margin:auto 0;}
+/* a long window scrolls with its backdrop, so its bottom is always reachable, whatever the phone's bars do */
+.modal-bg{overflow-y:auto;overscroll-behavior:contain;align-items:flex-start;padding-bottom:calc(var(--s5) + env(safe-area-inset-bottom));}
 .modal h3{font-size:var(--t-h2);margin-bottom:var(--s2);}
 .modal p{color:var(--fg-2);font-size:var(--t-sm);margin-bottom:var(--s4);}
 .cam-v,.cam-p{width:100%;border-radius:var(--r-ctl);background:#000;aspect-ratio:4/3;object-fit:cover;margin-bottom:var(--s4);}
@@ -815,7 +817,7 @@ body.no-scroll{overflow:hidden;}
 .pz-ic svg{width:22px;height:22px;color:#3B7F8C;}
 .pz-modal{max-width:420px;}
 .pz-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2);
-  position:sticky;top:calc(-1 * var(--s5));z-index:2;background:var(--ink-1);margin-top:calc(-1 * var(--s5));padding-top:var(--s5);padding-bottom:6px;}
+  position:sticky;top:0;z-index:2;background:var(--ink-1);margin-top:calc(-1 * var(--s5));padding-top:var(--s5);padding-bottom:6px;border-radius:var(--r-card) var(--r-card) 0 0;}
 .pz-top h3{display:flex;align-items:center;gap:8px;margin:0;}
 .pz-top h3 svg{width:20px;height:20px;color:#3B7F8C;}
 .pz-dots{display:flex;gap:5px;justify-content:center;margin:0 0 var(--s4);}
