@@ -814,7 +814,8 @@ body.no-scroll{overflow:hidden;}
 .pz-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#DCEEF2,#E6F1EA);flex:none;}
 .pz-ic svg{width:22px;height:22px;color:#3B7F8C;}
 .pz-modal{max-width:420px;}
-.pz-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2);}
+.pz-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2);
+  position:sticky;top:calc(-1 * var(--s5));z-index:2;background:var(--ink-1);margin-top:calc(-1 * var(--s5));padding-top:var(--s5);padding-bottom:6px;}
 .pz-top h3{display:flex;align-items:center;gap:8px;margin:0;}
 .pz-top h3 svg{width:20px;height:20px;color:#3B7F8C;}
 .pz-dots{display:flex;gap:5px;justify-content:center;margin:0 0 var(--s4);}

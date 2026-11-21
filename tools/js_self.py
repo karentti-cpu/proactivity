@@ -1151,8 +1151,18 @@ function pzOpen(mode){
        ['intent','init','ahead'].indexOf(mode)>=0 ? {mode:mode, step:mode} : {mode:'day', step:'intro'};
   document.getElementById('pzTitle').querySelector('span').textContent=t({feel:'pz.ck.t', sc:'sc.t', intent:'in.t', init:'it.t', ahead:'ah.t'}[mode]||'pz.btn');
   pzRender(); document.getElementById('pauseModal').classList.add('on');
+  /* the phone's back button closes the window instead of leaving the app */
+  if(!pzHist){ try{ history.pushState({pz:1},''); pzHist=true; }catch(e){} }
 }
-function pzClose(){ pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on'); renderPauseBtn(); renderPath(); }
+var pzHist=false;
+function pzClose(fromBack){
+  pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on');
+  if(pzHist && fromBack!==true){ pzHist=false; try{ history.back(); }catch(e){} } else pzHist=false;
+  renderPauseBtn(); renderPath();
+}
+window.addEventListener('popstate',function(){ if(pz || document.getElementById('pauseModal').classList.contains('on')){ pzHist=false; pzClose(true); } });
+/* after a choice, show the action buttons that appeared at the bottom */
+function pzShowActions(){ var b=document.getElementById('itPlan'); if(b) b.scrollIntoView({behavior:'smooth', block:'nearest'}); }
 function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; if(!L.inits) L.inits=[]; return L; }
 function pzWeekCount(){
   var log=S.log||{}, n=0;
@@ -1228,9 +1238,9 @@ function pzRender(){
     var keepEdits=function(){ box.querySelectorAll('[data-itsel]').forEach(function(inp){ var x=pz.sel[+inp.dataset.itsel]; if(x) x.t=inp.value; }); };
     box.querySelectorAll('[data-itpick]').forEach(function(b){ b.addEventListener('click',function(){
       keepEdits(); var n=+b.dataset.itpick, ix=-1; pz.sel.forEach(function(x,i){ if(x.n===n) ix=i; });
-      if(ix>=0) pz.sel.splice(ix,1); else if(!atMax) pz.sel.push({n:n, t:t('it.'+n)}); pzRender(); }); });
+      if(ix>=0) pz.sel.splice(ix,1); else if(!atMax) pz.sel.push({n:n, t:t('it.'+n)}); pzRender(); pzShowActions(); }); });
     var own=box.querySelector('#pzOwn');
-    var addOwn=function(){ var v=own.value.trim(); if(atMax) return; if(!v){ own.focus(); return; } keepEdits(); pz.sel.push({n:0, t:v}); pzRender(); };
+    var addOwn=function(){ var v=own.value.trim(); if(atMax) return; if(!v){ own.focus(); return; } keepEdits(); pz.sel.push({n:0, t:v}); pzRender(); pzShowActions(); };
     box.querySelector('#pzAddOwn').addEventListener('click',addOwn);
     own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addOwn(); } });
     box.querySelectorAll('[data-itdel]').forEach(function(b){ b.addEventListener('click',function(){ keepEdits(); pz.sel.splice(+b.dataset.itdel,1); pzRender(); }); });
@@ -1394,7 +1404,7 @@ function pzTick(){
 }
 document.getElementById('pauseBtn').addEventListener('click',function(){ pzOpen('day'); });
 document.getElementById('feelBtn').addEventListener('click',function(){ pzOpen('feel'); });
-document.getElementById('pzX').addEventListener('click',pzClose);
+document.getElementById('pzX').addEventListener('click',function(){ pzClose(); });
 document.getElementById('pauseModal').addEventListener('click',function(e){ if(e.target.id==='pauseModal') pzClose(); });
 
 /* ================= a tool for you, and what I have learned =================
