@@ -1163,6 +1163,10 @@ function pzClose(fromBack){
 window.addEventListener('popstate',function(){ if(pz || document.getElementById('pauseModal').classList.contains('on')){ pzHist=false; pzClose(true); } });
 /* after a choice, show the action buttons that appeared at the bottom */
 function pzShowActions(){ var b=document.getElementById('itPlan'); if(b) b.scrollIntoView({behavior:'smooth', block:'nearest'}); }
+/* a field in a window comes to the middle of the screen when tapped, above the keyboard */
+document.getElementById('pauseModal').addEventListener('focusin',function(e){
+  if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) setTimeout(function(){ try{ e.target.scrollIntoView({block:'center', behavior:'smooth'}); }catch(x){} },300);
+});
 function pzLog(){ if(!S.log || !S.log[dayKey()]) logDay(); var L=S.log[dayKey()]; if(!L.pauses) L.pauses=[]; if(!L.inits) L.inits=[]; return L; }
 function pzWeekCount(){
   var log=S.log||{}, n=0;
