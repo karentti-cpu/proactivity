@@ -65,7 +65,8 @@ TABS = [('home', 'home', 'n.tab.home'),
         ('sheet', 'calendar', 'n.tab.trk'),
         ('progress', 'trending', 'n.tab.prog'),
         ('more', 'sliders', 'n.tab.more')]
-MORE = [('help', 'book', 'help.t', 'more.help'),
+MORE = [('details', 'user', 'pf.t', 'more.pf'),
+        ('help', 'book', 'help.t', 'more.help'),
         ('values', 'compass', 'vl.t', 'more.values'),
         ('well', 'sparkles', 'wl.t', 'more.well'),
         ('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
@@ -79,7 +80,7 @@ HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), (
 def help_html():
     steps = ''.join(f'<li><span class="hp-ic">{i(ic_)}</span><span><b data-i18n="help.{n}.t"></b><small data-i18n="help.{n}.b"></small></span></li>'
                     for ic_, n in HELP_STEPS)
-    tips = ''.join(f'<li data-i18n="help.tip.{n}"></li>' for n in (1, 2, 3))
+    tips = ''.join(f'<li data-i18n="help.tip.{n}"></li>' for n in (1, 2, 3, 4))
     return (f'<ol class="help-steps">{steps}</ol>'
             f'<h3 class="help-tips-t">{i("sparkles")}<span data-i18n="help.tip.t"></span></h3><ul class="help-tips">{tips}</ul>')
 

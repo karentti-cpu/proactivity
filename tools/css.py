@@ -1105,6 +1105,7 @@ body.no-scroll{overflow:hidden;}
 .tm-addrow #tmTomH{width:100px;flex:none;}
 .tm-addrow .t3o{flex:none;}
 .tm-tom .mg-lab{display:block;margin-top:10px;}
+#settingsBox{scroll-margin-top:72px;}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
