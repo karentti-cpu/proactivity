@@ -12,6 +12,10 @@ PATH2 = {
 'path.go':     ('4 צעדים קטנים, ויש יום פרואקטיבי מלא 🎉', '4 small steps to a full proactive day 🎉', '4 petits pas pour une journée proactive complète 🎉',
                 '4 маленьких шага — и полный проактивный день 🎉', '4 خطوات صغيرة ليوم مبادر مكتمل 🎉'),
 
+'pz.cont':   ('להמשיך: {s}', 'Continue: {s}', 'Continuer : {s}', 'Дальше: {s}', 'تابع: {s}'),
+'pz.toDay':  ('להמשיך ל„היום שלי”', 'On to “My day”', 'Vers « Ma journée »', 'К «Моему дню»', 'إلى «يومي»'),
+'pz.allDone':('כל הצעדים של היום הושלמו 🎉', 'Every step for today is done 🎉', 'Toutes les étapes du jour sont faites 🎉', 'Все шаги на сегодня сделаны 🎉', 'اكتملت كل خطوات اليوم 🎉'),
+'in.done':   ('הכוונה שלך להיום: {x} ✨', 'Your intention for today: {x} ✨', 'Ton intention du jour : {x} ✨', 'Твоё намерение на сегодня: {x} ✨', 'نيّتك اليوم: {x} ✨'),
 'in.t':     ('הכוונה שלי היום', 'My intention today', 'Mon intention du jour', 'Моё намерение на сегодня', 'نيّتي اليوم'),
 'in.q':     ('{איך אתה בוחר|איך את בוחרת} להיות היום?', 'How do you choose to be today?', 'Comment choisis-tu d\'être aujourd\'hui ?', 'Каким ты выбираешь быть сегодня?', 'كيف {تختار|تختارين} أن تكون اليوم؟'),
 'in.vis':   ('מי אני רוצה להיות: {v}', 'Who I want to be: {v}', 'Qui je veux être : {v}', 'Кем я хочу быть: {v}', 'من أريد أن أكون: {v}'),
