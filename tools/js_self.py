@@ -1234,9 +1234,9 @@ function pzRender(){
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="100" placeholder="'+esc(t('it.own'))+'"'+(atMax?' disabled':'')+'>'+
       '<button class="btn btn-ghost" id="pzAddOwn"'+(atMax?' disabled':'')+'>'+ic('plus')+'<span>'+esc(t('it.add'))+'</span></button></div>'+
       (pz.sel.length ? '<p class="pz-sub pz-rt">'+esc(t('it.words'))+'</p><div class="it-sel">'+pz.sel.map(function(x,i){
-        return '<div class="it-selrow">'+ic('rocket')+'<input type="text" maxlength="100" data-itsel="'+i+'" value="'+esc(x.t)+'">'+
+        return '<div class="it-selrow"><span class="it-ok">'+ic('check')+'</span><input type="text" maxlength="100" data-itsel="'+i+'" value="'+esc(x.t)+'">'+
           '<button type="button" class="t3act" data-itdel="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+'</div>' : '')+
-      (pz.sel.length ? '<div class="row-btns it-btns">'+
+      (pz.sel.length ? '<div class="row-btns it-btns it-bar">'+
         '<button class="btn '+(eve?'btn-ghost':'btn-primary')+'" id="itPlan">'+esc(t('it.planN',{n:pz.sel.length}))+'</button>'+
         '<button class="btn '+(eve?'btn-primary':'btn-quiet')+'" id="itDid">'+esc(t('it.didN'))+'</button></div>' : '');
     var keepEdits=function(){ box.querySelectorAll('[data-itsel]').forEach(function(inp){ var x=pz.sel[+inp.dataset.itsel]; if(x) x.t=inp.value; }); };
@@ -1256,6 +1256,9 @@ function pzRender(){
       var list=chosen(); if(!list.length) return; var td=today3();
       list.forEach(function(x){ if(addDayItem(x)){ var it=td.items.filter(function(y){ return normLine(y.t)===normLine(x); })[0]; if(it) it.init=true; } });
       logDay(); save(); toast(t('it.planned.n')); pzClose(); renderToday3();
+      /* straight on to My day, with the new lines in view */
+      goPage('home'); setTimeout(function(){ var tb=document.getElementById('todayBox'); if(tb){ tb.scrollIntoView({behavior:'smooth', block:'start'});
+        tb.querySelectorAll('.t3row.init').forEach(function(r){ r.classList.add('flash'); }); } },120);
     });
     var db=box.querySelector('#itDid');
     if(db) db.addEventListener('click',function(){

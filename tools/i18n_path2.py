@@ -48,7 +48,7 @@ PATH2 = {
 'it.pick':  ('אפשר לבחור כמה:', 'You can pick several:', 'Tu peux en choisir plusieurs :', 'Можно выбрать несколько:', 'يمكنك اختيار عدّة:'),
 'it.words': ('בנוסח שלך (אפשר לשנות):', 'In your own words (you can edit):', 'Avec tes mots (modifiable) :', 'Своими словами (можно изменить):', 'بكلماتك (يمكن التعديل):'),
 'it.add':   ('להוסיף', 'Add', 'Ajouter', 'Добавить', 'أضف'),
-'it.planN': ('אעשה היום ({n})', 'I will do it today ({n})', 'Je le fais aujourd\'hui ({n})', 'Сделаю сегодня ({n})', 'سأفعلها اليوم ({n})'),
+'it.planN': ('להוסיף ל„היום שלי” ({n})', 'Add to “My day” ({n})', 'Ajouter à « Ma journée » ({n})', 'Добавить в «Мой день» ({n})', 'أضف إلى «يومي» ({n})'),
 'it.didN':  ('כבר עשיתי ✓', 'Already done ✓', 'Déjà fait ✓', 'Уже сделано ✓', 'فعلتها بالفعل ✓'),
 'it.planned.n':('נוסף ל„היום שלי” כיוזמה 🚀', 'Added to “My day” as initiatives 🚀', 'Ajouté à « Ma journée » comme initiatives 🚀', 'Добавлено в «Мой день» как инициативы 🚀', 'أُضيفت إلى «يومي» كمبادرات 🚀'),
 'it.room':  ('יש מקום ל־{n} ב„היום שלי”', 'Room for {n} in “My day”', 'De la place pour {n} dans « Ma journée »', 'В «Моём дне» есть место для {n}', 'يوجد مكان لـ{n} في «يومي»'),

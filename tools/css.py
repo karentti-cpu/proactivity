@@ -1106,6 +1106,13 @@ body.no-scroll{overflow:hidden;}
 .tm-addrow .t3o{flex:none;}
 .tm-tom .mg-lab{display:block;margin-top:10px;}
 #settingsBox{scroll-margin-top:72px;}
+.it-ok{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--acc);}
+.it-ok svg{width:15px;height:15px;color:#fff;}
+/* the action buttons stay at the bottom of the window while choosing */
+.it-bar{position:sticky;bottom:0;z-index:2;background:var(--ink-1);margin:var(--s3) calc(-1 * var(--s5)) calc(-1 * var(--s5));
+  padding:12px var(--s5) calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--ink-2);border-radius:0 0 var(--r-card) var(--r-card);box-shadow:0 -6px 14px rgba(0,0,0,.06);}
+.t3row.flash input{animation:t3flash 1.6s ease;}
+@keyframes t3flash{0%,40%{background:rgba(217,154,38,.25);}100%{background:transparent;}}
 .gm-harder{font-weight:700;color:#B23C70;margin:4px 0 8px;}
 .gm-quit{margin-top:var(--s3);}
 .trk-marks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--s3);}
