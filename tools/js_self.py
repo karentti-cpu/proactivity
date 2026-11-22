@@ -1162,6 +1162,31 @@ function pzClose(fromBack){
 }
 window.addEventListener('popstate',function(){ if(pz || document.getElementById('pauseModal').classList.contains('on')){ pzHist=false; pzClose(true); } });
 /* after a choice, show the action buttons that appeared at the bottom */
+/* the next step of today's path after the current one; in the morning
+   "look ahead" waits for the evening, so the way on is My day */
+var PZ_ORDER=['pause','choose','init','ahead'];
+function pathAllDone(){ var d=pathDone(); return PZ_ORDER.every(function(k){ return d[k]; }); }
+function pzNextStep(cur){
+  var d=pathDone(), map={day:'pause', intent:'choose', init:'init', ahead:'ahead', pause:'pause'}, c=map[cur]||cur;
+  var nx=PZ_ORDER.filter(function(k){ return k!==c && !d[k]; })[0];
+  if(nx==='ahead' && new Date().getHours()<17) nx=null;
+  return nx||null;
+}
+function pzNextBtn(cur){
+  var nx=pzNextStep(cur);
+  return '<button class="btn btn-primary" id="pzNextStep" data-next-step="'+(nx||'home')+'">'+esc(nx ? t('pz.cont',{s:t('path.'+nx)}) : t('pz.toDay'))+' '+ic('arrow')+'</button>';
+}
+function pzNextBind(box){
+  var b=box.querySelector('#pzNextStep'); if(!b) return;
+  b.addEventListener('click',function(){
+    var k=b.dataset.nextStep;
+    if(k==='pause'){ pzOpen('day'); return; }
+    if(k==='choose'){ pzOpen('intent'); return; }
+    if(k==='init'){ pzOpen('init'); return; }
+    if(k==='ahead'){ pzOpen('ahead'); return; }
+    pzClose(); goPage('home'); setTimeout(function(){ var tb=document.getElementById('todayBox'); if(tb) tb.scrollIntoView({behavior:'smooth', block:'start'}); },120);
+  });
+}
 function pzShowActions(){ var b=document.getElementById('itPlan'); if(b) b.scrollIntoView({behavior:'smooth', block:'nearest'}); }
 /* a field in a window comes to the middle of the screen when tapped, above the keyboard */
 document.getElementById('pauseModal').addEventListener('focusin',function(e){
@@ -1209,7 +1234,7 @@ function pzRender(){
         return '<button type="button" class="t3idea t3chip'+(Li.intent===t('q.'+k)?' on':'')+'" data-inq="'+k+'"><span>'+esc(t('q.'+k))+'</span></button>'; }).join('')+'</div>'+
       '<div class="addrow pz-ownrow"><input type="text" id="pzOwn" maxlength="60" placeholder="'+esc(t('in.own'))+'">'+
       '<button class="btn btn-primary" id="pzOk">'+esc(t('in.ok'))+'</button></div>';
-    var setI=function(x){ if(!x) return; var L=pzLog(), first=!L.intent; L.intent=x; if(first){ addPts(5); markActiveToday(); } save(); toast(t('in.saved',{x:x})); pzClose(); };
+    var setI=function(x){ if(!x) return; var L=pzLog(), first=!L.intent; L.intent=x; if(first){ addPts(5); markActiveToday(); } save(); pz.doneMsg=t('in.done',{x:x}); pz.step='stepend'; pzRender(); };
     box.querySelectorAll('[data-inq]').forEach(function(b){ b.addEventListener('click',function(){ setI(t('q.'+b.dataset.inq)); }); });
     box.querySelectorAll('[data-inv]').forEach(function(b){ b.addEventListener('click',function(){ setI(vlName(b.dataset.inv)); }); });
     var oi=box.querySelector('#pzOwn');
@@ -1238,7 +1263,8 @@ function pzRender(){
           '<button type="button" class="t3act" data-itdel="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+'</div>' : '')+
       (pz.sel.length ? '<div class="row-btns it-btns it-bar">'+
         '<button class="btn '+(eve?'btn-ghost':'btn-primary')+'" id="itPlan">'+esc(t('it.planN',{n:pz.sel.length}))+'</button>'+
-        '<button class="btn '+(eve?'btn-primary':'btn-quiet')+'" id="itDid">'+esc(t('it.didN'))+'</button></div>' : '');
+        '<button class="btn '+(eve?'btn-primary':'btn-quiet')+'" id="itDid">'+esc(t('it.didN'))+'</button></div>'
+       : '<div class="row-btns it-btns it-bar">'+pzNextBtn('init')+'</div>');
     var keepEdits=function(){ box.querySelectorAll('[data-itsel]').forEach(function(inp){ var x=pz.sel[+inp.dataset.itsel]; if(x) x.t=inp.value; }); };
     box.querySelectorAll('[data-itpick]').forEach(function(b){ b.addEventListener('click',function(){
       keepEdits(); var n=+b.dataset.itpick, ix=-1; pz.sel.forEach(function(x,i){ if(x.n===n) ix=i; });
@@ -1249,8 +1275,9 @@ function pzRender(){
     own.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addOwn(); } });
     box.querySelectorAll('[data-itdel]').forEach(function(b){ b.addEventListener('click',function(){ keepEdits(); pz.sel.splice(+b.dataset.itdel,1); pzRender(); }); });
     box.querySelectorAll('[data-ittrk]').forEach(function(b){ b.addEventListener('click',function(){
-      var r=trows[+b.dataset.ittrk]; trkTick(r.type, r.cfg, r.row, r.di); celebrate(); toast(t('it.done')); pzClose(); }); });
+      var r=trows[+b.dataset.ittrk]; trkTick(r.type, r.cfg, r.row, r.di); celebrate(); pz.doneMsg=t('it.done'); pz.step='stepend'; pzRender(); }); });
     var chosen=function(){ keepEdits(); return pz.sel.map(function(x){ return x.t.trim(); }).filter(Boolean); };
+    pzNextBind(box);
     var pb=box.querySelector('#itPlan');
     if(pb) pb.addEventListener('click',function(){
       var list=chosen(); if(!list.length) return; var td=today3();
@@ -1264,7 +1291,7 @@ function pzRender(){
     if(db) db.addEventListener('click',function(){
       var list=chosen(); if(!list.length) return; var L=pzLog();
       list.forEach(function(x){ L.inits.push({t:x, h:new Date().getHours()}); });
-      addPts(15*list.length); markActiveToday(); save(); celebrate(); toast(t('it.done')); pzClose();
+      addPts(15*list.length); markActiveToday(); save(); celebrate(); pz.doneMsg=t('it.done'); pz.step='stepend'; pzRender();
     });
   } else if(pz.step==='ahead'){
     var La=pzLog(), td3=today3(), mine=(La.inits||[]).map(function(x){ return x.t; }).concat(td3.items.filter(function(x){ return x.init&&x.done; }).map(function(x){ return x.t; }));
@@ -1299,7 +1326,7 @@ function pzRender(){
       var o=box.querySelector('#ahO').value.trim(), th=box.querySelector('#ahT').value.trim();
       var hasTom=S.tomorrow && S.tomorrow.items && S.tomorrow.items.length;
       if(!o && !th && !hasTom){ box.querySelector('#ahO').focus(); return; }
-      var L=pzLog(), first=!L.ahead; L.ahead={o:o, t:th}; if(first){ addPts(10); markActiveToday(); } save(); toast(t('ah.saved')); pzClose();
+      var L=pzLog(), first=!L.ahead; L.ahead={o:o, t:th}; if(first){ addPts(10); markActiveToday(); } save(); pz.doneMsg=t('ah.saved'); pz.step='stepend'; pzRender();
     });
   } else if(/^sc[0-3]$/.test(pz.step)){
     var n=+pz.step.slice(2);
@@ -1321,8 +1348,16 @@ function pzRender(){
   } else if(pz.step==='dayend'){
     box.innerHTML='<div class="pz-end"><div class="pz-endic">'+ic('check')+'</div><p class="pz-big">'+esc(t('pz.d.end'))+'</p>'+
       (pz.paid ? '<p class="ps-rxp">'+esc(t('ps.rxp',{n:5}))+'</p>' : '')+'</div>'+
-      '<div class="row-btns"><button class="btn btn-primary" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+      '<div class="row-btns">'+pzNextBtn('pause')+'<button class="btn btn-quiet" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
     box.querySelector('#pzEnd').addEventListener('click',pzClose);
+    pzNextBind(box);
+  } else if(pz.step==='stepend'){
+    /* the end of a path step: what was done, and the way on to the next */
+    box.innerHTML='<div class="pz-end"><div class="pz-endic">'+ic('check')+'</div><p class="pz-big">'+esc(pz.doneMsg||'')+'</p>'+
+      (pathAllDone() ? '<p class="pz-sub">'+esc(t('pz.allDone'))+'</p>' : '')+'</div>'+
+      '<div class="row-btns">'+pzNextBtn(pz.mode)+'<button class="btn btn-quiet" id="pzEnd">'+esc(t('pz.close'))+'</button></div>';
+    box.querySelector('#pzEnd').addEventListener('click',pzClose);
+    pzNextBind(box);
   } else if(pz.step==='feel'){
     box.innerHTML='<p class="pz-sub">'+esc(t('pz.2.s'))+'</p>'+
       '<div class="pz-feels">'+PZ_SHOWN.map(function(k){ var f=pzF(k);
