@@ -1616,13 +1616,13 @@ function renderWell(){
     : '<p class="wl-idea">'+esc(t('st.mine'))+'</p><div class="mg-picks">'+mineS.map(function(k){ return '<button type="button" class="t3idea t3chip" data-vs="'+k+'"><span>'+vlEmo(k)+' '+esc(vlName(k))+'</span></button>'; }).join('')+'</div>';
   if(wlKd===null){ var n=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5); wlKd=n%KD_N+1; }
   box.innerHTML=
-    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('book')+'<span>'+esc(t('gr.t'))+'</span></h3><p class="psub">'+esc(t('gr.s'))+'</p>'+
+    '<section class="dash-box wl-card" id="wl-grat"><h3 class="boxh">'+ic('book')+'<span>'+esc(t('gr.t'))+'</span></h3><p class="psub">'+esc(t('gr.s'))+'</p>'+
       rows+'<div class="row-btns"><button class="btn btn-primary btn-sm" id="grSave">'+esc(t('gr.save'))+'</button>'+
       (g.length?'<span class="wl-done">'+esc(t('gr.done'))+'</span>':'')+'</div>'+hist+'</section>'+
-    '<section class="dash-box wl-card"><h3 class="boxh">💛<span>'+esc(t('sc.t'))+'</span></h3><p class="psub">'+esc(t('sc.s'))+'</p>'+
+    '<section class="dash-box wl-card" id="wl-sc"><h3 class="boxh">💛<span>'+esc(t('sc.t'))+'</span></h3><p class="psub">'+esc(t('sc.s'))+'</p>'+
       '<button class="btn btn-primary btn-sm" id="scOpen">'+esc(t('sc.go'))+'</button></section>'+
-    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gem')+'<span>'+esc(t('st.t'))+'</span></h3><p class="psub">'+esc(t('st.s'))+'</p>'+str+'</section>'+
-    '<section class="dash-box wl-card"><h3 class="boxh">'+ic('gift')+'<span>'+esc(t('kd.t'))+'</span></h3><p class="psub">'+esc(t('kd.s'))+'</p>'+
+    '<section class="dash-box wl-card" id="wl-str"><h3 class="boxh">'+ic('gem')+'<span>'+esc(t('st.t'))+'</span></h3><p class="psub">'+esc(t('st.s'))+'</p>'+str+'</section>'+
+    '<section class="dash-box wl-card" id="wl-kd"><h3 class="boxh">'+ic('gift')+'<span>'+esc(t('kd.t'))+'</span></h3><p class="psub">'+esc(t('kd.s'))+'</p>'+
       '<p class="wl-pick">'+esc(t('kd.'+wlKd))+'</p><div class="row-btns">'+
       '<button class="btn btn-ghost btn-sm" data-wladd="'+esc(t('kd.'+wlKd))+'">'+ic('plus')+'<span>'+esc(t('wl.add'))+'</span></button>'+
       '<button class="btn btn-quiet btn-sm" id="kdMore">'+esc(t('kd.more'))+'</button></div></section>'+
@@ -1715,7 +1715,7 @@ function pathNextCard(done,n){
   var k=PZ_ORDER.filter(function(x){ return !done[x]; })[0];
   if(k==='ahead' && new Date().getHours()<17) k='today';
   var title=k==='today' ? t('nx.day.t') : t('path.'+k), sub=k==='today' ? t('nx.day') : t('nx.'+k);
-  return '<div class="nx-card"><span class="nx-ic">'+ic(icons[k])+'</span><div class="nx-t"><small>'+esc(t('nx.lab'))+'</small><b>'+esc(title)+'</b><span>'+esc(sub)+'</span></div>'+
+  return '<div class="nx-card v-'+k+'"><span class="nx-ic">'+ic(icons[k])+'</span><div class="nx-t"><small>'+esc(t('nx.lab'))+'</small><b>'+esc(title)+'</b><span>'+esc(sub)+'</span></div>'+
     '<button type="button" class="btn btn-primary nx-go" data-path="'+k+'">'+esc(k==='today' ? t('nx.day.go') : t('nx.go'))+' '+ic('arrow')+'</button></div>';
 }
 function renderPath(){
@@ -1969,7 +1969,7 @@ function tmTomBind(box){
 /* ================= the welcome tour =================
    Three short screens, once: the daily path, My day, and where everything
    else lives. Seen again from How to use it. */
-var TOUR=[{ic:'compass',k:1},{ic:'sun',k:2},{ic:'sliders',k:3}], tourI=0;
+var TOUR=[{ic:'compass',k:1},{ic:'sun',k:2},{ic:'zap',k:3}], tourI=0;
 function tourShow(){
   var st=TOUR[tourI];
   document.getElementById('tourIc').innerHTML=ic(st.ic);

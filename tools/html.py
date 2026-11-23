@@ -57,18 +57,37 @@ def nav(back=True, next_id=None, next_key='c.next', skip=None):
 TABS = [('home', 'home', 'n.tab.home'),
         ('goals', 'target', 'a.tab.goals'),
         ('sheet', 'calendar', 'n.tab.trk'),
-        ('progress', 'trending', 'n.tab.prog'),
-        ('more', 'sliders', 'n.tab.more')]
-# More, in three groups so it reads at a glance: about me, growing, help.
-MORE_GROUPS = [('more.g.me',   [('settings', 'user', 'set.t', 'more.set'),
-                                ('values', 'compass', 'vl.t', 'more.values')]),
-               ('more.g.grow', [('well', 'sparkles', 'wl.t', 'more.well'),
-                                ('games', 'star', 'gm.t', 'more.games'),
-                                ('learn', 'brain', 'n.tab.learn', 'more.learn'),
-                                ('body', 'activity', 'a.tab.body', 'more.body'),
-                                ('circle', 'compass', 'cir.t', 'more.circle'),
-                                ('tasks', 'check', 'n.tab.tasks', 'more.tasks')]),
-               ('more.g.help', [('help', 'book', 'help.t', 'more.help')])]
+        ('more', 'zap', 'prac.t'),
+        ('progress', 'trending', 'n.tab.prog')]
+# Practice: every tool and game under one of the four verbs of the daily
+# path, and a fifth group for what is not one of them. An item is
+# (action, icon, title key, subtitle key or None); actions are page:<name>,
+# pz:<mode>, game:<id>, or well:<section>.
+VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 'face', 'pz.ck.t', 'pz.ck.s'), ('pz:sc', 'shield', 'sc.t', None)],
+          ['calm', 'feel', 'kind']),
+         ('choose', 'compass', [('page:values', 'compass', 'vl.t', 'more.values'), ('page:circle', 'target', 'cir.t', 'more.circle'), ('mean', 'seedling', 'mn.t', None)],
+          ['react', 'circle', 'flip', 'speed']),
+         ('init', 'rocket', [('page:tasks', 'check', 'n.tab.tasks', 'more.tasks'), ('well:kd', 'gift', 'kd.t', None), ('well:str', 'gem', 'st.t', None)],
+          ['step', 'vact', 'str']),
+         ('ahead', 'flag', [('pz:ahead', 'flag', 'prac.ahead', None), ('well:grat', 'book', 'gr.t', None)],
+          ['opt'])]
+OTHER = [('page:well', 'sparkles', 'wl.t', 'more.well'), ('page:learn', 'brain', 'n.tab.learn', 'more.learn'),
+         ('page:body', 'activity', 'a.tab.body', 'more.body'), ('page:games', 'star', 'gm.t', 'more.games')]
+GAME_ICONS = {'circle': 'compass', 'flip': 'refresh', 'react': 'shield', 'calm': 'wind', 'feel': 'face', 'step': 'flag',
+              'speed': 'zap', 'opt': 'sun', 'kind': 'seedling', 'str': 'gem', 'vact': 'compass'}
+def prac_row(act, ic_, k, d):
+    sub = f'<small data-i18n="{d}"></small>' if d else ''
+    return f'<button class="pr-item" data-prac="{act}">{i(ic_)}<span><b data-i18n="{k}"></b>{sub}</span>{i("chevron")}</button>'
+def practice_html():
+    out = []
+    for v, ic_, items, games in VERBS:
+        chips = ''.join(f'<button class="pr-game" data-prac="game:{g}">{i(GAME_ICONS[g])}<span data-i18n="gm.{g}"></span></button>' for g in games)
+        out.append(f'<section class="pr-verb v-{v}"><h3 class="pr-h"><span class="pr-ic">{i(ic_)}</span><span data-i18n="path.{v}"></span></h3>'
+                   f'<p class="pr-s" data-i18n="vb.{v}.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in items)}</div>'
+                   f'<div class="pr-games"><span class="pr-gl" data-i18n="prac.games"></span>{chips}</div></section>')
+    out.append(f'<section class="pr-verb v-other"><h3 class="pr-h"><span class="pr-ic">{i("sparkles")}</span><span data-i18n="prac.other"></span></h3>'
+               f'<p class="pr-s" data-i18n="prac.other.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in OTHER)}</div></section>')
+    return ''.join(out)
 
 # How to use it: the same steps on the landing page and under More.
 HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('compass', 10), ('seedling', 11), ('clock', 12), ('sparkles', 9), ('sliders', 7)]
@@ -326,6 +345,7 @@ def build_body(logo):
  <header class="apphead">
   <div class="app-brand"><img src="{logo}" alt="" width="32" height="32">
    <div><div role="img" aria-label="Proacty">{WORDMARK}</div><p class="brand-tag" id="appTag" data-i18n="b.tag.n"></p></div></div>
+  <div class="head-acts"><button class="head-btn" id="hdHelp" data-go="help" data-i18n-title="help.t">{i("help")}</button><button class="head-btn" id="hdSet" data-go="settings" data-i18n-title="set.t">{i("gear")}</button></div>
   <p class="greet" id="greetName"></p>
  </header>
 
@@ -354,8 +374,8 @@ def build_body(logo):
  </div>
 
  <div class="page" id="page-more" role="tabpanel">
-  <h2 class="ptitle" data-i18n="n.tab.more"></h2>
-  {''.join(f'<h3 class="more-gt" data-i18n="{g}"></h3><div class="more-list">' + ''.join(f'<button class="more-item" data-more="{p}">{i(ic_)}<span><b data-i18n="{k}"></b><small data-i18n="{d}"></small></span>{i("chevron")}</button>' for p, ic_, k, d in items) + (f'<button class="more-item fb-item" id="fbOpen">{i("edit")}<span><b data-i18n="fb.t"></b><small data-i18n="fb.more"></small></span>{i("chevron")}</button>' if g == 'more.g.help' else '') + '</div>' for g, items in MORE_GROUPS)}
+  <h2 class="ptitle" data-i18n="prac.t"></h2><p class="psub" data-i18n="prac.s"></p>
+  {practice_html()}
  </div>
 
  <div class="page" id="page-settings" role="tabpanel">
@@ -413,7 +433,8 @@ def build_body(logo):
  <div class="page" id="page-help" role="tabpanel">
   <h2 class="ptitle" data-i18n="help.t"></h2><p class="psub" data-i18n="help.s"></p>
   <section class="dash-box">{help_html()}
-   <button class="btn btn-ghost btn-block" id="tourAgain">{i("compass")}<span data-i18n="help.tour"></span></button></section>
+   <button class="btn btn-ghost btn-block" id="tourAgain">{i("compass")}<span data-i18n="help.tour"></span></button>
+   <button class="btn btn-ghost btn-block" id="fbOpen">{i("edit")}<span data-i18n="fb.t"></span></button></section>
  </div>
 
  <div class="page" id="page-values" role="tabpanel">
