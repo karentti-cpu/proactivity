@@ -6,9 +6,7 @@ Order of tuple values: he, en, fr, ru, ar
 QUICK = {
 'more.pf':   ('שם, איך לפנות אליך, גיל ותזכורת', 'Name, how to address you, age and reminder', 'Prénom, façon de s\'adresser à toi, âge et rappel',
               'Имя, обращение, возраст и напоминание', 'الاسم، طريقة المخاطبة، العمر والتذكير'),
-'help.tip.4':('לשנות שם, איך לפנות אליך או גיל: „עוד” ← „הפרטים שלי והגדרות”.', 'To change your name, how you are addressed or your age: “More” → “My details and settings”.',
-              'Pour changer ton prénom, la façon de s\'adresser à toi ou ton âge : « Plus » → « Mes infos et réglages ».', 'Изменить имя, обращение или возраст: «Ещё» → «Мои данные и настройки».',
-              'لتغيير الاسم أو طريقة المخاطبة أو العمر: «المزيد» ← «بياناتي والإعدادات».'),
+'help.tip.4': ('לשנות שם, איך לפנות אליך או גיל: ⚙ למעלה. ו־? למעלה פותח את העזרה.', 'To change your name, how you are addressed or your age: ⚙ at the top. The ? at the top opens help.', "Pour changer ton prénom, la façon de s'adresser à toi ou ton âge : ⚙ en haut. Le ? en haut ouvre l'aide.", 'Изменить имя, обращение или возраст: ⚙ вверху. А ? вверху открывает помощь.', 'لتغيير الاسم أو طريقة المخاطبة أو العمر: ⚙ في الأعلى. و؟ في الأعلى تفتح المساعدة.'),
 'q.t':     ('נעים להכיר 👋', 'Nice to meet you 👋', 'Enchanté{|e} 👋', 'Приятно познакомиться 👋', 'تشرّفنا 👋'),
 'q.s':     ('שלוש שאלות קצרות, ומתחילים. אין הרשמה ואין מייל.', 'Three quick questions, and we begin. No sign-up, no email.', 'Trois petites questions, et on commence. Ni inscription ni e-mail.',
             'Три коротких вопроса — и начинаем. Без регистрации и почты.', 'ثلاثة أسئلة قصيرة ونبدأ. بلا تسجيل ولا بريد.'),

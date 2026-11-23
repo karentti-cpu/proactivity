@@ -2005,8 +2005,6 @@ svg.trend .td.hot{fill:var(--acc-hi);stroke:var(--acc-hi);r:5.5;}
 [dir=rtl] .nx-go svg{transform:scaleX(-1);}
 .nx-done{border-color:rgba(61,123,94,.35);box-shadow:none;}
 .pause-btn[hidden]{display:none;}
-.more-gt{font-size:var(--t-sm);font-weight:800;color:var(--fg-2);margin:var(--s4) 4px var(--s2);letter-spacing:.02em;}
-.more-gt:first-of-type{margin-top:var(--s2);}
 .extra-box .tl-box{border:1.5px solid rgba(217,154,38,.45);border-radius:var(--r-card);padding:14px;margin:0 0 var(--s3);
   background:linear-gradient(180deg,rgba(217,154,38,.08),transparent 70%);}
 .extra-box .home-game{margin:0;box-shadow:none;background:var(--ink-1);color:var(--fg);border:1px solid var(--ink-2);padding:12px 14px;}
@@ -2031,4 +2029,51 @@ svg.trend .td.hot{fill:var(--acc-hi);stroke:var(--acc-hi);r:5.5;}
 #tourAgain{margin-top:var(--s4);}
 /* the site's "rate" pill steps aside while a window or the update bar is open */
 body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{display:none!important;}
+
+/* ---- the four verbs: one colour and one icon each, everywhere ---- */
+.v-pause,[data-path=pause]{--vc:#2A8C8C;}
+.v-choose,[data-path=choose]{--vc:#3D7B5E;}
+.v-init,[data-path=init]{--vc:#C9781E;}
+.v-ahead,[data-path=ahead]{--vc:#6C5BA6;}
+.v-today,[data-path=today]{--vc:var(--acc);}
+.v-other{--vc:var(--fg-2);}
+.path-step .path-dot svg{color:var(--vc,var(--fg-2));}
+.path-step.on .path-dot{background:var(--vc,var(--acc));border-color:var(--vc,var(--acc));}
+.path-step.on small{color:var(--vc,var(--acc));}
+.path-step.is-next .path-dot{border-color:var(--vc);box-shadow:0 0 0 4px color-mix(in srgb,var(--vc) 18%,transparent);}
+.path-step.is-next small{color:var(--vc);}
+.nx-card[class*=" v-"]{border-color:var(--vc);}
+.nx-card[class*=" v-"] .nx-ic{background:color-mix(in srgb,var(--vc) 13%,transparent);}
+.nx-card[class*=" v-"] .nx-ic svg,.nx-card[class*=" v-"] .nx-t small{color:var(--vc);}
+.nx-card[class*=" v-"] .nx-go{background:var(--vc);border-color:var(--vc);}
+/* ---- Practice ---- */
+.pr-verb{margin:0 0 var(--s4);padding:14px 14px 12px;border-radius:var(--r-card);background:var(--ink-1);border:1px solid var(--ink-2);
+  border-inline-start:4px solid var(--vc);}
+.pr-h{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:19px;}
+.pr-ic{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--vc) 13%,transparent);flex:none;}
+.pr-ic svg{width:20px;height:20px;color:var(--vc);}
+.pr-s{color:var(--fg-2);font-size:var(--t-sm);line-height:1.55;margin:0 0 10px;}
+.pr-list{display:grid;gap:6px;}
+.pr-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--ink-2);background:var(--ink-0);
+  color:var(--fg);font:inherit;text-align:start;cursor:pointer;}
+.pr-item>svg:first-child{width:20px;height:20px;color:var(--vc);flex:none;}
+.pr-item span{flex:1;display:grid;gap:1px;}
+.pr-item b{font-size:15px;}
+.pr-item small{color:var(--fg-3);font-size:var(--t-xs);}
+.pr-item>svg:last-child{width:16px;height:16px;color:var(--fg-3);flex:none;}
+[dir=rtl] .pr-item>svg:last-child{transform:scaleX(-1);}
+.pr-games{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;}
+.pr-gl{font-size:var(--t-xs);font-weight:800;color:var(--fg-2);margin-inline-end:2px;}
+.pr-game{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r-pill);border:1px solid color-mix(in srgb,var(--vc) 35%,transparent);
+  background:color-mix(in srgb,var(--vc) 7%,transparent);color:var(--fg);font:inherit;font-size:13px;cursor:pointer;}
+.pr-game svg{width:14px;height:14px;color:var(--vc);}
+.pr-back{display:inline-flex;align-items:center;gap:4px;margin:0 0 var(--s2);padding:6px 10px 6px 4px;border:0;background:none;color:var(--acc);font:inherit;font-weight:700;font-size:var(--t-sm);cursor:pointer;}
+.pr-back svg{width:16px;height:16px;transform:scaleX(-1);}
+[dir=rtl] .pr-back{padding:6px 4px 6px 10px;}
+[dir=rtl] .pr-back svg{transform:none;}
+/* ---- header: help and settings ---- */
+.apphead{position:relative;}
+.head-acts{position:absolute;top:0;inset-inline-end:0;display:flex;gap:6px;}
+.head-btn{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--ink-2);background:var(--ink-1);color:var(--fg-2);cursor:pointer;}
+.head-btn svg{width:20px;height:20px;}
 """

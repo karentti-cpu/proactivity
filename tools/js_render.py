@@ -1831,9 +1831,11 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
 /* One <nav> serves as top tabs on a wide screen and as the bottom bar on a
    phone, so there is a single set of buttons and a single source of truth. */
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
-var UNDER_MORE=['help','values','well','tasks','learn','body','circle','games','settings'];
+/* Practice holds these pages; Help and Settings open from the header and light no tab */
+var UNDER_MORE=['values','well','tasks','learn','body','circle','games'];
 function goPage(name){
   var tabName = UNDER_MORE.indexOf(name)>=0 ? 'more' : name;
+  pracBack(name);
   document.querySelectorAll('.tab').forEach(function(x){
     var on=x.dataset.page===tabName;
     x.classList.toggle('on', on);
@@ -1858,10 +1860,28 @@ function goPage(name){
 document.querySelectorAll('.tab').forEach(function(tab){
   tab.addEventListener('click',function(){ goPage(tab.dataset.page); });
 });
-document.querySelectorAll('[data-more]').forEach(function(b){
+/* a way back to Practice at the top of each page that lives under it */
+function pracBack(name){
+  var pg=document.getElementById('page-'+name); if(!pg || UNDER_MORE.indexOf(name)<0) return;
+  if(pg.querySelector('.pr-back')) return;
+  var b=document.createElement('button'); b.type='button'; b.className='pr-back';
+  b.innerHTML=ic('chevron')+'<span data-i18n="prac.back">'+esc(t('prac.back'))+'</span>';
+  b.addEventListener('click',function(){ goPage('more'); });
+  pg.insertBefore(b,pg.firstChild);
+}
+function scrollToEl(id){ setTimeout(function(){ var el=document.getElementById(id)||document.querySelector(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
+document.querySelectorAll('[data-prac]').forEach(function(b){
   b.addEventListener('click',function(){
-    goPage(b.dataset.more);
+    var a=b.dataset.prac.split(':'), k=a[0], v=a[1];
+    if(k==='page') goPage(v);
+    else if(k==='pz') pzOpen(v);
+    else if(k==='game'){ gmPlayer={k:'me'}; goPage('games'); gmStart(v); }
+    else if(k==='well'){ goPage('well'); scrollToEl('wl-'+v); }
+    else if(k==='mean'){ goPage('values'); scrollToEl('.mn-card'); }
   });
+});
+document.querySelectorAll('[data-go]').forEach(function(b){
+  b.addEventListener('click',function(){ goPage(b.dataset.go); });
 });
 /* the app always opens on Today, whatever page was open last */
 function lastTab(){ return 'home'; }
