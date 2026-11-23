@@ -27,6 +27,8 @@ var visEdit=false;
 function renderVision(){
   var box=document.getElementById('visionBox'); if(!box) return;
   var v=(P.vision||'').trim();
+  var pb=document.getElementById('pathBox'), tb=document.getElementById('todayBox');
+  if(pb && tb){ if(v) pb.parentNode.insertBefore(box,pb); else tb.parentNode.insertBefore(box,tb.nextSibling); }
   if(v && !visEdit){
     /* a week after choosing, and then once a month: is this still it? */
     if(!P.visionNext){ P.visionNext=inDays(7); save(); }
@@ -49,6 +51,13 @@ function renderVision(){
   }
   /* not written yet: asked once, and "later" puts it away for a week */
   if(!v && !visEdit && P.visionLater && P.visionLater>dayKey()){ box.className='vision'; box.innerHTML=''; return; }
+  /* not written yet: one short row; tapping it opens the sentence and the ideas */
+  if(!v && !visEdit){
+    box.className='vision';
+    box.innerHTML='<button type="button" class="pause-btn vis-ask" data-vis-open><span class="pz-ic">'+ic('compass')+'</span><span><b>'+esc(t('vis.t'))+'</b><small>'+esc(t('vis.s'))+'</small></span>'+ic('chevron')+'</button>';
+    box.querySelector('[data-vis-open]').addEventListener('click',function(){ visEdit=true; renderVision(); var i=document.getElementById('visIn'); if(i) i.focus(); });
+    return;
+  }
   box.className='vision dash-box';
   box.innerHTML='<h2 class="boxh">'+ic('compass')+'<span>'+esc(t('vis.t'))+'</span></h2>'+
     '<p class="psub">'+esc(t('vis.s'))+'</p>'+
@@ -1698,6 +1707,17 @@ function fullStreak(){
   while(f[dayKey(d)]){ n++; d.setDate(d.getDate()-1); }
   return n;
 }
+/* The one thing to do now, big, at the top of Today. "Ahead" waits for the
+   evening; until then the next thing is My day itself. */
+function pathNextCard(done,n){
+  var icons={pause:'wind',choose:'compass',init:'rocket',ahead:'flag',today:'sun'};
+  if(n===4) return '<div class="nx-card nx-done"><span class="nx-ic">'+ic('check')+'</span><div class="nx-t"><b>'+esc(t('pz.allDone'))+'</b><span>'+esc(t('nx.done.s'))+'</span></div></div>';
+  var k=PZ_ORDER.filter(function(x){ return !done[x]; })[0];
+  if(k==='ahead' && new Date().getHours()<17) k='today';
+  var title=k==='today' ? t('nx.day.t') : t('path.'+k), sub=k==='today' ? t('nx.day') : t('nx.'+k);
+  return '<div class="nx-card"><span class="nx-ic">'+ic(icons[k])+'</span><div class="nx-t"><small>'+esc(t('nx.lab'))+'</small><b>'+esc(title)+'</b><span>'+esc(sub)+'</span></div>'+
+    '<button type="button" class="btn btn-primary nx-go" data-path="'+k+'">'+esc(k==='today' ? t('nx.day.go') : t('nx.go'))+' '+ic('arrow')+'</button></div>';
+}
 function renderPath(){
   var box=document.getElementById('pathBox'); if(!box) return;
   var done=pathDone(), n=PATH_STEPS.filter(function(s){ return done[s.k]; }).length, today=dayKey();
@@ -1708,13 +1728,12 @@ function renderPath(){
   var Ltoday=(S.log||{})[today]||{}, yd=new Date(); yd.setDate(yd.getDate()-1);
   var ya=((S.log||{})[dayKey(yd)]||{}).ahead, yPlan=(ya && ya.o && ya.t && new Date().getHours()<17) ? ya : null;
   box.className='path-box'+(n===4?' full':'');
-  box.innerHTML='<div class="path-top"><b>'+esc(t('path.t'))+'</b><span>'+esc(t('path.n',{n:n}))+'</span></div>'+
+  box.innerHTML=pathNextCard(done,n)+'<div class="path-top"><b>'+esc(t('path.t'))+'</b><span>'+esc(t('path.n',{n:n}))+'</span></div>'+
     '<div class="path-steps">'+PATH_STEPS.map(function(s,i){
       return (i?'<i class="path-line'+(done[PATH_STEPS[i-1].k]?' on':'')+'"></i>':'')+
         '<button type="button" class="path-step'+(done[s.k]?' on':'')+(next&&next.k===s.k?' is-next':'')+'" data-path="'+s.k+'">'+
         '<span class="path-dot">'+ic(done[s.k]?'check':s.icon)+'</span><small>'+esc(t('path.'+s.k))+'</small></button>'; }).join('')+'</div>'+
-    '<p class="path-msg">'+esc(n===4 ? t('path.full') : n===0 ? t('path.go') : t('path.next',{s:t('path.'+next.k)}))+
-      (streak>=2 ? ' <span class="path-streak">'+esc(t('path.streak',{n:streak}))+'</span>' : '')+'</p>'+
+    (streak>=2 ? '<p class="path-msg"><span class="path-streak">'+esc(t('path.streak',{n:streak}))+'</span></p>' : '')+
     (Ltoday.intent ? '<p class="path-note">'+ic('compass')+'<span>'+esc(t('in.line',{x:Ltoday.intent}))+'</span></p>' : '')+
     (yPlan ? '<p class="path-note pn-plan">'+ic('flag')+'<span>'+esc(t('ah.plan',{o:yPlan.o, t:yPlan.t}))+'</span></p>' : '')+
     '<div class="path-bonus"><span>'+esc(t('path.bonus'))+'</span>'+
@@ -1946,4 +1965,31 @@ function tmTomBind(box){
   box.querySelector('#tmPrepAdd').addEventListener('click',prep);
   pIn.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); prep(); } });
 }
+
+/* ================= the welcome tour =================
+   Three short screens, once: the daily path, My day, and where everything
+   else lives. Seen again from How to use it. */
+var TOUR=[{ic:'compass',k:1},{ic:'sun',k:2},{ic:'sliders',k:3}], tourI=0;
+function tourShow(){
+  var st=TOUR[tourI];
+  document.getElementById('tourIc').innerHTML=ic(st.ic);
+  document.getElementById('tourT').textContent=t('tr.'+st.k+'.t');
+  document.getElementById('tourB').textContent=t('tr.'+st.k+'.b');
+  document.getElementById('tourDots').innerHTML=TOUR.map(function(x,i){ return '<i'+(i===tourI?' class="on"':'')+'></i>'; }).join('');
+  var last=tourI===TOUR.length-1, nx=document.getElementById('tourNext');
+  nx.innerHTML=esc(t(last?'tr.go':'tr.next'))+' '+ic('arrow');
+  document.getElementById('tourSkip').hidden=last;
+}
+function tourOpen(){ tourI=0; S.tourSeen=1; save(); goPage('home'); tourShow(); document.getElementById('tourModal').classList.add('on'); }
+function tourClose(){ document.getElementById('tourModal').classList.remove('on'); }
+function tourMaybe(){
+  if(S.tourSeen) return;
+  var n=0, w=function(){ var sp=document.getElementById('splash');
+    if(sp && !sp.hidden && n++<20) return setTimeout(w,300);
+    if(!S.tourSeen) tourOpen(); };
+  setTimeout(w,400);
+}
+document.getElementById('tourNext').addEventListener('click',function(){ if(tourI<TOUR.length-1){ tourI++; tourShow(); } else tourClose(); });
+document.getElementById('tourSkip').addEventListener('click',tourClose);
+document.getElementById('tourAgain').addEventListener('click',tourOpen);
 """

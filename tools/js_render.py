@@ -1689,11 +1689,11 @@ function renderSettings(){
 }
 function bindSettings(){
   var n=document.getElementById('pfName'), a=document.getElementById('pfAge');
-  if(n) n.addEventListener('change',function(){ P.name=n.value.trim(); save(); startApp(); });
+  if(n) n.addEventListener('change',function(){ P.name=n.value.trim(); save(); startApp(); goPage('settings'); });
   if(a) a.addEventListener('change',function(){
     var v=parseInt(a.value,10);
     if(!(v>=AGE_MIN && v<=AGE_MAX)){ toast(t('t.agerange')); a.value=P.age||''; return; }
-    P.age=String(v); save(); startApp(); toast(t('gl.saved'));
+    P.age=String(v); save(); startApp(); goPage('settings'); toast(t('gl.saved'));
   });
   document.querySelectorAll('#pfGender [data-pfg]').forEach(function(o){
     o.addEventListener('click',function(){ setGender(o.dataset.pfg); });
@@ -1831,7 +1831,7 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
 /* One <nav> serves as top tabs on a wide screen and as the bottom bar on a
    phone, so there is a single set of buttons and a single source of truth. */
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
-var UNDER_MORE=['help','values','well','tasks','learn','body','circle','games'];
+var UNDER_MORE=['help','values','well','tasks','learn','body','circle','games','settings'];
 function goPage(name){
   var tabName = UNDER_MORE.indexOf(name)>=0 ? 'more' : name;
   document.querySelectorAll('.tab').forEach(function(x){
@@ -1845,7 +1845,8 @@ function goPage(name){
   try{ localStorage.setItem('proactive_tab', name); }catch(e){}
   if(name==='home') renderDash();
   if(name==='goals') renderGoals();
-  if(name==='progress'){ renderMyWeek(); renderLearned(); renderProfile('profBody'); renderAchievements(); renderSettings(); renderTrend(); renderBackupLast(); }
+  if(name==='progress'){ renderMyWeek(); renderLearned(); renderProfile('profBody'); renderAchievements(); renderTrend(); }
+  if(name==='settings'){ renderSettings(); renderBackupLast(); renderInvite(); }
   if(name==='circle') renderCircle();
   if(name==='well') renderWell();
   if(name==='values') renderValues();
@@ -1859,9 +1860,6 @@ document.querySelectorAll('.tab').forEach(function(tab){
 });
 document.querySelectorAll('[data-more]').forEach(function(b){
   b.addEventListener('click',function(){
-    /* "My details" is the settings card at the bottom of Progress */
-    if(b.dataset.more==='details'){ goPage('progress'); var sb=document.getElementById('settingsBox');
-      if(sb) setTimeout(function(){ sb.scrollIntoView({behavior:'smooth', block:'start'}); var n=document.getElementById('pfName'); if(n) n.focus({preventScroll:true}); },60); return; }
     goPage(b.dataset.more);
   });
 });
@@ -1915,6 +1913,7 @@ function startApp(){
   renderDash();
   checkAchievements();
   goPage(lastTab());
+  tourMaybe();
 }
 
 document.querySelectorAll('.langbtn').forEach(function(b){
