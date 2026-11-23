@@ -11,7 +11,6 @@ def i(name, cls=''):
     c = ('ic ' + cls).strip()
     return f'<svg class="{c}" aria-hidden="true"><use href="#i-{name}"></use></svg>'
 
-
 def scenario(n):
     """One everyday situation shown twice: waiting for it, and acting on it."""
     return (f'<li class="sc">'
@@ -21,11 +20,9 @@ def scenario(n):
             f'<div class="sc-p"><span class="sc-tag">{i("check")}<span data-i18n="n.def.pro"></span></span>'
             f'<p data-i18n="n.sc.{n}.p"></p></div></li>')
 
-
 def faq_item(n):
     return (f'<details><summary><span data-i18n="l.faq.q{n}"></span>{i("chevron")}</summary>'
             f'<p data-i18n="l.faq.a{n}"></p></details>')
-
 
 def plan_card(pid, feature=False):
     tag = (f'<div class="tag"><span data-i18n="l.pr.popular"></span>'
@@ -40,11 +37,9 @@ def plan_card(pid, feature=False):
             f'<ul>{feats}</ul>'
             f'<button class="btn {btn} btn-block" data-buy="{pid}" data-i18n="l.pr.cta"></button></div>')
 
-
 def opt(attr, val, icon, key):
     return (f'<button type="button" class="opt" data-{attr}="{val}" aria-pressed="false">{i(icon)}'
             f'<span data-i18n="{key}"></span></button>')
-
 
 def nav(back=True, next_id=None, next_key='c.next', skip=None):
     out = ''
@@ -58,22 +53,22 @@ def nav(back=True, next_id=None, next_key='c.next', skip=None):
             f'{i("arrow")}</button>')
     return f'<div class="nav">{out}</div>'
 
-
 # Four tabs fit a phone. Tasks, Learn and Body sit behind More.
 TABS = [('home', 'home', 'n.tab.home'),
         ('goals', 'target', 'a.tab.goals'),
         ('sheet', 'calendar', 'n.tab.trk'),
         ('progress', 'trending', 'n.tab.prog'),
         ('more', 'sliders', 'n.tab.more')]
-MORE = [('details', 'user', 'pf.t', 'more.pf'),
-        ('help', 'book', 'help.t', 'more.help'),
-        ('values', 'compass', 'vl.t', 'more.values'),
-        ('well', 'sparkles', 'wl.t', 'more.well'),
-        ('tasks', 'check', 'n.tab.tasks', 'more.tasks'),
-        ('learn', 'brain', 'n.tab.learn', 'more.learn'),
-        ('body', 'activity', 'a.tab.body', 'more.body'),
-        ('circle', 'compass', 'cir.t', 'more.circle'),
-        ('games', 'star', 'gm.t', 'more.games')]
+# More, in three groups so it reads at a glance: about me, growing, help.
+MORE_GROUPS = [('more.g.me',   [('settings', 'user', 'set.t', 'more.set'),
+                                ('values', 'compass', 'vl.t', 'more.values')]),
+               ('more.g.grow', [('well', 'sparkles', 'wl.t', 'more.well'),
+                                ('games', 'star', 'gm.t', 'more.games'),
+                                ('learn', 'brain', 'n.tab.learn', 'more.learn'),
+                                ('body', 'activity', 'a.tab.body', 'more.body'),
+                                ('circle', 'compass', 'cir.t', 'more.circle'),
+                                ('tasks', 'check', 'n.tab.tasks', 'more.tasks')]),
+               ('more.g.help', [('help', 'book', 'help.t', 'more.help')])]
 
 # How to use it: the same steps on the landing page and under More.
 HELP_STEPS = [('flag', 0), ('sun', 1), ('wind', 8), ('target', 2), ('zap', 3), ('calendar', 4), ('trending', 5), ('moon', 6), ('compass', 10), ('seedling', 11), ('clock', 12), ('sparkles', 9), ('sliders', 7)]
@@ -87,11 +82,9 @@ def help_html():
 LANGS = [('he', 'עברית', 'עב'), ('en', 'English', 'EN'), ('fr', 'Français', 'FR'),
          ('ru', 'Русский', 'RU'), ('ar', 'العربية', 'ع')]
 
-
 # The name, with its y drawn as the arrow and the figure - the landing page
 # and the app's own header both carry it.
 WORDMARK = ('''<span class="wordmark" dir="ltr" aria-hidden="true">Proact<svg viewBox="0 0 96 150" class="wm-y"><path d="M8 50 L40 100 M14 140 L70 30" stroke="currentColor" stroke-width="19" stroke-linecap="round"/><path d="M54 30 L84 4 L88 44 Z" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><circle cx="34" cy="40" r="11" fill="#D99A26"/></svg></span>''')
-
 
 def build_body(logo):
     L = ''.join(f'<button class="langbtn" data-lang="{c}" data-short="{sh}" lang="{c}">{n}</button>'
@@ -346,11 +339,14 @@ def build_body(logo):
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
   <section class="path-box" id="pathBox"></section>
-  <button type="button" class="pause-btn" id="pauseBtn"></button>
+  <button type="button" class="pause-btn" id="pauseBtn" hidden></button>
   <section class="dash-box today3" id="todayBox"></section>
-  <button type="button" class="pause-btn feel-btn" id="feelBtn"><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
-  <button type="button" class="home-game" id="gameRow" hidden></button>
-  <section class="dash-box tl-box" id="toolBox" hidden></section>
+  <button type="button" class="pause-btn feel-btn" id="feelBtn" hidden><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
+  <section class="dash-box extra-box" id="extraBox">
+   <h2 class="boxh">{i("sparkles")}<span data-i18n="ex.t"></span></h2>
+   <div class="tl-box" id="toolBox" hidden></div>
+   <button type="button" class="home-game" id="gameRow" hidden></button>
+  </section>
   <section class="dash-box fb-ask" id="fbAsk" hidden></section>
   <section class="dash-box eve" id="eveBox" hidden></section>
   <section class="dash-box bkask" id="bkAsk" hidden></section>
@@ -359,12 +355,65 @@ def build_body(logo):
 
  <div class="page" id="page-more" role="tabpanel">
   <h2 class="ptitle" data-i18n="n.tab.more"></h2>
-  <div class="more-list">{''.join(f'<button class="more-item" data-more="{p}">{i(ic_)}<span><b data-i18n="{k}"></b><small data-i18n="{d}"></small></span>{i("chevron")}</button>' for p, ic_, k, d in MORE)}<button class="more-item fb-item" id="fbOpen">{i("edit")}<span><b data-i18n="fb.t"></b><small data-i18n="fb.more"></small></span>{i("chevron")}</button></div>
+  {''.join(f'<h3 class="more-gt" data-i18n="{g}"></h3><div class="more-list">' + ''.join(f'<button class="more-item" data-more="{p}">{i(ic_)}<span><b data-i18n="{k}"></b><small data-i18n="{d}"></small></span>{i("chevron")}</button>' for p, ic_, k, d in items) + (f'<button class="more-item fb-item" id="fbOpen">{i("edit")}<span><b data-i18n="fb.t"></b><small data-i18n="fb.more"></small></span>{i("chevron")}</button>' if g == 'more.g.help' else '') + '</div>' for g, items in MORE_GROUPS)}
+ </div>
+
+ <div class="page" id="page-settings" role="tabpanel">
+  <h2 class="ptitle" data-i18n="set.t"></h2><p class="psub" data-i18n="set.s"></p>
+
+  <section class="dash-box" id="settingsBox">
+   <h3 class="boxh">{i("user")}<span data-i18n="pf.t"></span></h3>
+   <p class="psub" data-i18n="pf.s"></p>
+   <div class="pf-grid">
+    <div class="field"><label for="pfName" data-i18n="n.o.2.name"></label>
+     <input type="text" id="pfName" autocomplete="nickname" data-i18n-ph="n.o.2.nameph"></div>
+    <div class="field"><label for="pfAge" data-i18n="n.o.2.age"></label>
+     <input type="number" id="pfAge" min="6" max="99" step="1" inputmode="numeric" data-i18n-ph="o.age.ph">
+</div>
+    <div class="field"><label for="pfRemind" data-i18n="cal.time"></label>
+     <input type="time" id="pfRemind" step="300">
+     <p class="hint" data-i18n="cal.time.h"></p></div>
+   </div>
+   <div class="qlabel" data-i18n="n.o.2.gender"></div>
+   <div class="opts" id="pfGender">
+    {opt("pfg","m","user","o.iam.boy")}{opt("pfg","f","user","o.iam.girl")}{opt("pfg","n","compass","o.iam.na")}
+   </div>
+   <div class="qlabel" data-i18n="pf.look"></div>
+   <div class="lookrow">{''.join(f'<button class="accdot" data-set-accent="{a}" data-i18n-title="th.acc.{a}" aria-label="{a}"></button>' for a in ('sage', 'flame', 'bloom', 'mint'))}
+    <button class="modebtn" id="modeBtn" data-i18n-title="th.dark">{i("sun","ic-sun")}{i("moon","ic-moon")}</button>
+   </div>
+  </section>
+
+  <section class="dash-box" id="backupBox">
+   <h3 class="boxh">{i("shield")}<span data-i18n="bk.t"></span></h3>
+   <p class="psub" data-i18n="bk.s"></p>
+   <div class="bk-row">
+    <button class="btn btn-ghost" id="bkExport">{i("arrow")}<span data-i18n="bk.export"></span></button>
+    <label class="btn btn-ghost" for="bkFile">{i("refresh")}<span data-i18n="bk.import"></span></label>
+    <input type="file" accept="application/json,.json" class="hidden-file" id="bkFile">
+   </div>
+   <p class="bk-last" id="bkLast"></p>
+   <p class="hint" id="bkMsg" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="dash-box" id="installBox">
+   <h3 class="boxh">{i("rocket")}<span data-i18n="pwa.box"></span></h3>
+   <p class="psub" data-i18n="pwa.t"></p>
+   <div class="row-btns">
+    <button class="btn btn-ghost" id="installAny">{i("rocket")}<span data-i18n="pwa.go"></span></button>
+   </div>
+  </section>
+
+  <section class="dash-box" id="invBox">
+   <h3 class="boxh">{i("users")}<span data-i18n="inv.t"></span></h3>
+   <div id="inviteCard"></div>
+  </section>
  </div>
 
  <div class="page" id="page-help" role="tabpanel">
   <h2 class="ptitle" data-i18n="help.t"></h2><p class="psub" data-i18n="help.s"></p>
-  <section class="dash-box">{help_html()}</section>
+  <section class="dash-box">{help_html()}
+   <button class="btn btn-ghost btn-block" id="tourAgain">{i("compass")}<span data-i18n="help.tour"></span></button></section>
  </div>
 
  <div class="page" id="page-values" role="tabpanel">
@@ -462,59 +511,11 @@ def build_body(logo):
    <div id="avCard"></div>
   </section>
 
-  <section class="dash-box" id="invBox">
-   <h3 class="boxh">{i("users")}<span data-i18n="inv.t"></span></h3>
-   <div id="inviteCard"></div>
-  </section>
-
   <div id="dIns"></div>
 
   <section class="dash-box" id="trendSection">
    <h3 class="boxh">{i("trending")}<span data-i18n="tr.sec"></span></h3>
    <div class="trendbox" id="trendBox"></div>
-  </section>
-
-  <section class="dash-box" id="backupBox">
-   <h3 class="boxh">{i("shield")}<span data-i18n="bk.t"></span></h3>
-   <p class="psub" data-i18n="bk.s"></p>
-   <div class="bk-row">
-    <button class="btn btn-ghost" id="bkExport">{i("arrow")}<span data-i18n="bk.export"></span></button>
-    <label class="btn btn-ghost" for="bkFile">{i("refresh")}<span data-i18n="bk.import"></span></label>
-    <input type="file" accept="application/json,.json" class="hidden-file" id="bkFile">
-   </div>
-   <p class="bk-last" id="bkLast"></p>
-   <p class="hint" id="bkMsg" role="status" aria-live="polite"></p>
-  </section>
-
-  <section class="dash-box" id="settingsBox">
-   <h3 class="boxh">{i("user")}<span data-i18n="pf.t"></span></h3>
-   <p class="psub" data-i18n="pf.s"></p>
-   <div class="pf-grid">
-    <div class="field"><label for="pfName" data-i18n="n.o.2.name"></label>
-     <input type="text" id="pfName" autocomplete="nickname" data-i18n-ph="n.o.2.nameph"></div>
-    <div class="field"><label for="pfAge" data-i18n="n.o.2.age"></label>
-     <input type="number" id="pfAge" min="6" max="99" step="1" inputmode="numeric" data-i18n-ph="o.age.ph">
-</div>
-    <div class="field"><label for="pfRemind" data-i18n="cal.time"></label>
-     <input type="time" id="pfRemind" step="300">
-     <p class="hint" data-i18n="cal.time.h"></p></div>
-   </div>
-   <div class="qlabel" data-i18n="n.o.2.gender"></div>
-   <div class="opts" id="pfGender">
-    {opt("pfg","m","user","o.iam.boy")}{opt("pfg","f","user","o.iam.girl")}{opt("pfg","n","compass","o.iam.na")}
-   </div>
-   <div class="qlabel" data-i18n="pf.look"></div>
-   <div class="lookrow">{''.join(f'<button class="accdot" data-set-accent="{a}" data-i18n-title="th.acc.{a}" aria-label="{a}"></button>' for a in ('sage', 'flame', 'bloom', 'mint'))}
-    <button class="modebtn" id="modeBtn" data-i18n-title="th.dark">{i("sun","ic-sun")}{i("moon","ic-moon")}</button>
-   </div>
-  </section>
-
-  <section class="dash-box" id="installBox">
-   <h3 class="boxh">{i("rocket")}<span data-i18n="pwa.box"></span></h3>
-   <p class="psub" data-i18n="pwa.t"></p>
-   <div class="row-btns">
-    <button class="btn btn-ghost" id="installAny">{i("rocket")}<span data-i18n="pwa.go"></span></button>
-   </div>
   </section>
 
   <section class="dash-box">
@@ -748,6 +749,15 @@ def build_body(logo):
  <div id="pzBody"></div>
 </div></div>
 
+<div class="modal-bg tour-bg" id="tourModal" role="dialog" aria-modal="true" aria-labelledby="tourT">
+ <div class="modal tour">
+  <div class="tour-ic" id="tourIc"></div>
+  <h2 id="tourT"></h2>
+  <p id="tourB"></p>
+  <div class="tour-dots" id="tourDots"></div>
+  <div class="row-btns tour-btns"><button class="btn btn-primary" id="tourNext"></button><button class="btn btn-quiet" id="tourSkip" data-i18n="tr.skip"></button></div>
+ </div>
+</div>
 <div class="modal-bg" id="fbModal"><div class="modal pz-modal" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
  <div class="pz-top"><h3 id="fbTitle">{i("edit")}<span data-i18n="fb.t"></span></h3>
   <button type="button" class="t3act" id="fbX" aria-label="close">{i("x")}</button></div>
