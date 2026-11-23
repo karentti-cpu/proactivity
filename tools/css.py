@@ -1792,6 +1792,10 @@ a.t3act{display:inline-grid;place-items:center;color:var(--acc);}
   #app{padding-block-end:calc(78px + env(safe-area-inset-bottom));}
   .toast{inset-block-end:calc(74px + env(safe-area-inset-bottom));}
   .tipcard{inset-block-end:calc(120px + env(safe-area-inset-bottom));}
+  /* the site's "rate" pill (reviews.js on karenmor.com): up by the languages, where it covers
+     neither the tab bar nor a row of My day, and scrolls away with the page */
+  .kmr-pill{position:absolute!important;top:calc(7px + env(safe-area-inset-top,0px))!important;bottom:auto!important;
+    inset-inline-start:auto!important;inset-inline-end:10px!important;padding:6px 11px!important;font-size:13px!important;box-shadow:0 1px 6px rgba(0,0,0,.12)!important;}
   .ch-areas{grid-template-columns:repeat(2,1fr);}
   body.in-app .sticky-cta{display:none;}
 }
@@ -2025,4 +2029,6 @@ svg.trend .td.hot{fill:var(--acc-hi);stroke:var(--acc-hi);r:5.5;}
 [dir=rtl] .tour-btns svg{transform:scaleX(-1);}
 .tour-bg{align-items:center;}
 #tourAgain{margin-top:var(--s4);}
+/* the site's "rate" pill steps aside while a window or the update bar is open */
+body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{display:none!important;}
 """
