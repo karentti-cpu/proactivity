@@ -33,11 +33,12 @@ function renderVision(){
     /* a week after choosing, and then once a month: is this still it? */
     if(!P.visionNext){ P.visionNext=inDays(7); save(); }
     var due=P.visionNext<=dayKey();
-    box.className='vision';
+    box.className='vision vis-card';
     box.innerHTML='<button type="button" class="vision-line" data-vis-edit aria-label="'+esc(t('ge.btn'))+'">'+ic('compass')+
       '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span>'+ic('edit','vis-edit')+'</button>'+
       ((S.meaning&&S.meaning.why) ? '<button type="button" class="vis-why" data-vis-vals>🌱 <small>'+esc(t('mn.lab'))+':</small> '+esc(S.meaning.why)+'</button>' : '')+
-      ((S.values&&S.values.list&&S.values.list.length) ? '<button type="button" class="vis-vals" data-vis-vals>'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</button>' : '')+
+      ((S.values&&S.values.list&&S.values.list.length) ? '<button type="button" class="vis-vals" data-vis-vals aria-label="'+esc(t('vl.t'))+'"><small class="vis-vl">'+ic('compass')+esc(t('vl.t'))+'</small>'+
+        '<span class="vis-chips">'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</span>'+ic('chevron','vis-go')+'</button>' : '')+
       (due ? '<div class="vis-chk"><p>'+esc(t('vis.chk'))+'</p><div class="row-btns">'+
         '<button class="btn btn-ghost btn-sm" data-vis-keep>'+ic('check')+'<span>'+esc(t('vis.keep'))+'</span></button>'+
         '<button class="btn btn-quiet btn-sm" data-vis-change>'+ic('edit')+'<span>'+esc(t('vis.change'))+'</span></button></div></div>' : '');
