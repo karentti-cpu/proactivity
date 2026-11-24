@@ -2031,11 +2031,11 @@ svg.trend .td.hot{fill:var(--acc-hi);stroke:var(--acc-hi);r:5.5;}
 body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{display:none!important;}
 
 /* ---- the four verbs: one colour and one icon each, everywhere ---- */
-.v-pause,[data-path=pause]{--vc:#2A8C8C;}
-.v-choose,[data-path=choose]{--vc:#3D7B5E;}
-.v-init,[data-path=init]{--vc:#C9781E;}
-.v-ahead,[data-path=ahead]{--vc:#6C5BA6;}
-.v-today,[data-path=today]{--vc:var(--acc);}
+.v-pause,[data-path=pause],[data-path-k=pause]{--vc:#2A8C8C;}
+.v-choose,[data-path=choose],[data-path-k=choose]{--vc:#3D7B5E;}
+.v-init,[data-path=init],[data-path-k=init]{--vc:#C9781E;}
+.v-ahead,[data-path=ahead],[data-path-k=ahead]{--vc:#6C5BA6;}
+.v-today,[data-path=today],[data-path-k=today]{--vc:var(--acc);}
 .v-other{--vc:var(--fg-2);}
 .path-step .path-dot svg{color:var(--vc,var(--fg-2));}
 .path-step.on .path-dot{background:var(--vc,var(--acc));border-color:var(--vc,var(--acc));}
@@ -2199,4 +2199,16 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 .rg-x{display:inline-grid;place-items:center;border:0;background:none;padding:0 0 0 2px;cursor:pointer;color:var(--fg-3);}
 .rg-x svg{width:13px;height:13px;}
 .nt-sg .t3idea.on{border-style:solid;border-color:var(--vc,var(--acc));background:color-mix(in srgb,var(--vc,var(--acc)) 9%,transparent);}
+
+/* ---- Today: the four steps explained ---- */
+.path-intro{font-size:var(--t-sm);color:var(--fg-2);line-height:1.55;margin:-4px 0 12px;}
+.path-step em{font-style:normal;font-size:10.5px;color:var(--fg-3);line-height:1.25;text-align:center;max-width:76px;}
+.path-step.open .path-dot{box-shadow:0 0 0 4px color-mix(in srgb,var(--vc) 22%,transparent);}
+.path-info{margin:12px 0 4px;padding:12px 14px;border-radius:14px;background:var(--ink-1);border:1.5px solid var(--vc);}
+.path-info>b{display:flex;align-items:center;gap:8px;color:var(--vc);font-size:16px;margin-bottom:6px;}
+.path-info>b svg{width:20px;height:20px;}
+.path-info ul{margin:0 0 10px;padding-inline-start:20px;display:grid;gap:4px;font-size:var(--t-sm);line-height:1.55;}
+.path-info li::marker{color:var(--vc);}
+.path-info .btn-primary{background:var(--vc);border-color:var(--vc);}
+.path-box .nx-card{margin:14px -4px 6px;}
 """
