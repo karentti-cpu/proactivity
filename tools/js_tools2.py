@@ -131,7 +131,7 @@ function tl2Open(id){
   m.className='modal-bg v-'+d.v;
   document.getElementById('tlTitle').innerHTML=ic(d.icon)+'<span>'+esc(t('tl2.'+id+'.t'))+'</span>';
   tl2Render(); m.classList.add('on');
-  try{ history.pushState({tl2:1},''); tl2Hist=true; }catch(e){}
+  if(!tl2Hist){ try{ history.pushState({tl2:1},''); tl2Hist=true; }catch(e){} }
 }
 function tl2Close(fromBack){
   tl2Stop(); tl2=null; document.getElementById('toolModal').classList.remove('on');
@@ -150,6 +150,7 @@ function tl2Intro(id){
     (d.ex ? '<p class="tl2-ex"><b>'+esc(t('tl2.ex'))+':</b> '+esc(t('tl2.'+id+'.ex.'+ageK()))+'</p>' : '')+
     (d.dex ? '<p class="tl2-ex">'+esc(t('dc.ex.'+ageK()))+'</p>' : '');
 }
+function tl2ToPause(mode){ var had=tl2Hist; tl2Close(true); if(had) pzHist=true; pzOpen(mode); }
 /* the end of every tool: a step was taken, and did it help? */
 function tl2Done(msg){
   var st=tl2St(), today=dayKey(), id=tl2.id;
@@ -300,7 +301,7 @@ function regBind(box,d){
   box.querySelectorAll('[data-rgf]').forEach(function(b){ b.addEventListener('click',function(){ tl2.f=b.dataset.rgf; tl2Render(); }); });
   box.querySelectorAll('[data-rgt]').forEach(function(b){ b.addEventListener('click',function(){ tl2.n=+b.dataset.rgt; tl2Render(); }); });
   box.querySelectorAll('[data-rggo]').forEach(function(b){ b.addEventListener('click',function(){ var a=b.dataset.rggo;
-    if(a.indexOf('pz:')===0){ tl2Close(); pzOpen(a.slice(3)); } else tl2Open(a.slice(5)); }); });
+    if(a.indexOf('pz:')===0) tl2ToPause(a.slice(3)); else tl2Open(a.slice(5)); }); });
   box.querySelectorAll('[data-rgcb]').forEach(function(b){ b.addEventListener('click',function(){ var x=b.dataset.rgcb, i=S.calmbox.indexOf(x);
     if(i<0) S.calmbox.push(x); else S.calmbox.splice(i,1); save(); tl2Render(); }); });
   box.querySelectorAll('[data-rgcbdel]').forEach(function(b){ b.addEventListener('click',function(){ S.calmbox.splice(+b.dataset.rgcbdel,1); save(); tl2Render(); }); });
@@ -340,7 +341,7 @@ function tl2Bind(box,d,td){
     box.querySelectorAll('[data-why]').forEach(function(b){ b.addEventListener('click',function(){ tl2.r=b.dataset.why; tl2Render(); }); });
     var nx=$('#tlNext'); if(nx) nx.addEventListener('click',function(){
       var to=STUCK_TO[tl2.r], st=tl2St(), today=dayKey(); if(!st.used[today]) st.used[today]=[]; if(st.used[today].indexOf('stuck')<0) st.used[today].push('stuck'); save();
-      if(to.indexOf('pz:')===0){ tl2Close(); pzOpen(to.slice(3)); } else tl2Open(to); });
+      if(to.indexOf('pz:')===0) tl2ToPause(to.slice(3)); else tl2Open(to); });
   }
   if(d.kind==='matrix'){
     box.querySelectorAll('[data-mimp]').forEach(function(b){ b.addEventListener('click',function(){ var x=td.items[+b.dataset.mimp]; x.imp=!x.imp; save(); tl2Render(); }); });
