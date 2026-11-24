@@ -1718,6 +1718,7 @@ function pathNextCard(done,n){
   return '<div class="nx-card v-'+k+'"><span class="nx-ic">'+ic(icons[k])+'</span><div class="nx-t"><small>'+esc(t('nx.lab'))+'</small><b>'+esc(title)+'</b><span>'+esc(sub)+'</span></div>'+
     '<button type="button" class="btn btn-primary nx-go" data-path="'+k+'">'+esc(k==='today' ? t('nx.day.go') : t('nx.go'))+' '+ic('arrow')+'</button></div>';
 }
+var pathInfo=null;
 function renderPath(){
   var box=document.getElementById('pathBox'); if(!box) return;
   var done=pathDone(), n=PATH_STEPS.filter(function(s){ return done[s.k]; }).length, today=dayKey();
@@ -1728,11 +1729,20 @@ function renderPath(){
   var Ltoday=(S.log||{})[today]||{}, yd=new Date(); yd.setDate(yd.getDate()-1);
   var ya=((S.log||{})[dayKey(yd)]||{}).ahead, yPlan=(ya && ya.o && ya.t && new Date().getHours()<17) ? ya : null;
   box.className='path-box'+(n===4?' full':'');
-  box.innerHTML=pathNextCard(done,n)+'<div class="path-top"><b>'+esc(t('path.t'))+'</b><span>'+esc(t('path.n',{n:n}))+'</span></div>'+
+  /* first a word about the four steps, then the steps (a tap shows what each
+     one works on), then the next step to start */
+  var info=pathInfo ? PATH_STEPS.filter(function(s){ return s.k===pathInfo; })[0] : null;
+  box.innerHTML='<div class="path-top"><b>'+esc(t('path.t'))+'</b><span>'+esc(t('path.n',{n:n}))+'</span></div>'+
+    '<p class="path-intro">'+esc(t('path.intro'))+'</p>'+
     '<div class="path-steps">'+PATH_STEPS.map(function(s,i){
       return (i?'<i class="path-line'+(done[PATH_STEPS[i-1].k]?' on':'')+'"></i>':'')+
-        '<button type="button" class="path-step'+(done[s.k]?' on':'')+(next&&next.k===s.k?' is-next':'')+'" data-path="'+s.k+'">'+
-        '<span class="path-dot">'+ic(done[s.k]?'check':s.icon)+'</span><small>'+esc(t('path.'+s.k))+'</small></button>'; }).join('')+'</div>'+
+        '<button type="button" class="path-step'+(done[s.k]?' on':'')+(next&&next.k===s.k?' is-next':'')+(pathInfo===s.k?' open':'')+'" data-pinfo="'+s.k+'" data-path-k="'+s.k+'" aria-expanded="'+(pathInfo===s.k)+'">'+
+        '<span class="path-dot">'+ic(done[s.k]?'check':s.icon)+'</span><small>'+esc(t('path.'+s.k))+'</small><em>'+esc(t('path.w.'+s.k))+'</em></button>'; }).join('')+'</div>'+
+    (info ? '<div class="path-info v-'+info.k+'"><b>'+ic(info.icon)+'<span>'+esc(t('path.'+info.k))+'</span></b>'+
+        '<ul>'+[1,2,3].map(function(j){ return '<li>'+esc(t('path.wp.'+info.k+'.'+j))+'</li>'; }).join('')+'</ul>'+
+        '<div class="row-btns"><button type="button" class="btn btn-primary btn-sm" data-path="'+info.k+'">'+esc(t('path.go.step',{s:t('path.'+info.k)}))+'</button>'+
+        '<button type="button" class="btn btn-quiet btn-sm" data-ptools="'+info.k+'">'+esc(t('path.tools'))+'</button></div></div>' : '')+
+    pathNextCard(done,n)+
     (streak>=2 ? '<p class="path-msg"><span class="path-streak">'+esc(t('path.streak',{n:streak}))+'</span></p>' : '')+
     (Ltoday.intent ? '<p class="path-note">'+ic('compass')+'<span>'+esc(t('in.line',{x:Ltoday.intent}))+'</span></p>' : '')+
     (yPlan ? '<p class="path-note pn-plan">'+ic('flag')+'<span>'+esc(t('ah.plan',{o:yPlan.o, t:yPlan.t}))+'</span></p>' : '')+
@@ -1740,6 +1750,10 @@ function renderPath(){
       '<button type="button" class="pb'+(done.feel?' on':'')+'" data-path="feel">'+ic(done.feel?'check':'face')+'<span>'+esc(t('path.feel'))+'</span></button>'+
       '<button type="button" class="pb'+(done.game?' on':'')+'" data-path="game">'+ic(done.game?'check':'star')+'<span>'+esc(t('path.game'))+'</span></button></div>';
   if(fresh) box.classList.add('pop');
+  box.querySelectorAll('[data-pinfo]').forEach(function(b){ b.addEventListener('click',function(){
+    pathInfo = pathInfo===b.dataset.pinfo ? null : b.dataset.pinfo; renderPath(); }); });
+  box.querySelectorAll('[data-ptools]').forEach(function(b){ b.addEventListener('click',function(){
+    var k=b.dataset.ptools; goPage('more'); setTimeout(function(){ var el=document.querySelector('#page-more .v-'+k); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); }); });
   box.querySelectorAll('[data-path]').forEach(function(b){ b.addEventListener('click',function(){
     var k=b.dataset.path;
     if(k==='pause') pzOpen('day');
