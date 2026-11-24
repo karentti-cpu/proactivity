@@ -2211,4 +2211,16 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 .path-info li::marker{color:var(--vc);}
 .path-info .btn-primary{background:var(--vc);border-color:var(--vc);}
 .path-box .nx-card{margin:14px -4px 6px;}
+
+/* ---- the direction card on Today: who I want to be, what for, my values ---- */
+.vis-card{margin:0 0 var(--s3);padding:var(--s3) var(--s4);border-radius:var(--r-card);background:var(--acc-dim);}
+.vis-card .vision-line{margin:0;padding:0;background:none;border-radius:0;}
+.vis-card .vis-why,.vis-card .vis-vals{margin-top:10px;padding-top:10px;border-top:1px solid rgba(61,123,94,.15);}
+.vis-card .vis-vals{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:start;font:inherit;background:none;border-radius:0;width:100%;}
+.vis-vl{flex:0 0 100%;display:flex;align-items:center;gap:6px;font-size:var(--t-xs);font-weight:700;color:var(--acc);}
+.vis-vl svg{width:14px;height:14px;}
+.vis-card .vis-vals .vis-chips{flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:0;background:none;border-radius:0;}
+.vis-card .vis-vals .vis-chips span{padding:3px 10px;border-radius:var(--r-pill);background:rgba(255,255,255,.75);font-size:var(--t-xs);font-weight:700;color:var(--fg);}
+.vis-go{width:16px;height:16px;color:var(--fg-3);flex:none;}
+[dir=rtl] .vis-go{transform:scaleX(-1);}
 """
