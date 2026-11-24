@@ -1834,7 +1834,19 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
 /* Practice holds these pages; Help and Settings open from the header and light no tab */
 var UNDER_MORE=['values','well','tasks','learn','body','circle','games','notes'];
-function goPage(name){
+/* Every move between pages is a step in the phone's history, so its back
+   button returns to the previous page; only from the first page does it
+   leave the app. Windows (pause, tools) push their own step on top. */
+var curPage=null, prevPage=null, pageBooted=false;
+function goPage(name, fromHistory){
+  if(!fromHistory){
+    try{
+      if(!pageBooted) history.replaceState({pg:name},'');
+      else if(name!==curPage) history.pushState({pg:name},'');
+    }catch(e){}
+  }
+  if(name!==curPage) prevPage=curPage;
+  pageBooted=true; curPage=name;
   var tabName = UNDER_MORE.indexOf(name)>=0 ? 'more' : name;
   pracBack(name);
   document.querySelectorAll('.tab').forEach(function(x){
@@ -1862,13 +1874,17 @@ function goPage(name){
 document.querySelectorAll('.tab').forEach(function(tab){
   tab.addEventListener('click',function(){ goPage(tab.dataset.page); });
 });
+window.addEventListener('popstate',function(e){
+  var st=e.state||{};
+  if(st.pg && st.pg!==curPage && document.getElementById('page-'+st.pg)) goPage(st.pg,true);
+});
 /* a way back to Practice at the top of each page that lives under it */
 function pracBack(name){
   var pg=document.getElementById('page-'+name); if(!pg || UNDER_MORE.indexOf(name)<0) return;
   if(pg.querySelector('.pr-back')) return;
   var b=document.createElement('button'); b.type='button'; b.className='pr-back';
   b.innerHTML=ic('chevron')+'<span data-i18n="prac.back">'+esc(t('prac.back'))+'</span>';
-  b.addEventListener('click',function(){ goPage('more'); });
+  b.addEventListener('click',function(){ if(prevPage==='more') history.back(); else goPage('more'); });
   pg.insertBefore(b,pg.firstChild);
 }
 function scrollToEl(id){ setTimeout(function(){ var el=document.getElementById(id)||document.querySelector(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
