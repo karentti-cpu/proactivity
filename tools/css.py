@@ -2223,4 +2223,17 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 .vis-card .vis-vals .vis-chips span{padding:3px 10px;border-radius:var(--r-pill);background:rgba(255,255,255,.75);font-size:var(--t-xs);font-weight:700;color:var(--fg);}
 .vis-go{width:16px;height:16px;color:var(--fg-3);flex:none;}
 [dir=rtl] .vis-go{transform:scaleX(-1);}
+
+.vis-vl .vis-chg{margin-inline-start:auto;}
+.vis-chg{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--r-pill);border:1px solid rgba(61,123,94,.35);background:rgba(255,255,255,.75);
+  font-style:normal;font-size:var(--t-xs);font-weight:700;color:var(--acc);}
+.vis-chg svg{width:12px;height:12px;}
+.vis-hint{flex:0 0 100%;font-size:var(--t-xs);color:var(--fg-2);}
+.vis-none{align-items:center;}
+.vis-none .vis-hint{flex:1;}
+.vis-card .vis-vals .vis-hint{padding:0;background:none;border-radius:0;font-weight:400;color:var(--fg-2);}
+.vl-pickbox{scroll-margin-top:70px;}
+.vl-choice{margin:4px 0 8px;padding:8px 12px;border-radius:12px;background:var(--acc-dim);font-size:var(--t-sm);font-weight:600;line-height:1.5;}
+.vl-pickbox.flash{animation:vlflash 1.6s ease;}
+@keyframes vlflash{0%,40%{box-shadow:0 0 0 3px var(--acc);}100%{box-shadow:none;}}
 """
