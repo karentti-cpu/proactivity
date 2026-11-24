@@ -63,7 +63,10 @@ TABS = [('home', 'home', 'n.tab.home'),
 # path, and a fifth group for what is not one of them. An item is
 # (action, icon, title key, subtitle key or None); actions are page:<name>,
 # pz:<mode>, game:<id>, or well:<section>.
-VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 'face', 'pz.ck.t', 'pz.ck.s'), ('pz:sc', 'shield', 'sc.t', None)], [],
+VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 'face', 'pz.ck.t', 'pz.ck.s'),
+                           ('tool:stop', 'shield', 'tl2.stop.t', 'tl2.stop.s'), ('tool:ground', 'seedling', 'tl2.ground.t', 'tl2.ground.s')],
+          [('tool:therm', 'gauge', 'tl2.therm.t', 'tl2.therm.s'), ('tool:name', 'face', 'tl2.name.t', 'tl2.name.s'),
+           ('tool:calmbox', 'gift', 'tl2.calmbox.t', 'tl2.calmbox.s'), ('tool:move', 'activity', 'tl2.move.t', 'tl2.move.s'), ('pz:sc', 'shield', 'sc.t', None)],
           ['calm', 'feel', 'kind']),
          ('choose', 'compass', [('tool:pros', 'target', 'tl2.pros.t', 'tl2.pros.s'), ('tool:ten', 'clock', 'tl2.ten.t', 'tl2.ten.s'),
                                 ('page:values', 'compass', 'vl.t', 'more.values'), ('page:circle', 'target', 'cir.t', 'more.circle')],
@@ -90,7 +93,7 @@ def prac_row(act, ic_, k, d):
     return f'<button class="pr-item" data-prac="{act}">{i(ic_)}<span><b data-i18n="{k}"></b>{sub}</span>{i("chevron")}</button>'
 def practice_html():
     out = []
-    groups = [('pause', ('stress', 'sad')), ('choose', ('decide', 'lost', 'fear')),
+    groups = [('pause', ('stress', 'strong', 'sad')), ('choose', ('decide', 'lost', 'fear')),
               ('init', ('procr', 'energy', 'phone')), ('ahead', ('time', 'much', 'forget'))]
     hard = ''.join(f'<div class="hd-g v-{v}"><span class="hd-gl" data-i18n="path.{v}"></span>' +
                    ''.join(f'<button type="button" class="t3idea t3chip" data-hard="{k}"><span data-i18n="hd.{k}"></span></button>' for k in ks) + '</div>'
@@ -101,7 +104,7 @@ def practice_html():
         more = (f'<details class="pr-more"><summary>{i("chevron")}<span data-i18n="prac.more"></span> <span class="numf">({len(extra)})</span></summary>'
                 f'<div class="pr-list">{"".join(prac_row(*x) for x in extra)}</div></details>') if extra else ''
         chips = ''.join(f'<button class="pr-game" data-prac="game:{g}">{i(GAME_ICONS[g])}<span data-i18n="gm.{g}"></span></button>' for g in games)
-        out.append(f'<section class="pr-verb v-{v}"><h3 class="pr-h"><span class="pr-ic">{i(ic_)}</span><span data-i18n="path.{v}"></span></h3>'
+        out.append(f'<section class="pr-verb v-{v}"><h3 class="pr-h"><span class="pr-ic">{i(ic_)}</span><span data-i18n="{'vb.pause.t' if v == 'pause' else 'path.' + v}"></span></h3>'
                    f'<p class="pr-s" data-i18n="vb.{v}.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in items)}</div>{more}'
                    f'<div class="pr-games"><span class="pr-gl" data-i18n="prac.games"></span>{chips}</div></section>')
     out.append(f'<section class="pr-verb v-other"><h3 class="pr-h"><span class="pr-ic">{i("sparkles")}</span><span data-i18n="prac.other"></span></h3>'
