@@ -2179,4 +2179,24 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 .dc-coin b{font-size:18px;}
 .tl2-fb .btn.on{border-color:var(--vc,var(--acc));background:color-mix(in srgb,var(--vc,var(--acc)) 10%,transparent);}
 .dc-foot{margin-top:8px;padding-top:10px;border-top:1px dashed var(--ink-3);}
+
+/* ---- regulation tools ---- */
+.rg-card{display:grid;justify-items:center;gap:6px;text-align:center;margin:8px 0 12px;padding:18px 14px;border-radius:20px;background:color-mix(in srgb,var(--vc,var(--acc)) 9%,transparent);}
+.rg-n{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--vc,var(--acc));color:#fff;font-size:30px;font-weight:800;}
+.rg-card b{font-size:19px;line-height:1.4;}
+.rg-card small{color:var(--fg-2);line-height:1.55;font-size:var(--t-sm);}
+.rg-card .tour-dots{margin:6px 0 0;}
+.rg-say p{font-size:16px;font-weight:600;}
+#rgNext svg{width:18px;height:18px;}
+[dir=rtl] #rgNext svg{transform:scaleX(-1);}
+.rg-therm{display:grid;gap:6px;margin:8px 0;}
+.rg-t{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;border:1.5px solid transparent;font:inherit;text-align:start;cursor:pointer;color:#1F2B2A;}
+.rg-t b{font-size:20px;width:26px;text-align:center;}
+.rg-t.t1{background:#DDF0E4;}.rg-t.t2{background:#EAF2D6;}.rg-t.t3{background:#FBF0D2;}.rg-t.t4{background:#FBE0CC;}.rg-t.t5{background:#F7D3D0;}
+.rg-t.on{border-color:#1F2B2A;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.rg-box{margin:10px 0;padding:12px;border-radius:12px;border:1px dashed var(--ink-3);}
+.rg-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.rg-x{display:inline-grid;place-items:center;border:0;background:none;padding:0 0 0 2px;cursor:pointer;color:var(--fg-3);}
+.rg-x svg{width:13px;height:13px;}
+.nt-sg .t3idea.on{border-style:solid;border-color:var(--vc,var(--acc));background:color-mix(in srgb,var(--vc,var(--acc)) 9%,transparent);}
 """

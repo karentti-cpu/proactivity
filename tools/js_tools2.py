@@ -20,6 +20,12 @@ var TL2={
   matrix: {icon:'target',   v:'ahead', m:3,  ex:0, kind:'matrix'},
   blocks: {icon:'calendar', v:'ahead', m:3,  ex:0, kind:'blocks'},
   rocks:  {icon:'gem',      v:'ahead', m:3,  ex:0, kind:'rocks'},
+  ground: {icon:'seedling', v:'pause', m:2, ex:0, kind:'seq', seq:['5','4','3','2','1']},
+  stop:   {icon:'shield',   v:'pause', m:1, ex:0, kind:'seq', seq:['1','2','3','4']},
+  name:   {icon:'face',     v:'pause', m:1, ex:0, kind:'name'},
+  move:   {icon:'activity', v:'pause', m:1, ex:0, kind:'timer'},
+  therm:  {icon:'gauge',    v:'pause', m:1, ex:0, kind:'therm'},
+  calmbox:{icon:'gift',     v:'pause', m:2, ex:0, kind:'calmbox'},
   phone:  {icon:'zap',      v:'init',  m:20, ex:0, kind:'timer'},
   draft:  {icon:'edit',     v:'init',  m:10, ex:0, kind:'timer'},
   pros:   {icon:'target',   v:'choose', m:5, dex:1, kind:'pros'},
@@ -253,10 +259,55 @@ function tl2Render(){
       (r[i] ? '<button type="button" class="btn btn-ghost btn-sm" data-rockday="'+i+'">'+esc(t('tl2.rocks.today'))+'</button>' : '')+'</div>'; }).join('')+
       '<button class="btn btn-primary btn-block" id="tlOk">'+ic('check')+'<span>'+esc(t('c.save'))+'</span></button>';
   }
+  else if(d.kind==='seq'){
+    var si=tl2.si||0, k=d.seq[si], last=si===d.seq.length-1;
+    html+='<div class="rg-card"><span class="rg-n">'+(id==='ground' ? k : 'STOP'.charAt(si))+'</span>'+
+      (id==='ground' ? '<b>'+esc(t('tl2.g.'+k))+'</b><small>'+esc(t('tl2.g.h'))+'</small>' : '<b>'+esc(t('tl2.stop.p'+k))+'</b><small>'+esc(t('tl2.stop.b'+k))+'</small>')+
+      '<div class="tour-dots">'+d.seq.map(function(_,i){ return '<i'+(i===si?' class="on"':'')+'></i>'; }).join('')+'</div></div>'+
+      '<button class="btn btn-primary btn-block" id="rgNext">'+esc(t(last?'dc.done':'tr.next'))+' '+(last?'':ic('arrow'))+'</button>';
+  }
+  else if(d.kind==='name'){
+    html+='<div class="mg-picks pz-chips">'+FEELINGS.slice(7).map(function(f){ return '<button type="button" class="t3idea t3chip'+(tl2.f===f.k?' on':'')+'" data-rgf="'+f.k+'"><span>'+f.e+' '+esc(t('fe.'+f.k))+'</span></button>'; }).join('')+'</div>'+
+      (tl2.f ? '<div class="tl2-tip rg-say">'+ic('sparkles')+'<p>'+esc(t('tl2.name.say',{f:t('fe.'+tl2.f).toLowerCase()}))+'</p></div><button class="btn btn-primary btn-block" id="rgDone">'+esc(t('dc.done'))+'</button>' : '');
+  }
+  else if(d.kind==='therm'){
+    var go={2:['tool:name'],3:['pz:day'],4:['tool:stop'],5:['tool:ground','tool:calmbox']};
+    html+='<div class="rg-therm">'+[5,4,3,2,1].map(function(n){ return '<button type="button" class="rg-t t'+n+(tl2.n===n?' on':'')+'" data-rgt="'+n+'"><b class="numf">'+n+'</b><span>'+esc(t('tl2.therm.l'+n))+'</span></button>'; }).join('')+'</div>'+
+      (tl2.n ? '<div class="tl2-tip">'+ic('sparkles')+'<p>'+esc(t('tl2.therm.a'+tl2.n))+'</p></div>'+
+        (go[tl2.n]||[]).map(function(a){ var L=pracLabel(a); return '<button class="pr-item" data-rggo="'+a+'">'+ic(L[0])+'<span><b>'+esc(L[1])+'</b></span>'+ic('chevron')+'</button>'; }).join('')+
+        '<button class="btn btn-ghost btn-block" id="rgDone">'+esc(t('dc.done'))+'</button>' : '');
+  }
+  else if(d.kind==='calmbox'){
+    if(!S.calmbox) S.calmbox=[];
+    var mine=S.calmbox;
+    html+='<div class="nt-sg">'+t('tl2.calmbox.sg.'+ageK()).split('|').map(function(x){ var on=mine.indexOf(x)>=0;
+        return '<button type="button" class="t3idea'+(on?' on':'')+'" data-rgcb="'+esc(x)+'">'+ic(on?'check':'plus')+'<span>'+esc(x)+'</span></button>'; }).join('')+'</div>'+
+      '<div class="addrow"><input type="text" id="rgCbIn" maxlength="60" placeholder="'+esc(t('tl2.calmbox.ph'))+'"><button class="btn btn-ghost" id="rgCbAdd">'+ic('plus')+'<span>'+esc(t('c.add'))+'</span></button></div>'+
+      '<div class="rg-box"><b>🧰 '+esc(t('tl2.calmbox.mine'))+'</b>'+(mine.length ? '<div class="rg-items">'+mine.map(function(x,i){
+        return '<span class="ns-chip">'+esc(x)+'<button type="button" class="rg-x" data-rgcbdel="'+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></span>'; }).join('')+'</div>'
+        : '<p class="hint">'+esc(t('tl2.calmbox.empty'))+'</p>')+'</div>'+
+      '<button class="btn btn-primary btn-block" id="rgDone">'+esc(t('dc.done'))+'</button>';
+  }
   else if(d.kind in DEC_KINDS) html+=DEC_KINDS[d.kind]();
   box.innerHTML=html;
   tl2Bind(box,d,td);
   if(d.kind in DEC_KINDS) decBind(box,d);
+  regBind(box,d);
+}
+function regBind(box,d){
+  var nx=box.querySelector('#rgNext'); if(nx) nx.addEventListener('click',function(){
+    tl2.si=(tl2.si||0)+1; if(tl2.si>=d.seq.length) tl2Done(t('tl2.well')); else tl2Render(); });
+  box.querySelectorAll('[data-rgf]').forEach(function(b){ b.addEventListener('click',function(){ tl2.f=b.dataset.rgf; tl2Render(); }); });
+  box.querySelectorAll('[data-rgt]').forEach(function(b){ b.addEventListener('click',function(){ tl2.n=+b.dataset.rgt; tl2Render(); }); });
+  box.querySelectorAll('[data-rggo]').forEach(function(b){ b.addEventListener('click',function(){ var a=b.dataset.rggo;
+    if(a.indexOf('pz:')===0){ tl2Close(); pzOpen(a.slice(3)); } else tl2Open(a.slice(5)); }); });
+  box.querySelectorAll('[data-rgcb]').forEach(function(b){ b.addEventListener('click',function(){ var x=b.dataset.rgcb, i=S.calmbox.indexOf(x);
+    if(i<0) S.calmbox.push(x); else S.calmbox.splice(i,1); save(); tl2Render(); }); });
+  box.querySelectorAll('[data-rgcbdel]').forEach(function(b){ b.addEventListener('click',function(){ S.calmbox.splice(+b.dataset.rgcbdel,1); save(); tl2Render(); }); });
+  var ca=box.querySelector('#rgCbAdd'); if(ca){ var ci=box.querySelector('#rgCbIn');
+    var add=function(){ var v=ci.value.trim(); if(!v) return; if(S.calmbox.indexOf(v)<0) S.calmbox.push(v); save(); tl2Render(); var n=document.getElementById('rgCbIn'); if(n) n.focus(); };
+    ca.addEventListener('click',add); ci.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); add(); } }); }
+  var dn=box.querySelector('#rgDone'); if(dn) dn.addEventListener('click',function(){ tl2Done(t('tl2.well')); });
 }
 function tl2Bind(box,d,td){
   var $=function(s){ return box.querySelector(s); };
@@ -310,8 +361,8 @@ function tl2Frog(i){
 
 /* ================= what is hard for me now ================= */
 var HARD={procr:['tool:five','tool:tiny','tool:stuck'], time:['tool:top3','tool:matrix','tool:blocks'], much:['page:notes','tool:top3','tool:frog'],
-          energy:['tool:two','tool:five','pz:day'], stress:['pz:day','pz:feel','pz:sc'], lost:['page:values','vision','mean'],
-          decide:['tool:pros','tool:ten','tool:coin'], fear:['tool:draft','tool:tiny','pz:sc'], sad:['pz:sc','game:kind','well:grat'],
+          energy:['tool:two','tool:five','pz:day'], stress:['tool:stop','pz:day','tool:ground'], strong:['tool:therm','tool:ground','tool:calmbox'], lost:['page:values','vision','mean'],
+          decide:['tool:pros','tool:ten','tool:coin'], fear:['tool:draft','tool:tiny','pz:sc'], sad:['tool:name','pz:sc','game:kind'],
           phone:['tool:phone','tool:focus','tool:five'], forget:['page:notes','tool:ifthen','tool:blocks']};
 var hardOn=null;
 function pracLabel(a){
