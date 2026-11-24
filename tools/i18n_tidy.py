@@ -82,4 +82,5 @@ TIDY = {
 'prac.games': ('משחקים', 'Games', 'Jeux', 'Игры', 'ألعاب'),
 'prac.ahead': ('לתכנן את מחר', 'Plan tomorrow', 'Prévoir demain', 'Спланировать завтра', 'خطّط للغد'),
 'prac.back':  ('לתרגול', 'Back to Practice', 'Retour à Pratique', 'Назад к практике', 'العودة إلى التمرين'),
+'prac.more':  ('עוד כלים כאן', 'More tools here', 'Plus d\'outils ici', 'Ещё инструменты', 'أدوات أخرى هنا'),
 }

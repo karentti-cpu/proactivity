@@ -46,6 +46,7 @@ from i18n_vact import VACT
 from i18n_mean import MEAN
 from i18n_quick import QUICK
 from i18n_tidy import TIDY
+from i18n_tools2 import TOOLS2
 from i18n_time import TIMEM
 from i18n_pro import PRO
 from i18n_avatar import AVATAR
@@ -62,6 +63,7 @@ from js_pro import JS_PRO
 from js_data import JS_DATA
 from js_avatar import JS_AVATAR
 from js_self import JS_SELF
+from js_tools2 import JS_TOOLS2
 
 LANGS = ['he', 'en', 'fr', 'ru', 'ar']
 OUT = os.path.join(ROOT, 'index.html')
@@ -73,7 +75,7 @@ def merged_table():
                       (CONTENT, 'i18n_content'), (PLAN, 'i18n_plan'),
                       (MINI, 'i18n_mini'), (FOOD, 'i18n_food'),
                       (QUIZ, 'i18n_quiz'), (HOME, 'i18n_home'),
-                      (QBANDS, 'i18n_qbands'), (CHAIN, 'i18n_chain'), (SUGGEST, 'i18n_suggest'), (READY, 'i18n_ready'), (GAMES, 'i18n_games'), (GAMES2, 'i18n_games2'), (HELP, 'i18n_help'), (PAUSE, 'i18n_pause'), (FEEL, 'i18n_feel'), (TOOLS, 'i18n_tools'), (WELL, 'i18n_well'), (WELL2, 'i18n_well2'), (PATH, 'i18n_path'), (PATH2, 'i18n_path2'), (KIDS, 'i18n_kids'), (KIDGAMES, 'i18n_kidgames'), (FB, 'i18n_fb'), (VALUES, 'i18n_values'), (VIA, 'i18n_via'), (VACT, 'i18n_vact'), (MEAN, 'i18n_mean'), (QUICK, 'i18n_quick'), (TIDY, 'i18n_tidy'), (TIMEM, 'i18n_time'),
+                      (QBANDS, 'i18n_qbands'), (CHAIN, 'i18n_chain'), (SUGGEST, 'i18n_suggest'), (READY, 'i18n_ready'), (GAMES, 'i18n_games'), (GAMES2, 'i18n_games2'), (HELP, 'i18n_help'), (PAUSE, 'i18n_pause'), (FEEL, 'i18n_feel'), (TOOLS, 'i18n_tools'), (WELL, 'i18n_well'), (WELL2, 'i18n_well2'), (PATH, 'i18n_path'), (PATH2, 'i18n_path2'), (KIDS, 'i18n_kids'), (KIDGAMES, 'i18n_kidgames'), (FB, 'i18n_fb'), (VALUES, 'i18n_values'), (VIA, 'i18n_via'), (VACT, 'i18n_vact'), (MEAN, 'i18n_mean'), (QUICK, 'i18n_quick'), (TIDY, 'i18n_tidy'), (TOOLS2, 'i18n_tools2'), (TIMEM, 'i18n_time'),
                       (PRO, 'i18n_pro'), (AVATAR, 'i18n_avatar')):
         for k, v in src.items():
             if k in table:
@@ -363,7 +365,7 @@ def main():
              "}catch(e){}})();")
 
     js = '\n'.join([i18n_js(table), JS_CORE, JS_QUIZ, JS_APP, JS_PRO, JS_DATA,
-                    JS_AVATAR, JS_CHAIN, JS_MINI, JS_SELF, JS_RENDER])
+                    JS_AVATAR, JS_CHAIN, JS_MINI, JS_SELF, JS_TOOLS2, JS_RENDER])
 
     html = (
         '<!DOCTYPE html>\n'
