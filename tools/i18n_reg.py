@@ -167,4 +167,16 @@ REG = {
 'path.wp.ahead.3': ('לתת לו שעה, כדי שזה באמת יקרה', 'Give it a time, so it really happens', 'Lui donner une heure, pour que ça arrive vraiment', 'Назначить время, чтобы это точно случилось', 'أعطيها ساعة كي تحدث فعلاً'),
 'path.go.step':    ('להתחיל: {s}', 'Start: {s}', 'Commencer : {s}', 'Начать: {s}', 'ابدأ: {s}'),
 'path.tools':      ('כלים לצעד הזה', 'Tools for this step', 'Outils pour ce pas', 'Инструменты для этого шага', 'أدوات لهذه الخطوة'),
+
+# ---- my values: chosen by me, and changeable ----
+'vis.vl.mine':  ('הערכים שבחרתי', 'The values I chose', 'Les valeurs que j\'ai choisies', 'Ценности, которые я выбрал{|а}', 'القيم التي اخترتها'),
+'vis.vl.change':('לשנות', 'Change', 'Modifier', 'Изменить', 'تغيير'),
+'vis.vl.hint':  ('הבחירה שלך. אפשר לשנות בכל רגע.', 'Your choice. You can change it any time.', 'C\'est ton choix. Tu peux le changer à tout moment.',
+                 'Это твой выбор. Его можно изменить в любой момент.', 'اختيارك. يمكنك تغييره في أي وقت.'),
+'vis.vl.none':  ('עוד לא בחרת. עד 5 ערכים שהכי חשובים לך.', 'Not chosen yet. Up to 5 values that matter most to you.', 'Pas encore choisies. Jusqu\'à 5 valeurs qui comptent le plus pour toi.',
+                 'Пока не выбраны. До 5 самых важных для тебя ценностей.', 'لم تختر بعد. حتى 5 قيم هي الأهم لك.'),
+'vis.vl.pick':  ('לבחור', 'Choose', 'Choisir', 'Выбрать', 'اختر'),
+'vl.choice':    ('הבחירה כאן שלך: לוחצים כדי להוסיף או להוריד, ואפשר לשנות בכל רגע.', 'The choice here is yours: tap to add or remove, and change it any time.',
+                 'Ici, c\'est toi qui choisis : touche pour ajouter ou retirer, et change quand tu veux.', 'Выбор здесь за тобой: нажимай, чтобы добавить или убрать, и меняй когда угодно.',
+                 'الاختيار هنا لك: اضغط لتضيف أو تزيل، وغيّر متى شئت.'),
 }

@@ -37,13 +37,19 @@ function renderVision(){
     box.innerHTML='<button type="button" class="vision-line" data-vis-edit aria-label="'+esc(t('ge.btn'))+'">'+ic('compass')+
       '<span><small>'+esc(t('vis.lab'))+'</small><b>'+esc(v)+'</b></span>'+ic('edit','vis-edit')+'</button>'+
       ((S.meaning&&S.meaning.why) ? '<button type="button" class="vis-why" data-vis-vals>🌱 <small>'+esc(t('mn.lab'))+':</small> '+esc(S.meaning.why)+'</button>' : '')+
-      ((S.values&&S.values.list&&S.values.list.length) ? '<button type="button" class="vis-vals" data-vis-vals aria-label="'+esc(t('vl.t'))+'"><small class="vis-vl">'+ic('compass')+esc(t('vl.t'))+'</small>'+
-        '<span class="vis-chips">'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</span>'+ic('chevron','vis-go')+'</button>' : '')+
+      ((S.values&&S.values.list&&S.values.list.length)
+        ? '<button type="button" class="vis-vals" data-vis-vals aria-label="'+esc(t('vis.vl.change'))+'"><small class="vis-vl">'+ic('compass')+esc(t('vis.vl.mine'))+
+            '<em class="vis-chg">'+ic('edit')+esc(t('vis.vl.change'))+'</em></small>'+
+          '<span class="vis-chips">'+S.values.list.map(function(k){ return '<span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'; }).join('')+'</span>'+
+          '<small class="vis-hint">'+esc(t('vis.vl.hint'))+'</small></button>'
+        : '<button type="button" class="vis-vals vis-none" data-vis-vals><small class="vis-vl">'+ic('compass')+esc(t('vl.t'))+'</small>'+
+          '<span class="vis-hint">'+esc(t('vis.vl.none'))+'</span><em class="vis-chg">'+esc(t('vis.vl.pick'))+'</em></button>')+
       (due ? '<div class="vis-chk"><p>'+esc(t('vis.chk'))+'</p><div class="row-btns">'+
         '<button class="btn btn-ghost btn-sm" data-vis-keep>'+ic('check')+'<span>'+esc(t('vis.keep'))+'</span></button>'+
         '<button class="btn btn-quiet btn-sm" data-vis-change>'+ic('edit')+'<span>'+esc(t('vis.change'))+'</span></button></div></div>' : '');
     box.querySelector('[data-vis-edit]').addEventListener('click',function(){ visEdit=true; renderVision(); });
-    var vv=box.querySelector('[data-vis-vals]'); if(vv) vv.addEventListener('click',function(){ goPage('values'); });
+    box.querySelectorAll('[data-vis-vals]').forEach(function(vv){ vv.addEventListener('click',function(){ goPage('values');
+      setTimeout(function(){ var pk=document.querySelector('#valuesBox .vl-pickbox'); if(pk){ pk.scrollIntoView({behavior:'smooth',block:'start'}); pk.classList.add('flash'); setTimeout(function(){ pk.classList.remove('flash'); },1600); } },80); }); });
     var kp=box.querySelector('[data-vis-keep]');
     if(kp) kp.addEventListener('click',function(){ P.visionNext=inDays(30); save(); toast(t('vis.saved')); renderVision(); });
     var ch=box.querySelector('[data-vis-change]');
@@ -1883,8 +1889,9 @@ function renderValues(){
   var prevWk=(function(){ var d=new Date(wk+'T00:00:00'); d.setDate(d.getDate()-7); return dayKey(d); })();
   var chk=st.check[wk]||{}, prev=st.check[prevWk]||{};
   box.innerHTML=
-    '<section class="dash-box"><div class="boxh-row"><h3 class="boxh">'+ic('compass')+'<span>'+esc(t('vl.pick'))+'</span></h3>'+
+    '<section class="dash-box vl-pickbox"><div class="boxh-row"><h3 class="boxh">'+ic('compass')+'<span>'+esc(t('vl.pick'))+'</span></h3>'+
       '<span class="boxh-n">'+esc(t('vl.n',{n:list.length}))+'</span></div>'+
+      '<p class="vl-choice">✋ '+esc(t('vl.choice'))+'</p>'+
       '<p class="vl-src">'+esc(t('vl.src'))+'</p>'+
       VIA_GROUPS.map(function(g){ return '<div class="vl-group"><div class="mg-lab">'+esc(t('vt.'+g[0]))+'</div><div class="vl-grid">'+g[1].map(function(v){ var on=list.indexOf(v[0])>=0;
         return '<button type="button" class="vl-chip'+(on?' on':'')+'" data-vl="'+v[0]+'"'+(!on&&full?' disabled':'')+'><span>'+v[1]+'</span><i><b>'+esc(vlName(v[0]))+'</b><small>'+esc(t('v.'+v[0]+'.m'))+'</small></i></button>'; }).join('')+'</div></div>'; }).join('')+
