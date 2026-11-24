@@ -813,6 +813,7 @@ function renderToday3(){
   var rank=function(x){ return x.imp&&x.urg ? 0 : x.imp ? 1 : x.urg ? 2 : 3; };
   var order=td.items.map(function(_,i){ return i; }).sort(function(a,b){
     var A=td.items[a], B=td.items[b];
+    if(!!A.frog!==!!B.frog) return A.frog ? -1 : 1;
     if(!!A.time!==!!B.time) return A.time ? -1 : 1;
     if(A.time && B.time && A.time!==B.time) return A.time<B.time ? -1 : 1;
     return rank(A)-rank(B) || a-b;
@@ -823,7 +824,7 @@ function renderToday3(){
       '<button type="button" class="t3chk" data-t3="'+i+'" aria-pressed="'+(it.done?'true':'false')+'" aria-label="'+esc(t('t3.mark'))+'">'+ic('check')+'</button>'+
       (it.time ? '<span class="t3time numf">'+esc(it.time)+'</span>' : '')+
       '<input type="text" maxlength="80" data-t3in="'+i+'" value="'+esc(it.t)+'" aria-label="'+esc(it.t)+'">'+
-      (it.imp ? '<span class="t3flag" title="'+esc(t('tm.imp'))+'">⭐</span>' : '')+(it.urg ? '<span class="t3flag" title="'+esc(t('tm.urg'))+'">⏰</span>' : '')+
+      (it.frog && !it.done ? '<span class="t3flag" title="'+esc(t('tl2.frog.t'))+'">🐸</span>' : '')+(it.imp ? '<span class="t3flag" title="'+esc(t('tm.imp'))+'">⭐</span>' : '')+(it.urg ? '<span class="t3flag" title="'+esc(t('tm.urg'))+'">⏰</span>' : '')+
       (it.init ? '<span class="t3tag" title="'+esc(t('it.t'))+'">'+ic('rocket')+'</span>' : it.retry ? '<span class="t3tag rt" title="'+esc(t('rt.tag'))+'">'+ic('refresh')+'</span>' : '')+
       (it.url ? '<a class="t3act" href="'+esc(it.url)+'" target="_blank" rel="noopener" aria-label="'+esc(t('srch.open'))+'" title="'+esc(t('srch.open'))+'">'+ic('link')+'</a>' : '')+
       (it.done ? '' : '<button type="button" class="t3act t3more'+(open?' on':'')+'" data-t3more-i="'+i+'" aria-expanded="'+open+'" aria-label="'+esc(t('tm.more'))+'" title="'+esc(t('tm.more'))+'">⋯</button>')+
@@ -1705,7 +1706,7 @@ function bindSettings(){
 }
 function renderDash(){
   renderVision(); renderGenderAsk(); renderToday3(); renderEvening(); renderBackupAsk(); renderDashStats(); renderGameRow(); renderTool(); renderPauseBtn(); renderPath(); renderGreet(); renderFbAsk();
-  renderAvatarCard(); renderInvite();
+  renderAvatarCard(); renderInvite(); renderNoteStrip();
 }
 
 
@@ -1832,7 +1833,7 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
    phone, so there is a single set of buttons and a single source of truth. */
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
 /* Practice holds these pages; Help and Settings open from the header and light no tab */
-var UNDER_MORE=['values','well','tasks','learn','body','circle','games'];
+var UNDER_MORE=['values','well','tasks','learn','body','circle','games','notes'];
 function goPage(name){
   var tabName = UNDER_MORE.indexOf(name)>=0 ? 'more' : name;
   pracBack(name);
@@ -1852,6 +1853,7 @@ function goPage(name){
   if(name==='circle') renderCircle();
   if(name==='well') renderWell();
   if(name==='values') renderValues();
+  if(name==='notes') renderNotes();
   if(name==='sheet') renderTrackers();
   if(name==='games'){ gmRun=null; renderGames(); }
   if(name==='body') renderBodyGate();
@@ -1870,16 +1872,20 @@ function pracBack(name){
   pg.insertBefore(b,pg.firstChild);
 }
 function scrollToEl(id){ setTimeout(function(){ var el=document.getElementById(id)||document.querySelector(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
-document.querySelectorAll('[data-prac]').forEach(function(b){
+function pracBind(b){
+  if(b.dataset.pracBound) return; b.dataset.pracBound='1';
   b.addEventListener('click',function(){
     var a=b.dataset.prac.split(':'), k=a[0], v=a[1];
-    if(k==='page') goPage(v);
+    if(k==='tool') tl2Open(v);
+    else if(k==='vision'){ goPage('home'); visEdit=true; renderVision(); var vi=document.getElementById('visIn'); if(vi){ vi.scrollIntoView({block:'center'}); vi.focus(); } }
+    else if(k==='page') goPage(v);
     else if(k==='pz') pzOpen(v);
     else if(k==='game'){ gmPlayer={k:'me'}; goPage('games'); gmStart(v); }
     else if(k==='well'){ goPage('well'); scrollToEl('wl-'+v); }
     else if(k==='mean'){ goPage('values'); scrollToEl('.mn-card'); }
   });
-});
+}
+document.querySelectorAll('[data-prac]').forEach(pracBind);
 document.querySelectorAll('[data-go]').forEach(function(b){
   b.addEventListener('click',function(){ goPage(b.dataset.go); });
 });

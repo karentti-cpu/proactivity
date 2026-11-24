@@ -63,13 +63,23 @@ TABS = [('home', 'home', 'n.tab.home'),
 # path, and a fifth group for what is not one of them. An item is
 # (action, icon, title key, subtitle key or None); actions are page:<name>,
 # pz:<mode>, game:<id>, or well:<section>.
-VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 'face', 'pz.ck.t', 'pz.ck.s'), ('pz:sc', 'shield', 'sc.t', None)],
+VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 'face', 'pz.ck.t', 'pz.ck.s'), ('pz:sc', 'shield', 'sc.t', None)], [],
           ['calm', 'feel', 'kind']),
-         ('choose', 'compass', [('page:values', 'compass', 'vl.t', 'more.values'), ('page:circle', 'target', 'cir.t', 'more.circle'), ('mean', 'seedling', 'mn.t', None)],
+         ('choose', 'compass', [('tool:pros', 'target', 'tl2.pros.t', 'tl2.pros.s'), ('tool:ten', 'clock', 'tl2.ten.t', 'tl2.ten.s'),
+                                ('page:values', 'compass', 'vl.t', 'more.values'), ('page:circle', 'target', 'cir.t', 'more.circle')],
+          [('tool:friend', 'users', 'tl2.friend.t', 'tl2.friend.s'), ('tool:vfit', 'compass', 'tl2.vfit.t', 'tl2.vfit.s'),
+           ('tool:coin', 'star', 'tl2.coin.t', 'tl2.coin.s'), ('tool:enough', 'check', 'tl2.enough.t', 'tl2.enough.s'), ('mean', 'seedling', 'mn.t', None)],
           ['react', 'circle', 'flip', 'speed']),
-         ('init', 'rocket', [('page:tasks', 'check', 'n.tab.tasks', 'more.tasks'), ('well:kd', 'gift', 'kd.t', None), ('well:str', 'gem', 'st.t', None)],
+         ('init', 'rocket', [('tool:five', 'zap', 'tl2.five.t', 'tl2.five.s'), ('tool:tiny', 'flag', 'tl2.tiny.t', 'tl2.tiny.s'),
+                             ('tool:frog', 'target', 'tl2.frog.t', 'tl2.frog.s'), ('tool:stuck', 'help', 'tl2.stuck.t', 'tl2.stuck.s')],
+          [('tool:two', 'check', 'tl2.two.t', 'tl2.two.s'), ('tool:ifthen', 'clock', 'tl2.ifthen.t', 'tl2.ifthen.s'),
+           ('tool:phone', 'zap', 'tl2.phone.t', 'tl2.phone.s'), ('tool:draft', 'edit', 'tl2.draft.t', 'tl2.draft.s'),
+           ('page:tasks', 'check', 'n.tab.tasks', 'more.tasks'), ('well:kd', 'gift', 'kd.t', None), ('well:str', 'gem', 'st.t', None)],
           ['step', 'vact', 'str']),
-         ('ahead', 'flag', [('pz:ahead', 'flag', 'prac.ahead', None), ('well:grat', 'book', 'gr.t', None)],
+         ('ahead', 'flag', [('page:notes', 'edit', 'nt.t', 'nt.sub'), ('tool:top3', 'star', 'tl2.top3.t', 'tl2.top3.s'),
+                            ('tool:focus', 'clock', 'tl2.focus.t', 'tl2.focus.s'), ('tool:matrix', 'target', 'tl2.matrix.t', 'tl2.matrix.s')],
+          [('tool:blocks', 'calendar', 'tl2.blocks.t', 'tl2.blocks.s'), ('tool:rocks', 'gem', 'tl2.rocks.t', 'tl2.rocks.s'),
+           ('pz:ahead', 'flag', 'prac.ahead', None), ('well:grat', 'book', 'gr.t', None)],
           ['opt'])]
 OTHER = [('page:well', 'sparkles', 'wl.t', 'more.well'), ('page:learn', 'brain', 'n.tab.learn', 'more.learn'),
          ('page:body', 'activity', 'a.tab.body', 'more.body'), ('page:games', 'star', 'gm.t', 'more.games')]
@@ -80,10 +90,19 @@ def prac_row(act, ic_, k, d):
     return f'<button class="pr-item" data-prac="{act}">{i(ic_)}<span><b data-i18n="{k}"></b>{sub}</span>{i("chevron")}</button>'
 def practice_html():
     out = []
-    for v, ic_, items, games in VERBS:
+    groups = [('pause', ('stress', 'sad')), ('choose', ('decide', 'lost', 'fear')),
+              ('init', ('procr', 'energy', 'phone')), ('ahead', ('time', 'much', 'forget'))]
+    hard = ''.join(f'<div class="hd-g v-{v}"><span class="hd-gl" data-i18n="path.{v}"></span>' +
+                   ''.join(f'<button type="button" class="t3idea t3chip" data-hard="{k}"><span data-i18n="hd.{k}"></span></button>' for k in ks) + '</div>'
+                   for v, ks in groups)
+    out.append(f'<section class="pr-hard"><h3 class="pr-h"><span data-i18n="hd.t"></span></h3><p class="pr-s" data-i18n="hd.s"></p>'
+               f'{hard}<div class="pr-list" id="hardBox" hidden></div></section>')
+    for v, ic_, items, extra, games in VERBS:
+        more = (f'<details class="pr-more"><summary>{i("chevron")}<span data-i18n="prac.more"></span> <span class="numf">({len(extra)})</span></summary>'
+                f'<div class="pr-list">{"".join(prac_row(*x) for x in extra)}</div></details>') if extra else ''
         chips = ''.join(f'<button class="pr-game" data-prac="game:{g}">{i(GAME_ICONS[g])}<span data-i18n="gm.{g}"></span></button>' for g in games)
         out.append(f'<section class="pr-verb v-{v}"><h3 class="pr-h"><span class="pr-ic">{i(ic_)}</span><span data-i18n="path.{v}"></span></h3>'
-                   f'<p class="pr-s" data-i18n="vb.{v}.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in items)}</div>'
+                   f'<p class="pr-s" data-i18n="vb.{v}.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in items)}</div>{more}'
                    f'<div class="pr-games"><span class="pr-gl" data-i18n="prac.games"></span>{chips}</div></section>')
     out.append(f'<section class="pr-verb v-other"><h3 class="pr-h"><span class="pr-ic">{i("sparkles")}</span><span data-i18n="prac.other"></span></h3>'
                f'<p class="pr-s" data-i18n="prac.other.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in OTHER)}</div></section>')
@@ -359,6 +378,7 @@ def build_body(logo):
    <div class="opts">{opt("hgnd","m","user","o.iam.boy")}{opt("hgnd","f","user","o.iam.girl")}{opt("hgnd","n","compass","o.iam.na")}</div>
   </section>
   <section class="path-box" id="pathBox"></section>
+  <section class="note-strip" id="noteStrip"></section>
   <button type="button" class="pause-btn" id="pauseBtn" hidden></button>
   <section class="dash-box today3" id="todayBox"></section>
   <button type="button" class="pause-btn feel-btn" id="feelBtn" hidden><span class="pz-ic">{i("face")}</span><span><b data-i18n="pz.ck.t"></b><small data-i18n="pz.ck.s"></small></span>{i("chevron")}</button>
@@ -428,6 +448,11 @@ def build_body(logo):
    <h3 class="boxh">{i("users")}<span data-i18n="inv.t"></span></h3>
    <div id="inviteCard"></div>
   </section>
+ </div>
+
+ <div class="page" id="page-notes" role="tabpanel">
+  <h2 class="ptitle" data-i18n="nt.t"></h2><p class="psub" data-i18n="nt.s"></p>
+  <section class="dash-box" id="notesBox"></section>
  </div>
 
  <div class="page" id="page-help" role="tabpanel">
@@ -768,6 +793,12 @@ def build_body(logo):
  <div class="pz-top"><h3 id="pzTitle">{i("wind")}<span data-i18n="pz.btn"></span></h3>
   <button type="button" class="t3act" id="pzX" aria-label="close">{i("x")}</button></div>
  <div id="pzBody"></div>
+</div></div>
+
+<div class="modal-bg" id="toolModal"><div class="modal pz-modal tl2-modal" role="dialog" aria-modal="true" aria-labelledby="tlTitle">
+ <div class="pz-top"><h3 id="tlTitle"></h3>
+  <button type="button" class="t3act" id="tlX" aria-label="close">{i("x")}</button></div>
+ <div id="tlBody"></div>
 </div></div>
 
 <div class="modal-bg tour-bg" id="tourModal" role="dialog" aria-modal="true" aria-labelledby="tourT">
