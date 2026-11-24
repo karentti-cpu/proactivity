@@ -2150,4 +2150,33 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 .ns-open span{flex:1;}
 .ns-open>svg:last-child{width:16px;height:16px;color:var(--fg-3);}
 [dir=rtl] .ns-open>svg:last-child{transform:scaleX(-1);}
+
+/* ---- difficulties by step; deciding ---- */
+.hd-g{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;padding-inline-start:8px;border-inline-start:3px solid var(--vc);}
+.hd-gl{flex:0 0 100%;font-size:var(--t-xs);font-weight:800;color:var(--vc);}
+.hd-g .t3chip{border-color:color-mix(in srgb,var(--vc) 35%,transparent);}
+.pr-hard .hd-g .t3chip.on{background:var(--vc);border-color:var(--vc);}
+.dc-ab{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.dc-opt{margin:6px 0 10px;padding:10px;border-radius:12px;border:1px solid var(--ink-2);background:var(--ink-0);}
+.dc-opt>b{display:flex;justify-content:space-between;margin-bottom:6px;}
+.dc-sc{color:var(--vc,var(--acc));direction:ltr;unicode-bidi:isolate;}
+.dc-it{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:var(--t-sm);}
+.dc-it span{flex:1;}
+.dc-it.pro span{color:#2F6B4F;}
+.dc-it.con span{color:#A4483A;}
+.dc-w{min-width:38px;padding:3px 8px;border-radius:var(--r-pill);border:1px solid var(--ink-3);background:var(--ink-1);font:inherit;font-weight:800;font-size:12px;cursor:pointer;}
+.dc-add{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+.dc-add input{min-width:0;}
+.dc-lean{text-align:center;font-weight:800;color:var(--vc,var(--acc));margin:6px 0 10px;}
+.dc-lab{display:block;font-weight:700;font-size:var(--t-sm);margin:4px 0;}
+.dc-v{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--ink-2);}
+.dc-v span{flex:1 1 100%;font-weight:600;}
+.dc-coin{display:grid;justify-items:center;gap:6px;margin:10px 0;}
+.dc-c{font-size:54px;line-height:1;}
+.dc-coin.on .dc-c{animation:dcflip .6s ease;}
+@keyframes dcflip{0%{transform:rotateY(0) translateY(0);}50%{transform:rotateY(540deg) translateY(-20px);}100%{transform:rotateY(1080deg) translateY(0);}}
+@media (prefers-reduced-motion:reduce){.dc-coin.on .dc-c{animation:none;}}
+.dc-coin b{font-size:18px;}
+.tl2-fb .btn.on{border-color:var(--vc,var(--acc));background:color-mix(in srgb,var(--vc,var(--acc)) 10%,transparent);}
+.dc-foot{margin-top:8px;padding-top:10px;border-top:1px dashed var(--ink-3);}
 """

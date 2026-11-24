@@ -65,11 +65,15 @@ TABS = [('home', 'home', 'n.tab.home'),
 # pz:<mode>, game:<id>, or well:<section>.
 VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 'face', 'pz.ck.t', 'pz.ck.s'), ('pz:sc', 'shield', 'sc.t', None)], [],
           ['calm', 'feel', 'kind']),
-         ('choose', 'compass', [('page:values', 'compass', 'vl.t', 'more.values'), ('page:circle', 'target', 'cir.t', 'more.circle'), ('mean', 'seedling', 'mn.t', None)], [],
+         ('choose', 'compass', [('tool:pros', 'target', 'tl2.pros.t', 'tl2.pros.s'), ('tool:ten', 'clock', 'tl2.ten.t', 'tl2.ten.s'),
+                                ('page:values', 'compass', 'vl.t', 'more.values'), ('page:circle', 'target', 'cir.t', 'more.circle')],
+          [('tool:friend', 'users', 'tl2.friend.t', 'tl2.friend.s'), ('tool:vfit', 'compass', 'tl2.vfit.t', 'tl2.vfit.s'),
+           ('tool:coin', 'star', 'tl2.coin.t', 'tl2.coin.s'), ('tool:enough', 'check', 'tl2.enough.t', 'tl2.enough.s'), ('mean', 'seedling', 'mn.t', None)],
           ['react', 'circle', 'flip', 'speed']),
          ('init', 'rocket', [('tool:five', 'zap', 'tl2.five.t', 'tl2.five.s'), ('tool:tiny', 'flag', 'tl2.tiny.t', 'tl2.tiny.s'),
                              ('tool:frog', 'target', 'tl2.frog.t', 'tl2.frog.s'), ('tool:stuck', 'help', 'tl2.stuck.t', 'tl2.stuck.s')],
           [('tool:two', 'check', 'tl2.two.t', 'tl2.two.s'), ('tool:ifthen', 'clock', 'tl2.ifthen.t', 'tl2.ifthen.s'),
+           ('tool:phone', 'zap', 'tl2.phone.t', 'tl2.phone.s'), ('tool:draft', 'edit', 'tl2.draft.t', 'tl2.draft.s'),
            ('page:tasks', 'check', 'n.tab.tasks', 'more.tasks'), ('well:kd', 'gift', 'kd.t', None), ('well:str', 'gem', 'st.t', None)],
           ['step', 'vact', 'str']),
          ('ahead', 'flag', [('page:notes', 'edit', 'nt.t', 'nt.sub'), ('tool:top3', 'star', 'tl2.top3.t', 'tl2.top3.s'),
@@ -86,10 +90,13 @@ def prac_row(act, ic_, k, d):
     return f'<button class="pr-item" data-prac="{act}">{i(ic_)}<span><b data-i18n="{k}"></b>{sub}</span>{i("chevron")}</button>'
 def practice_html():
     out = []
-    hard = ''.join(f'<button type="button" class="t3idea t3chip" data-hard="{k}"><span data-i18n="hd.{k}"></span></button>'
-                   for k in ('procr', 'time', 'much', 'energy', 'stress', 'lost'))
+    groups = [('pause', ('stress', 'sad')), ('choose', ('decide', 'lost', 'fear')),
+              ('init', ('procr', 'energy', 'phone')), ('ahead', ('time', 'much', 'forget'))]
+    hard = ''.join(f'<div class="hd-g v-{v}"><span class="hd-gl" data-i18n="path.{v}"></span>' +
+                   ''.join(f'<button type="button" class="t3idea t3chip" data-hard="{k}"><span data-i18n="hd.{k}"></span></button>' for k in ks) + '</div>'
+                   for v, ks in groups)
     out.append(f'<section class="pr-hard"><h3 class="pr-h"><span data-i18n="hd.t"></span></h3><p class="pr-s" data-i18n="hd.s"></p>'
-               f'<div class="mg-picks pz-chips">{hard}</div><div class="pr-list" id="hardBox" hidden></div></section>')
+               f'{hard}<div class="pr-list" id="hardBox" hidden></div></section>')
     for v, ic_, items, extra, games in VERBS:
         more = (f'<details class="pr-more"><summary>{i("chevron")}<span data-i18n="prac.more"></span> <span class="numf">({len(extra)})</span></summary>'
                 f'<div class="pr-list">{"".join(prac_row(*x) for x in extra)}</div></details>') if extra else ''

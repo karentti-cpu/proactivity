@@ -19,8 +19,101 @@ var TL2={
   focus:  {icon:'clock',    v:'ahead', m:25, ex:0, kind:'focus'},
   matrix: {icon:'target',   v:'ahead', m:3,  ex:0, kind:'matrix'},
   blocks: {icon:'calendar', v:'ahead', m:3,  ex:0, kind:'blocks'},
-  rocks:  {icon:'gem',      v:'ahead', m:3,  ex:0, kind:'rocks'}
+  rocks:  {icon:'gem',      v:'ahead', m:3,  ex:0, kind:'rocks'},
+  phone:  {icon:'zap',      v:'init',  m:20, ex:0, kind:'timer'},
+  draft:  {icon:'edit',     v:'init',  m:10, ex:0, kind:'timer'},
+  pros:   {icon:'target',   v:'choose', m:5, dex:1, kind:'pros'},
+  ten:    {icon:'clock',    v:'choose', m:3, dex:1, kind:'ten'},
+  friend: {icon:'users',    v:'choose', m:3, dex:0, kind:'friend'},
+  vfit:   {icon:'compass',  v:'choose', m:3, dex:1, kind:'vfit'},
+  coin:   {icon:'star',     v:'choose', m:1, dex:1, kind:'coin'},
+  enough: {icon:'check',    v:'choose', m:3, dex:1, kind:'enough'}
 };
+/* ---- deciding ---- */
+function decV(k){ return esc((tl2 && tl2[k])||''); }
+function decAB(){ return '<div class="dc-ab"><input type="text" class="tl2-in" data-dc="a" maxlength="60" placeholder="'+esc(t('dc.a'))+'" value="'+decV('a')+'">'+
+  '<input type="text" class="tl2-in" data-dc="b" maxlength="60" placeholder="'+esc(t('dc.b'))+'" value="'+decV('b')+'"></div>'; }
+function decName(o){ return (tl2[o]||'').trim() || t(o==='a'?'dc.a':'dc.b'); }
+function decFoot(){ return '<div class="dc-foot"><input type="text" class="tl2-in" data-dc="first" maxlength="80" placeholder="'+esc(t('dc.step'))+'" value="'+decV('first')+'">'+
+  '<div class="row-btns"><button class="btn btn-primary" id="dcAdd">'+ic('plus')+'<span>'+esc(t('tl2.toDay'))+'</span></button>'+
+  '<button class="btn btn-ghost" id="dcDone">'+esc(t('dc.done'))+'</button></div></div>'; }
+function decLean(sa,sb){ return '<p class="dc-lean">'+esc(sa===sb ? t('dc.even') : t('dc.lean',{o:decName(sa>sb?'a':'b')}))+'</p>'; }
+var DEC_KINDS={
+  pros:function(){
+    if(!tl2.pc) tl2.pc={a:[],b:[]};
+    var sc=function(o){ return tl2.pc[o].reduce(function(n,x){ return n+(x.pro?x.w:-x.w); },0); };
+    return decAB()+['a','b'].map(function(o){
+      return '<div class="dc-opt"><b><span data-dcname="'+o+'">'+esc(decName(o))+'</span> <span class="dc-sc numf">'+(sc(o)>0?'+':'')+sc(o)+'</span></b>'+
+        tl2.pc[o].map(function(x,i){ return '<div class="dc-it'+(x.pro?' pro':' con')+'"><span>'+(x.pro?'＋ ':'－ ')+esc(x.t)+'</span>'+
+          '<button type="button" class="dc-w" data-dcw="'+o+i+'">×'+x.w+'</button><button type="button" class="t3act" data-dcdel="'+o+i+'" aria-label="'+esc(t('c.delete'))+'">'+ic('x')+'</button></div>'; }).join('')+
+        '<div class="dc-add"><input type="text" data-dcpro="'+o+'" maxlength="60" placeholder="'+esc(t('tl2.pros.pro'))+'"><input type="text" data-dccon="'+o+'" maxlength="60" placeholder="'+esc(t('tl2.pros.con'))+'"></div></div>'; }).join('')+
+      ((tl2.pc.a.length||tl2.pc.b.length) ? decLean(sc('a'),sc('b')) : '')+decFoot();
+  },
+  ten:function(){ return '<input type="text" class="tl2-in" data-dc="what" maxlength="80" placeholder="'+esc(t('dc.what'))+'" value="'+decV('what')+'">'+
+    '<input type="text" class="tl2-in" data-dc="lean" maxlength="80" placeholder="'+esc(t('tl2.ten.lean'))+'" value="'+decV('lean')+'">'+
+    [['m','tl2.ten.m'],['mo','tl2.ten.mo'],['y','tl2.ten.y']].map(function(x){ return '<label class="dc-lab">'+esc(t(x[1]))+'</label><input type="text" class="tl2-in" data-dc="'+x[0]+'" maxlength="100" value="'+decV(x[0])+'">'; }).join('')+decFoot(); },
+  friend:function(){ return '<textarea class="tl2-in" data-dc="sit" rows="3" maxlength="300" placeholder="'+esc(t('tl2.friend.sit'))+'">'+decV('sit')+'</textarea>'+
+    '<textarea class="tl2-in" data-dc="say" rows="3" maxlength="300" placeholder="'+esc(t('tl2.friend.say'))+'">'+decV('say')+'</textarea>'+decFoot(); },
+  vfit:function(){
+    var vals=(S.values&&S.values.list)||[];
+    if(!vals.length) return '<p class="hint">'+esc(t('tl2.vfit.none'))+'</p><button class="btn btn-primary btn-block" id="dcVals">'+esc(t('vl.t'))+'</button>';
+    if(!tl2.vf) tl2.vf={};
+    var na=0, nb=0; vals.forEach(function(k){ if(tl2.vf[k]==='a') na++; if(tl2.vf[k]==='b') nb++; });
+    return decAB()+'<div class="dc-vals">'+vals.map(function(k){ return '<div class="dc-v"><span>'+vlEmo(k)+' '+esc(vlName(k))+'</span>'+
+      ['a','b'].map(function(o){ return '<button type="button" class="t3o'+(tl2.vf[k]===o?' on':'')+'" data-dcv="'+k+'|'+o+'"><span data-dcname="'+o+'">'+esc(decName(o))+'</span></button>'; }).join('')+'</div>'; }).join('')+'</div>'+
+      ((na||nb) ? decLean(na,nb) : '')+decFoot(); },
+  coin:function(){
+    var r=tl2.coin;
+    return decAB()+'<div class="dc-coin'+(r?' on':'')+'"><span class="dc-c">🪙</span>'+(r ? '<b>'+esc(t('tl2.coin.res',{o:decName(r)}))+'</b>' : '')+'</div>'+
+      '<button class="btn btn-ghost btn-block" id="dcToss">'+esc(t('tl2.coin.go'))+'</button>'+
+      (r ? '<p class="tl2-q">'+esc(t('tl2.coin.feel'))+'</p><div class="row-btns tl2-fb"><button class="btn btn-ghost'+(tl2.cf==='rel'?' on':'')+'" data-dcf="rel">'+esc(t('tl2.coin.rel'))+'</button>'+
+        '<button class="btn btn-ghost'+(tl2.cf==='dis'?' on':'')+'" data-dcf="dis">'+esc(t('tl2.coin.dis'))+'</button></div>'+
+        (tl2.cf ? '<div class="tl2-tip">'+ic('sparkles')+'<p>'+esc(t('tl2.coin.'+tl2.cf+'.t',{o:decName(tl2.cf==='rel'?r:(r==='a'?'b':'a'))}))+'</p></div>'+decFoot() : '') : ''); },
+  enough:function(){
+    if(!tl2.by){ var d=new Date(); d.setDate(d.getDate()+3); tl2.by=dayKey(d); }
+    return '<input type="text" class="tl2-in" data-dc="what" maxlength="80" placeholder="'+esc(t('dc.what'))+'" value="'+decV('what')+'">'+
+      [1,2,3].map(function(n){ return '<input type="text" class="tl2-in" data-dc="m'+n+'" maxlength="80" placeholder="'+esc(t('tl2.enough.must',{n:n}))+'" value="'+decV('m'+n)+'">'; }).join('')+
+      '<label class="dc-lab">'+esc(t('tl2.enough.by'))+' <input type="date" data-dc="by" value="'+decV('by')+'"></label>'+
+      '<button class="btn btn-primary btn-block" id="dcSave">'+ic('check')+'<span>'+esc(t('c.save'))+'</span></button>'; }
+};
+function decBind(box,d){
+  box.querySelectorAll('[data-dc]').forEach(function(inp){ inp.addEventListener('input',function(){ tl2[inp.dataset.dc]=inp.value; });
+    if(inp.dataset.dc==='a'||inp.dataset.dc==='b') inp.addEventListener('input',function(){ var o=inp.dataset.dc;
+      box.querySelectorAll('[data-dcname="'+o+'"]').forEach(function(el){ el.textContent=decName(o); }); }); });
+  var add=box.querySelector('#dcAdd'); if(add) add.addEventListener('click',function(){
+    var v=(tl2.first||'').trim(); if(!v){ box.querySelector('[data-dc="first"]').focus(); return; }
+    if(addDayItem(v)){ toast(t('tl2.added')); tl2Done(t('dc.ok')); } });
+  var dn=box.querySelector('#dcDone'); if(dn) dn.addEventListener('click',function(){ tl2Done(t('dc.ok')); });
+  if(d.kind==='pros'){
+    /* after adding, the field the person moved to keeps the focus (or the same one, after Enter) */
+    var put=function(o,pro,inp,enter){ var v=inp.value.trim(); if(!v) return; inp.value=''; tl2.pc[o].push({t:v, pro:pro, w:2});
+      setTimeout(function(){
+        var a=document.activeElement, sel = enter ? (pro?'[data-dcpro="'+o+'"]':'[data-dccon="'+o+'"]')
+          : a && a.dataset && a.dataset.dcpro ? '[data-dcpro="'+a.dataset.dcpro+'"]' : a && a.dataset && a.dataset.dccon ? '[data-dccon="'+a.dataset.dccon+'"]'
+          : a && a.dataset && a.dataset.dc ? '[data-dc="'+a.dataset.dc+'"]' : null;
+        tl2Render(); var n=sel && document.querySelector('#tlBody '+sel); if(n) n.focus(); },0); };
+    box.querySelectorAll('[data-dcpro]').forEach(function(inp){ inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); put(inp.dataset.dcpro,true,inp,true); } });
+      inp.addEventListener('change',function(){ put(inp.dataset.dcpro,true,inp); }); });
+    box.querySelectorAll('[data-dccon]').forEach(function(inp){ inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); put(inp.dataset.dccon,false,inp,true); } });
+      inp.addEventListener('change',function(){ put(inp.dataset.dccon,false,inp); }); });
+    box.querySelectorAll('[data-dcw]').forEach(function(b){ b.addEventListener('click',function(){ var x=tl2.pc[b.dataset.dcw[0]][+b.dataset.dcw.slice(1)]; x.w=x.w%3+1; tl2Render(); }); });
+    box.querySelectorAll('[data-dcdel]').forEach(function(b){ b.addEventListener('click',function(){ tl2.pc[b.dataset.dcdel[0]].splice(+b.dataset.dcdel.slice(1),1); tl2Render(); }); });
+  }
+  if(d.kind==='vfit'){
+    var gv=box.querySelector('#dcVals'); if(gv) gv.addEventListener('click',function(){ tl2Close(); goPage('values'); });
+    box.querySelectorAll('[data-dcv]').forEach(function(b){ b.addEventListener('click',function(){ var p=b.dataset.dcv.split('|'); tl2.vf[p[0]] = tl2.vf[p[0]]===p[1] ? null : p[1]; tl2Render(); }); });
+  }
+  if(d.kind==='coin'){
+    box.querySelector('#dcToss').addEventListener('click',function(){ tl2.coin=Math.random()<.5?'a':'b'; tl2.cf=null; tl2Render(); });
+    box.querySelectorAll('[data-dcf]').forEach(function(b){ b.addEventListener('click',function(){ tl2.cf=b.dataset.dcf; tl2Render(); }); });
+  }
+  if(d.kind==='enough') box.querySelector('#dcSave').addEventListener('click',function(){
+    var w=(tl2.what||'').trim(); if(!w){ box.querySelector('[data-dc="what"]').focus(); return; }
+    var musts=[1,2,3].map(function(n){ return (tl2['m'+n]||'').trim(); }).filter(Boolean);
+    if(!S.notes) S.notes=[];
+    S.notes.unshift({id:Date.now(), k:'todo', t:t('tl2.enough.note',{d:w, by:fmtDay(tl2.by)})+(musts.length?' · '+musts.join(', '):'')});
+    save(); tl2Done(t('tl2.enough.ok')); });
+}
 var STUCK_TO={bore:'five', fear:'pz:day', unclear:'tiny', big:'tiny', tired:'five', perfect:'focus'};
 var tl2=null, tl2Hist=false;
 function tl2St(){ if(!S.tl2) S.tl2={help:{}, used:{}}; return S.tl2; }
@@ -48,7 +141,8 @@ function tl2Intro(id){
   return '<p class="tl2-sub">'+esc(t('tl2.'+id+'.s'))+' · <span class="tl2-min">'+ic('clock')+esc(t('tl2.mins',{n:d.kind==='focus'&&ageK()==='k'?15:d.m}))+'</span></p>'+
     '<div class="tl2-why"><b>'+esc(t('tl2.why'))+'</b> '+esc(t('tl2.'+id+'.w'))+'</div>'+
     '<ol class="tl2-steps">'+[1,2,3].map(function(n){ return '<li>'+esc(t('tl2.'+id+'.'+n))+'</li>'; }).join('')+'</ol>'+
-    (d.ex ? '<p class="tl2-ex"><b>'+esc(t('tl2.ex'))+':</b> '+esc(t('tl2.'+id+'.ex.'+ageK()))+'</p>' : '');
+    (d.ex ? '<p class="tl2-ex"><b>'+esc(t('tl2.ex'))+':</b> '+esc(t('tl2.'+id+'.ex.'+ageK()))+'</p>' : '')+
+    (d.dex ? '<p class="tl2-ex">'+esc(t('dc.ex.'+ageK()))+'</p>' : '');
 }
 /* the end of every tool: a step was taken, and did it help? */
 function tl2Done(msg){
@@ -159,8 +253,10 @@ function tl2Render(){
       (r[i] ? '<button type="button" class="btn btn-ghost btn-sm" data-rockday="'+i+'">'+esc(t('tl2.rocks.today'))+'</button>' : '')+'</div>'; }).join('')+
       '<button class="btn btn-primary btn-block" id="tlOk">'+ic('check')+'<span>'+esc(t('c.save'))+'</span></button>';
   }
+  else if(d.kind in DEC_KINDS) html+=DEC_KINDS[d.kind]();
   box.innerHTML=html;
   tl2Bind(box,d,td);
+  if(d.kind in DEC_KINDS) decBind(box,d);
 }
 function tl2Bind(box,d,td){
   var $=function(s){ return box.querySelector(s); };
@@ -214,7 +310,9 @@ function tl2Frog(i){
 
 /* ================= what is hard for me now ================= */
 var HARD={procr:['tool:five','tool:tiny','tool:stuck'], time:['tool:top3','tool:matrix','tool:blocks'], much:['page:notes','tool:top3','tool:frog'],
-          energy:['tool:two','tool:five','pz:day'], stress:['pz:day','pz:feel','pz:sc'], lost:['page:values','vision','mean']};
+          energy:['tool:two','tool:five','pz:day'], stress:['pz:day','pz:feel','pz:sc'], lost:['page:values','vision','mean'],
+          decide:['tool:pros','tool:ten','tool:coin'], fear:['tool:draft','tool:tiny','pz:sc'], sad:['pz:sc','game:kind','well:grat'],
+          phone:['tool:phone','tool:focus','tool:five'], forget:['page:notes','tool:ifthen','tool:blocks']};
 var hardOn=null;
 function pracLabel(a){
   var k=a.split(':')[0], v=a.split(':')[1];
@@ -224,6 +322,8 @@ function pracLabel(a){
   if(a==='page:values') return ['compass', t('vl.t'), t('more.values')];
   if(a==='vision') return ['compass', t('vis.t'), t('vis.s')];
   if(a==='mean') return ['seedling', t('mn.t'), ''];
+  if(k==='game'){ var g=GAME_IDS.filter(function(x){ return x.id===v; })[0]; return [g?g.icon:'star', t('gm.'+v), t('gm.'+v+'.s')]; }
+  if(a==='well:grat') return ['book', t('gr.t'), ''];
   return ['star', a, ''];
 }
 function renderHard(){
