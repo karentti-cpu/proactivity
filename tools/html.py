@@ -73,9 +73,9 @@ VERBS = [('pause', 'wind', [('pz:day', 'wind', 'pz.btn', 'pz.d.s'), ('pz:feel', 
           [('tool:friend', 'users', 'tl2.friend.t', 'tl2.friend.s'), ('tool:vfit', 'compass', 'tl2.vfit.t', 'tl2.vfit.s'),
            ('tool:coin', 'star', 'tl2.coin.t', 'tl2.coin.s'), ('tool:enough', 'check', 'tl2.enough.t', 'tl2.enough.s'), ('mean', 'seedling', 'mn.t', None)],
           ['react', 'circle', 'flip', 'speed']),
-         ('init', 'rocket', [('tool:five', 'zap', 'tl2.five.t', 'tl2.five.s'), ('tool:tiny', 'flag', 'tl2.tiny.t', 'tl2.tiny.s'),
-                             ('tool:frog', 'target', 'tl2.frog.t', 'tl2.frog.s'), ('tool:stuck', 'help', 'tl2.stuck.t', 'tl2.stuck.s')],
-          [('tool:two', 'check', 'tl2.two.t', 'tl2.two.s'), ('tool:ifthen', 'clock', 'tl2.ifthen.t', 'tl2.ifthen.s'),
+         ('init', 'rocket', [('page:sheet', 'calendar', 'sp.trk.t', 'sp.trk.s'), ('tool:five', 'zap', 'tl2.five.t', 'tl2.five.s'),
+                             ('tool:tiny', 'flag', 'tl2.tiny.t', 'tl2.tiny.s'), ('tool:frog', 'target', 'tl2.frog.t', 'tl2.frog.s')],
+          [('tool:stuck', 'help', 'tl2.stuck.t', 'tl2.stuck.s'), ('tool:two', 'check', 'tl2.two.t', 'tl2.two.s'), ('tool:ifthen', 'clock', 'tl2.ifthen.t', 'tl2.ifthen.s'),
            ('tool:phone', 'zap', 'tl2.phone.t', 'tl2.phone.s'), ('tool:draft', 'edit', 'tl2.draft.t', 'tl2.draft.s'),
            ('page:tasks', 'check', 'n.tab.tasks', 'more.tasks'), ('well:kd', 'gift', 'kd.t', None), ('well:str', 'gem', 'st.t', None)],
           ['step', 'vact', 'str']),
@@ -128,7 +128,7 @@ def step_html():
                          f'<p class="st-what" data-i18n="gm.{g}.s"></p><div class="st-acts"><button class="btn btn-primary btn-sm" data-prac="game:{g}"><span data-i18n="sp.open"></span></button>'
                          f'<button class="btn btn-ghost btn-sm st-mark" data-used="game:{g}">{i("check")}<span data-i18n="sp.mark"></span></button><small class="st-n"></small></div></div>' for g in games)
         out.append(f'<section class="st-verb v-{v}" data-stepv="{v}" hidden><div class="st-head"><span class="pr-ic">{i(ic_)}</span><h2 class="ptitle" data-i18n="{title}"></h2></div>'
-                   f'<p class="st-long" data-i18n="sp.long.{v}"></p><div class="st-today" data-st-today="{v}"></div>'
+                   f'<p class="st-long" data-i18n="sp.long.{v}"></p><div class="st-today" data-st-today="{v}"></div>' + ('<div class="st-trk" data-st-trk></div>' if v == 'init' else '') +
                    f'<h3 class="st-h3">{i("sparkles")}<span data-i18n="sp.tools"></span></h3><p class="pr-s" data-i18n="sp.tools.s"></p><p class="st-count" data-st-count="{v}"></p>'
                    f'<div class="st-list">{"".join(step_card(*x) for x in items + extra)}</div>'
                    f'<h3 class="st-h3">{i("star")}<span data-i18n="sp.games"></span></h3><div class="st-list">{gcards}</div></section>')

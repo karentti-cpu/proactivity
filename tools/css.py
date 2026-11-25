@@ -2279,4 +2279,12 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 [dir=rtl] .pr-page svg{transform:scaleX(-1);}
 .pr-item.used>svg:last-child,.pr-game.used{position:relative;}
 .pr-item.used b::after,.pr-game.used span::after{content:" ✓";color:var(--vc);font-weight:800;}
+
+.st-trkbox{margin:-4px 0 14px;padding:12px 14px;border-radius:var(--r-card);background:var(--ink-1);border:1px dashed var(--vc);}
+.st-trkbox>b{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:var(--t-sm);color:var(--vc);}
+.st-trkbox>b svg{width:18px;height:18px;}
+.st-trkbox .it-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--ink-2);}
+.st-trkbox .it-row span{flex:1;}
+.st-trkbox .it-row.done span{text-decoration:line-through;color:var(--fg-3);}
+.st-trkbox .it-row em{font-style:normal;font-weight:800;color:var(--vc);}
 """
