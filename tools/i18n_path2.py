@@ -7,7 +7,7 @@ Order of tuple values: he, en, fr, ru, ar
 PATH2 = {
 'path.choose': ('לבחור', 'Choose', 'Choisir', 'Выбрать', 'اختر'),
 'path.init':   ('ליזום', 'Initiate', 'Initier', 'Начать', 'بادر'),
-'path.ahead':  ('קדימה', 'Ahead', 'Anticiper', 'Вперёд', 'إلى الأمام'),
+'path.ahead': ('לתכנן', 'Plan', 'Planifier', 'Планировать', 'خطّط'),
 'path.bonus':  ('בונוס:', 'Bonus:', 'Bonus :', 'Бонус:', 'إضافي:'),
 'path.go':     ('4 צעדים קטנים, ויש יום פרואקטיבי מלא 🎉', '4 small steps to a full proactive day 🎉', '4 petits pas pour une journée proactive complète 🎉',
                 '4 маленьких шага — и полный проактивный день 🎉', '4 خطوات صغيرة ليوم مبادر مكتمل 🎉'),
@@ -72,7 +72,7 @@ PATH2 = {
 'trk.init': ('🚀 כל סימון בטבלה נספר כיוזמה במסלול היומי.', '🚀 Every tick in a table counts as an initiative on your daily path.',
              '🚀 Chaque case cochée compte comme une initiative dans ton parcours du jour.', '🚀 Каждая отметка в таблице засчитывается как инициатива в пути дня.',
              '🚀 كل علامة في الجدول تُحسب مبادرة في مسارك اليومي.'),
-'ah.t':      ('מבט קדימה', 'Looking ahead', 'Regarder devant', 'Взгляд вперёд', 'نظرة إلى الأمام'),
+'ah.t': ('לתכנן את מחר', 'Plan tomorrow', 'Planifier demain', 'Планируем завтра', 'خطّط للغد'),
 'ah.good':   ('היום יזמת:', 'Today you initiated:', 'Aujourd\'hui tu as initié :', 'Сегодня ты начал{|а}:', 'اليوم {بادرت|بادرتِ} بـ:'),
 'ah.q1':     ('מה עלול להפריע מחר?', 'What might get in the way tomorrow?', 'Qu\'est-ce qui pourrait gêner demain ?', 'Что может помешать завтра?', 'ما الذي قد يعيقك غداً؟'),
 'ob.tired':  ('עייפות', 'tiredness', 'la fatigue', 'усталость', 'التعب'),
@@ -102,9 +102,5 @@ PATH2 = {
 'ln.init':   ('בשבועיים האחרונים יזמת {n} דברים בעצמך.', 'In the last two weeks you initiated {n} things yourself.', 'Ces deux dernières semaines, tu as initié {n} choses toi-même.',
               'За последние две недели ты сам{|а} начал{|а} {n} дел.', 'في الأسبوعين الأخيرين {بادرت|بادرتِ} بـ{n} أشياء بنفسك.'),
 'help.0.t':  ('המסלול היומי', 'The daily path', 'Le parcours du jour', 'Путь дня', 'المسار اليومي'),
-'help.0.b':  ('ארבעה צעדים ביום: לעצור (נשימה), לבחור (כוונה להיום), ליזום (דבר אחד מיוזמתך), ובערב להסתכל קדימה: מה עלול להפריע מחר, ומה {תעשה|תעשי} אם זה יקרה. כל הארבעה: יום מלא 🎉',
-              'Four steps a day: pause (breathe), choose (an intention for today), initiate (one thing on your own initiative), and in the evening look ahead: what might get in the way tomorrow, and what you will do if it happens. All four: a full day 🎉',
-              'Quatre pas par jour : la pause (respirer), choisir (une intention), initier (une chose de ta propre initiative), et le soir regarder devant : ce qui pourrait gêner demain, et ce que tu feras alors. Les quatre : une journée complète 🎉',
-              'Четыре шага в день: пауза (дыхание), выбор (намерение на день), инициатива (одно дело по своей воле) и вечером взгляд вперёд: что может помешать завтра и что ты тогда сделаешь. Все четыре — полный день 🎉',
-              'أربع خطوات يومياً: التوقّف (التنفّس)، الاختيار (نيّة لليوم)، المبادرة (شيء واحد بمبادرتك)، وفي المساء النظر إلى الأمام: ما قد يعيقك غداً وماذا {ستفعل|ستفعلين} حينها. الأربع معاً: يوم مكتمل 🎉'),
+'help.0.b': ('ארבעה צעדים ביום: לעצור (נשימה), לבחור (כוונה להיום), ליזום (דבר אחד מיוזמתך), ובערב לתכנן: צעד אחד למחר, מה עלול להפריע, ומה {תעשה|תעשי} אם זה יקרה. כל הארבעה: יום מלא 🎉', 'Four steps a day: pause (breathe), choose (an intention for today), initiate (one thing on your own initiative), and in the evening plan: one step for tomorrow, what might get in the way, and what you will do if it happens. All four: a full day 🎉', 'Quatre pas par jour : la pause (respirer), choisir (une intention), initier (une chose de ta propre initiative), et le soir planifier : un pas pour demain, ce qui pourrait gêner, et ce que tu feras alors. Les quatre : une journée complète 🎉', 'Четыре шага в день: пауза (дыхание), выбор (намерение на день), инициатива (одно дело по своей воле) и вечером планирование: шаг на завтра, что может помешать и что ты тогда сделаешь. Все четыре — полный день 🎉', 'أربع خطوات يومياً: التوقّف (التنفّس)، الاختيار (نيّة لليوم)، المبادرة (شيء واحد بمبادرتك)، وفي المساء التخطيط: خطوة للغد، وما قد يعيقك، وماذا {ستفعل|ستفعلين} حينها. الأربع معاً: يوم مكتمل 🎉'),
 }
