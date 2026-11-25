@@ -1899,7 +1899,7 @@ function pracBind(b){
     var a=b.dataset.prac.split(':'), k=a[0], v=a[1];
     if(k==='tool') tl2Open(v);
     else if(k==='vision'){ goPage('home'); visEdit=true; renderVision(); var vi=document.getElementById('visIn'); if(vi){ vi.scrollIntoView({block:'center'}); vi.focus(); } }
-    else if(k==='page') goPage(v);
+    else if(k==='page') goPage(v==='sheetc' ? 'sheet' : v);
     else if(k==='pz') pzOpen(v);
     else if(k==='game'){ gmPlayer={k:'me'}; goPage('games'); gmStart(v); }
     else if(k==='well'){ goPage('well'); scrollToEl('wl-'+v); }
