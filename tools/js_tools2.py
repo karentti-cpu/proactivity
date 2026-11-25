@@ -478,7 +478,8 @@ function isUsed(key){
   if(usedToday()[key]) return true;
   var d=pathDone();
   return (key==='pz:day' && d.pause) || (key==='pz:feel' && d.feel) || (key==='pz:ahead' && d.ahead) ||
-    (key.indexOf('tool:')===0 && (tl2St().used[dayKey()]||[]).indexOf(key.slice(5))>=0);
+    (key.indexOf('tool:')===0 && (tl2St().used[dayKey()]||[]).indexOf(key.slice(5))>=0) ||
+    (key==='page:sheet' && trkTodayRows().some(function(r){ return r.done; }));
 }
 function openStep(v){ stepOn=v; goPage('step'); }
 var STEP_MODE={pause:'day', choose:'intent', init:'init', ahead:'ahead'};
@@ -490,6 +491,19 @@ function renderStep(){
   tb.innerHTML='<div class="st-task"><div><small>'+esc(t('sp.today'))+'</small><b>'+esc(t('path.wp.'+stepOn+'.1'))+'</b></div>'+
     (done ? '<em>'+esc(t('sp.today.done'))+'</em>' : '<button type="button" class="btn btn-primary btn-sm" data-st-go>'+esc(t('sp.go'))+' '+ic('arrow')+'</button>')+'</div>';
   var go=tb.querySelector('[data-st-go]'); if(go) go.addEventListener('click',function(){ pzOpen(STEP_MODE[stepOn]); });
+  /* Initiate: today's table rows, ticked right here (a tick is initiative too) */
+  var tk=sec.querySelector('[data-st-trk]');
+  if(tk){
+    var rows=trkTodayRows(), open=rows.filter(function(r){ return !r.done; });
+    tk.innerHTML='<div class="st-trkbox"><b>'+ic('calendar')+'<span>'+esc(t(rows.length?'sp.trk.today':'sp.trk.t'))+'</span></b>'+
+      (rows.length ? rows.map(function(r,i){ return '<div class="it-row'+(r.done?' done':'')+'"><span>'+esc(r.row.t)+'</span>'+
+          (r.done ? '<em>✓</em>' : '<button type="button" class="btn btn-ghost btn-sm" data-sttrk="'+i+'">'+esc(t('it.did'))+'</button>')+'</div>'; }).join('')+
+          (!open.length ? '<p class="hint">'+esc(t('sp.trk.all'))+'</p>' : '')
+        : '<p class="hint">'+esc(t('sp.trk.none'))+'</p><button type="button" class="btn btn-ghost btn-sm" data-sttrkgo>'+ic('plus')+'<span>'+esc(t('sp.trk.make'))+'</span></button>')+'</div>';
+    tk.querySelectorAll('[data-sttrk]').forEach(function(b){ b.addEventListener('click',function(){
+      var r=rows[+b.dataset.sttrk]; trkTick(r.type, r.cfg, r.row, r.di); markUsed('page:sheet'); celebrate(); toast(t('it.done')); renderStep(); }); });
+    var mk=tk.querySelector('[data-sttrkgo]'); if(mk) mk.addEventListener('click',function(){ goPage('sheet'); });
+  }
   var n=0;
   sec.querySelectorAll('.st-card').forEach(function(c){
     var key=c.dataset.key, u=isUsed(key), cnt=(S.usedN||{})[key]||0; if(u) n++;
