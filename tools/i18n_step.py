@@ -96,4 +96,12 @@ STEP = {
                  'Таблиц пока нет. Можно сделать таблицу с целью и маленькими шагами — для себя или детей.', 'لا جداول بعد. يمكنك إعداد جدول بهدف وأهداف صغيرة، لك أو لأطفالك.'),
 'sp.trk.make':  ('להכין טבלה', 'Make a table', 'Créer un tableau', 'Создать таблицу', 'أعدّ جدولاً'),
 'sp.trk.all':   ('כל הסימונים של היום נעשו 🎉', 'All of today\'s ticks are done 🎉', 'Toutes les cases du jour sont cochées 🎉', 'Все отметки на сегодня сделаны 🎉', 'كل علامات اليوم أُنجزت 🎉'),
+'sp.trkc.t':  ('לבחור מטרה לטבלה', 'Choose a goal for a table', 'Choisir un objectif pour un tableau', 'Выбрать цель для таблицы', 'اختر هدفاً لجدول'),
+'sp.trkc.s':  ('מה חשוב לי לחזק? מטרה אחת ושלושה יעדים קטנים', 'What do I want to strengthen? One goal and three small targets', 'Que veux-je renforcer ? Un objectif et trois petites cibles',
+               'Что я хочу укрепить? Одна цель и три маленьких шага', 'ماذا أريد أن أقوّي؟ هدف واحد وثلاثة أهداف صغيرة'),
+'sx.page.sheetc': ('לבחור על מה לעבוד זו כבר החלטה פרואקטיבית. מטרה ברורה עם יעדים קטנים וקונקרטיים הופכת רצון להרגל. את הסימון היומי עושים ב„ליזום”.',
+                   'Choosing what to work on is already a proactive decision. A clear goal with small, concrete targets turns a wish into a habit. The daily ticking happens in Initiate.',
+                   'Choisir sur quoi travailler, c\'est déjà une décision proactive. Un objectif clair avec de petites cibles concrètes transforme une envie en habitude. Les cases du jour se cochent dans Initier.',
+                   'Выбрать, над чем работать, — уже проактивное решение. Ясная цель с маленькими конкретными шагами превращает желание в привычку. Ежедневные отметки — в «Начать».',
+                   'اختيار ما تعمل عليه قرار مبادر بحدّ ذاته. هدف واضح بأهداف صغيرة ملموسة يحوّل الرغبة إلى عادة. العلامات اليومية تكون في «بادر».'),
 }
