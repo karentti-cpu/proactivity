@@ -105,10 +105,33 @@ def practice_html():
                 f'<div class="pr-list">{"".join(prac_row(*x) for x in extra)}</div></details>') if extra else ''
         chips = ''.join(f'<button class="pr-game" data-prac="game:{g}">{i(GAME_ICONS[g])}<span data-i18n="gm.{g}"></span></button>' for g in games)
         out.append(f'<section class="pr-verb v-{v}"><h3 class="pr-h"><span class="pr-ic">{i(ic_)}</span><span data-i18n="{'vb.pause.t' if v == 'pause' else 'path.' + v}"></span></h3>'
-                   f'<p class="pr-s" data-i18n="vb.{v}.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in items)}</div>{more}'
+                   f'<p class="pr-s" data-i18n="vb.{v}.s"></p><button type="button" class="pr-page" data-stepgo="{v}"><span data-i18n="sp.pagebtn"></span>{i("chevron")}</button>'
+                   f'<div class="pr-list">{"".join(prac_row(*x) for x in items)}</div>{more}'
                    f'<div class="pr-games"><span class="pr-gl" data-i18n="prac.games"></span>{chips}</div></section>')
     out.append(f'<section class="pr-verb v-other"><h3 class="pr-h"><span class="pr-ic">{i("sparkles")}</span><span data-i18n="prac.other"></span></h3>'
                f'<p class="pr-s" data-i18n="prac.other.s"></p><div class="pr-list">{"".join(prac_row(*x) for x in OTHER)}</div></section>')
+    return ''.join(out)
+
+def why_key(act):
+    return f'tl2.{act[5:]}.w' if act.startswith('tool:') else 'sx.' + act.replace(':', '.')
+def step_card(act, ic_, k, d):
+    what = f'<p class="st-what" data-i18n="{d}"></p>' if d else ''
+    return (f'<div class="st-card" data-key="{act}"><div class="st-ch">{i(ic_)}<b data-i18n="{k}"></b><span class="st-badge" data-i18n="sp.marked"></span></div>{what}'
+            f'<p class="st-why"><b data-i18n="tl2.why"></b> <span data-i18n="{why_key(act)}"></span></p>'
+            f'<div class="st-acts"><button class="btn btn-primary btn-sm" data-prac="{act}"><span data-i18n="sp.open"></span></button>'
+            f'<button class="btn btn-ghost btn-sm st-mark" data-used="{act}">{i("check")}<span data-i18n="sp.mark"></span></button><small class="st-n"></small></div></div>')
+def step_html():
+    out = []
+    for v, ic_, items, extra, games in VERBS:
+        title = 'vb.pause.t' if v == 'pause' else 'path.' + v
+        gcards = ''.join(f'<div class="st-card st-gcard" data-key="game:{g}"><div class="st-ch">{i(GAME_ICONS[g])}<b data-i18n="gm.{g}"></b><span class="st-badge" data-i18n="sp.marked"></span></div>'
+                         f'<p class="st-what" data-i18n="gm.{g}.s"></p><div class="st-acts"><button class="btn btn-primary btn-sm" data-prac="game:{g}"><span data-i18n="sp.open"></span></button>'
+                         f'<button class="btn btn-ghost btn-sm st-mark" data-used="game:{g}">{i("check")}<span data-i18n="sp.mark"></span></button><small class="st-n"></small></div></div>' for g in games)
+        out.append(f'<section class="st-verb v-{v}" data-stepv="{v}" hidden><div class="st-head"><span class="pr-ic">{i(ic_)}</span><h2 class="ptitle" data-i18n="{title}"></h2></div>'
+                   f'<p class="st-long" data-i18n="sp.long.{v}"></p><div class="st-today" data-st-today="{v}"></div>'
+                   f'<h3 class="st-h3">{i("sparkles")}<span data-i18n="sp.tools"></span></h3><p class="pr-s" data-i18n="sp.tools.s"></p><p class="st-count" data-st-count="{v}"></p>'
+                   f'<div class="st-list">{"".join(step_card(*x) for x in items + extra)}</div>'
+                   f'<h3 class="st-h3">{i("star")}<span data-i18n="sp.games"></span></h3><div class="st-list">{gcards}</div></section>')
     return ''.join(out)
 
 # How to use it: the same steps on the landing page and under More.
@@ -451,6 +474,10 @@ def build_body(logo):
    <h3 class="boxh">{i("users")}<span data-i18n="inv.t"></span></h3>
    <div id="inviteCard"></div>
   </section>
+ </div>
+
+ <div class="page" id="page-step" role="tabpanel">
+  {step_html()}
  </div>
 
  <div class="page" id="page-notes" role="tabpanel">

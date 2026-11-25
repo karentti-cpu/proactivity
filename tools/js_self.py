@@ -1091,7 +1091,7 @@ function gmFinish(box){
   if(!R.paid){
     R.paid=true;
     var before=levelInfo(), gain=10+R.pts, bonus=0;
-    st.played[R.id]=(st.played[R.id]||0)+1; st.lastDay=today;
+    st.played[R.id]=(st.played[R.id]||0)+1; st.lastDay=today; if(typeof markUsed==='function') markUsed('game:'+R.id);
     /* a strong round: the next one starts harder; a hard one: a little easier */
     var L=st.lvl[R.id]||0, up, down;
     if(R.id==='speed'){ up=total>=8 && R.right/total>=.85; down=total>=4 && R.right/total<.5; }
@@ -1175,6 +1175,7 @@ function pzClose(fromBack){
   pzStop(); pz=null; document.getElementById('pauseModal').classList.remove('on');
   if(pzHist && fromBack!==true){ pzHist=false; try{ history.back(); }catch(e){} } else pzHist=false;
   renderPauseBtn(); renderPath();
+  if(typeof curPage!=='undefined' && curPage==='step') renderStep();
 }
 window.addEventListener('popstate',function(){ if(pz || document.getElementById('pauseModal').classList.contains('on')){ pzHist=false; pzClose(true); } });
 /* after a choice, show the action buttons that appeared at the bottom */
@@ -1760,7 +1761,7 @@ function renderPath(){
   box.querySelectorAll('[data-pinfo]').forEach(function(b){ b.addEventListener('click',function(){
     pathInfo = pathInfo===b.dataset.pinfo ? null : b.dataset.pinfo; renderPath(); }); });
   box.querySelectorAll('[data-ptools]').forEach(function(b){ b.addEventListener('click',function(){
-    var k=b.dataset.ptools; goPage('more'); setTimeout(function(){ var el=document.querySelector('#page-more .v-'+k); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); }); });
+    openStep(b.dataset.ptools); }); });
   box.querySelectorAll('[data-path]').forEach(function(b){ b.addEventListener('click',function(){
     var k=b.dataset.path;
     if(k==='pause') pzOpen('day');
