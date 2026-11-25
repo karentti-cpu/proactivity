@@ -1833,7 +1833,7 @@ document.getElementById('vidModal').addEventListener('click',function(e){ if(e.t
    phone, so there is a single set of buttons and a single source of truth. */
 /* Tasks, Learn and Body have no tab of their own; More stays lit on them. */
 /* Practice holds these pages; Help and Settings open from the header and light no tab */
-var UNDER_MORE=['values','well','tasks','learn','body','circle','games','notes'];
+var UNDER_MORE=['values','well','tasks','learn','body','circle','games','notes','step'];
 /* Every move between pages is a step in the phone's history, so its back
    button returns to the previous page; only from the first page does it
    leave the app. Windows (pause, tools) push their own step on top. */
@@ -1866,6 +1866,8 @@ function goPage(name, fromHistory){
   if(name==='well') renderWell();
   if(name==='values') renderValues();
   if(name==='notes') renderNotes();
+  if(name==='step') renderStep();
+  if(name==='more') pracUsedMarks();
   if(name==='sheet') renderTrackers();
   if(name==='games'){ gmRun=null; renderGames(); }
   if(name==='body') renderBodyGate();
@@ -1881,11 +1883,14 @@ window.addEventListener('popstate',function(e){
 /* a way back to Practice at the top of each page that lives under it */
 function pracBack(name){
   var pg=document.getElementById('page-'+name); if(!pg || UNDER_MORE.indexOf(name)<0) return;
-  if(pg.querySelector('.pr-back')) return;
-  var b=document.createElement('button'); b.type='button'; b.className='pr-back';
-  b.innerHTML=ic('chevron')+'<span data-i18n="prac.back">'+esc(t('prac.back'))+'</span>';
-  b.addEventListener('click',function(){ if(prevPage==='more') history.back(); else goPage('more'); });
-  pg.insertBefore(b,pg.firstChild);
+  var b=pg.querySelector('.pr-back');
+  if(!b){
+    b=document.createElement('button'); b.type='button'; b.className='pr-back';
+    b.addEventListener('click',function(){ if(prevPage) history.back(); else goPage('more'); });
+    pg.insertBefore(b,pg.firstChild);
+  }
+  var k=(prevPage && prevPage!=='more') ? 'sp.back' : 'prac.back';
+  b.innerHTML=ic('chevron')+'<span data-i18n="'+k+'">'+esc(t(k))+'</span>';
 }
 function scrollToEl(id){ setTimeout(function(){ var el=document.getElementById(id)||document.querySelector(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
 function pracBind(b){

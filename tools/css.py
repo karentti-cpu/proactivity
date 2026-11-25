@@ -2236,4 +2236,47 @@ body:has(.modal-bg.on) .kmr-pill, body:has(#updBar:not([hidden])) .kmr-pill{disp
 .vl-choice{margin:4px 0 8px;padding:8px 12px;border-radius:12px;background:var(--acc-dim);font-size:var(--t-sm);font-weight:600;line-height:1.5;}
 .vl-pickbox.flash{animation:vlflash 1.6s ease;}
 @keyframes vlflash{0%,40%{box-shadow:0 0 0 3px var(--acc);}100%{box-shadow:none;}}
+
+/* ---- a page for each step ---- */
+.st-verb{--vc:var(--acc);}
+.st-head{display:flex;align-items:center;gap:10px;margin:4px 0 6px;}
+.st-head .pr-ic{width:44px;height:44px;border-radius:14px;}
+.st-head .pr-ic svg{width:24px;height:24px;}
+.st-head .ptitle{margin:0;color:var(--vc);}
+.st-long{line-height:1.65;margin:0 0 12px;}
+.st-task{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--r-card);background:color-mix(in srgb,var(--vc) 10%,transparent);border:1.5px solid var(--vc);margin:0 0 16px;}
+.st-task>div{flex:1;min-width:180px;display:grid;gap:2px;}
+.st-task small{font-size:var(--t-xs);font-weight:800;color:var(--vc);}
+.st-task b{line-height:1.45;}
+.st-task em{font-style:normal;font-weight:800;color:var(--vc);}
+.st-task .btn-primary{background:var(--vc);border-color:var(--vc);}
+[dir=rtl] .st-task .btn svg{transform:scaleX(-1);}
+.st-task .btn svg{width:16px;height:16px;}
+.st-h3{display:flex;align-items:center;gap:8px;font-size:18px;margin:18px 0 4px;}
+.st-h3 svg{width:18px;height:18px;color:var(--vc);}
+.st-count{font-size:var(--t-sm);font-weight:700;color:var(--vc);margin:0 0 8px;}
+.st-count:empty{display:none;}
+.st-list{display:grid;gap:10px;}
+.st-card{padding:12px 14px;border-radius:var(--r-card);background:var(--ink-1);border:1px solid var(--ink-2);border-inline-start:4px solid var(--vc);}
+.st-card.used{background:color-mix(in srgb,var(--vc) 6%,var(--ink-1));}
+.st-ch{display:flex;align-items:center;gap:8px;}
+.st-ch>svg{width:20px;height:20px;color:var(--vc);flex:none;}
+.st-ch b{flex:1;font-size:16px;}
+.st-badge{display:none;font-size:var(--t-xs);font-weight:800;color:var(--vc);}
+.st-card.used .st-badge{display:inline;}
+.st-what{margin:4px 0 0;color:var(--fg-2);font-size:var(--t-sm);}
+.st-why{margin:6px 0 0;font-size:var(--t-sm);line-height:1.6;}
+.st-why b{color:var(--vc);}
+.st-acts{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.st-acts .btn-primary{background:var(--vc);border-color:var(--vc);}
+.st-mark svg{width:15px;height:15px;opacity:.35;}
+.st-mark.on{border-color:var(--vc);background:color-mix(in srgb,var(--vc) 12%,transparent);color:var(--vc);}
+.st-mark.on svg{opacity:1;}
+.st-n{color:var(--fg-3);font-size:var(--t-xs);}
+.pr-page{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--vc);background:color-mix(in srgb,var(--vc) 8%,transparent);
+  color:var(--vc);font:inherit;font-size:var(--t-sm);font-weight:700;cursor:pointer;}
+.pr-page svg{width:14px;height:14px;}
+[dir=rtl] .pr-page svg{transform:scaleX(-1);}
+.pr-item.used>svg:last-child,.pr-game.used{position:relative;}
+.pr-item.used b::after,.pr-game.used span::after{content:" ✓";color:var(--vc);font-weight:800;}
 """

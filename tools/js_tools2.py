@@ -137,6 +137,7 @@ function tl2Close(fromBack){
   tl2Stop(); tl2=null; document.getElementById('toolModal').classList.remove('on');
   if(tl2Hist && fromBack!==true){ tl2Hist=false; try{ history.back(); }catch(e){} } else tl2Hist=false;
   if(typeof renderDash==='function') renderDash();
+  if(typeof curPage!=='undefined' && curPage==='step') renderStep(); else if(typeof pracUsedMarks==='function') pracUsedMarks();
 }
 window.addEventListener('popstate',function(){ if(document.getElementById('toolModal').classList.contains('on')){ tl2Hist=false; tl2Close(true); } });
 document.getElementById('tlX').addEventListener('click',function(){ tl2Close(); });
@@ -156,6 +157,7 @@ function tl2Done(msg){
   var st=tl2St(), today=dayKey(), id=tl2.id;
   if(!st.used[today]) st.used[today]=[];
   if(st.used[today].indexOf(id)<0){ st.used[today].push(id); addPts(5); }
+  markUsed('tool:'+id);
   markActiveToday(); save();
   tl2.step='end'; tl2.msg=msg; tl2Render();
 }
@@ -459,4 +461,48 @@ function renderNoteStrip(){
     var id=Number(b.dataset.nsdone), i=S.remDone.ids.indexOf(id); if(i<0) S.remDone.ids.push(id); else S.remDone.ids.splice(i,1); save(); renderNoteStrip(); }); });
   box.querySelectorAll('[data-prac]').forEach(pracBind);
 }
+
+/* ================= a page for each step =================
+   What the step is and why it matters, today's task, and every tool and
+   game for it, explained, each with "I used it". A tool finished in its
+   window, a game played, or the day's exercise done mark themselves. */
+var stepOn='pause';
+function usedToday(){ if(!S.used || S.used.day!==dayKey()) S.used={day:dayKey(), keys:{}}; return S.used.keys; }
+function markUsed(key,on){
+  var u=usedToday(); if(!S.usedN) S.usedN={}; if(on===undefined) on=true;
+  if(on && !u[key]){ u[key]=1; S.usedN[key]=(S.usedN[key]||0)+1; }
+  else if(!on && u[key]){ delete u[key]; S.usedN[key]=Math.max(0,(S.usedN[key]||1)-1); }
+  save();
+}
+function isUsed(key){
+  if(usedToday()[key]) return true;
+  var d=pathDone();
+  return (key==='pz:day' && d.pause) || (key==='pz:feel' && d.feel) || (key==='pz:ahead' && d.ahead) ||
+    (key.indexOf('tool:')===0 && (tl2St().used[dayKey()]||[]).indexOf(key.slice(5))>=0);
+}
+function openStep(v){ stepOn=v; goPage('step'); }
+var STEP_MODE={pause:'day', choose:'intent', init:'init', ahead:'ahead'};
+function renderStep(){
+  var pg=document.getElementById('page-step'); if(!pg) return;
+  pg.querySelectorAll('[data-stepv]').forEach(function(sec){ sec.hidden = sec.dataset.stepv!==stepOn; });
+  var sec=pg.querySelector('[data-stepv="'+stepOn+'"]'); if(!sec) return;
+  var done=pathDone()[stepOn], tb=sec.querySelector('[data-st-today]');
+  tb.innerHTML='<div class="st-task"><div><small>'+esc(t('sp.today'))+'</small><b>'+esc(t('path.wp.'+stepOn+'.1'))+'</b></div>'+
+    (done ? '<em>'+esc(t('sp.today.done'))+'</em>' : '<button type="button" class="btn btn-primary btn-sm" data-st-go>'+esc(t('sp.go'))+' '+ic('arrow')+'</button>')+'</div>';
+  var go=tb.querySelector('[data-st-go]'); if(go) go.addEventListener('click',function(){ pzOpen(STEP_MODE[stepOn]); });
+  var n=0;
+  sec.querySelectorAll('.st-card').forEach(function(c){
+    var key=c.dataset.key, u=isUsed(key), cnt=(S.usedN||{})[key]||0; if(u) n++;
+    c.classList.toggle('used',u);
+    var m=c.querySelector('.st-mark'); m.classList.toggle('on',u); m.setAttribute('aria-pressed',u?'true':'false');
+    c.querySelector('.st-n').textContent = cnt===1 ? t('sp.n1') : cnt ? t('sp.n',{n:cnt}) : '';
+  });
+  sec.querySelector('[data-st-count]').textContent = n ? t('sp.count',{n:n}) : '';
+  pracUsedMarks();
+}
+/* a small check on the Practice list too, for what was used today */
+function pracUsedMarks(){ document.querySelectorAll('#page-more [data-prac]').forEach(function(b){ b.classList.toggle('used', isUsed(b.dataset.prac)); }); }
+document.querySelectorAll('[data-used]').forEach(function(b){ b.addEventListener('click',function(){
+  var k=b.dataset.used; markUsed(k, !usedToday()[k]); if(usedToday()[k]) toast(t('sp.marked')); renderStep(); }); });
+document.querySelectorAll('[data-stepgo]').forEach(function(b){ b.addEventListener('click',function(){ openStep(b.dataset.stepgo); }); });
 """
