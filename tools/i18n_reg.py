@@ -137,11 +137,7 @@ REG = {
 'tl2.well': ('כל הכבוד. עצרת, וזה כבר צעד.', 'Well done. You paused, and that is already a step.', 'Bravo. Tu as fait une pause, et c\'est déjà un pas.', 'Молодец. Ты остановился — это уже шаг.', 'أحسنت. توقّفت، وهذه خطوة بحدّ ذاتها.'),
 
 # ---- Today: a word about the four steps, and what each one works on ----
-'path.intro': ('ארבעה צעדים קטנים שמחזקים פרואקטיביות: לעצור לפני שמגיבים, לבחור איך להיות, ליזום צעד, ולהסתכל קדימה. לחיצה על צעד מראה על מה עובדים בו.',
-               'Four small steps that build proactivity: pause before reacting, choose how to be, take a step, and look ahead. Tap a step to see what it works on.',
-               'Quatre petits pas qui renforcent la proactivité : faire une pause avant de réagir, choisir comment être, faire un pas, et regarder devant. Touche un pas pour voir ce qu\'il travaille.',
-               'Четыре маленьких шага, которые развивают проактивность: остановиться перед реакцией, выбрать, каким быть, сделать шаг и посмотреть вперёд. Нажми на шаг, чтобы увидеть, над чем он работает.',
-               'أربع خطوات صغيرة تقوّي المبادرة: توقّف قبل أن تتفاعل، اختر كيف تكون، بادر بخطوة، وانظر إلى الأمام. اضغط على خطوة لترى على ماذا تعمل.'),
+'path.intro': ('ארבעה צעדים קטנים שמחזקים פרואקטיביות: לעצור לפני שמגיבים, לבחור איך להיות, ליזום צעד, ולתכנן את מחר. לחיצה על צעד מראה על מה עובדים בו.', 'Four small steps that build proactivity: pause before reacting, choose how to be, take a step, and plan tomorrow. Tap a step to see what it works on.', "Quatre petits pas qui renforcent la proactivité : faire une pause avant de réagir, choisir comment être, faire un pas, et planifier demain. Touche un pas pour voir ce qu'il travaille.", 'Четыре маленьких шага, которые развивают проактивность: остановиться перед реакцией, выбрать, каким быть, сделать шаг и спланировать завтра. Нажми на шаг, чтобы увидеть, над чем он работает.', 'أربع خطوات صغيرة تقوّي المبادرة: توقّف قبل أن تتفاعل، اختر كيف تكون، بادر بخطوة، وخطّط للغد. اضغط على خطوة لترى على ماذا تعمل.'),
 'path.w.pause':  ('לנשום ולהרגיש', 'breathe, feel', 'respirer, ressentir', 'дышать, чувствовать', 'تنفّس واشعر'),
 'path.w.choose': ('כוונה ליום', 'the day\'s intention', 'l\'intention du jour', 'намерение дня', 'نيّة اليوم'),
 'path.w.init':   ('צעד בלי שיבקשו', 'a step unasked', 'un pas spontané', 'шаг без просьб', 'خطوة دون طلب'),
